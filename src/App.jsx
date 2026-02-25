@@ -2,665 +2,271 @@ import { useState, useEffect, useRef } from "react";
 
 const MODULES = [
   {
-    id: 1,
-    title: "The Convergence Wave",
-    subtitle: "Why Everything Is About to Change — Fast",
-    icon: "⚡",
-    color: "#FF3B30",
-    week: "Weeks 2–3",
-    book: "Ch 1–4: Convergence, Exponential Tech, Acceleration of Acceleration",
-    bookNote: "Part 1 lays the foundation: Moore's Law, exponential vs linear thinking, key technologies growing exponentially. The holy shit moment: it's not any single tech — it's what happens when they CONVERGE.",
-    events: [
-      "Track Moore's Law: latest GPU vs 5 years ago",
-      "ChatGPT adoption — 2 months to 100M users",
-      "Diamandis's Moonshots podcast weekly",
-      "CES 2025 sports tech vs book's 2020 predictions"
-    ],
-    concepts: [
-      {
-        name: "Exponential vs Linear Thinking",
-        desc: "30 linear steps = 30 meters. 30 exponential steps = around Earth 26 times. Technologies reshaping your career grow exponentially, not linearly.",
-        sport: "2019: AI couldn't write a recap. 2023: AP generates thousands of minor league summaries. 2025: personalized highlights, multilingual commentary, and real-time analytics simultaneously.",
-        insight: "The book opens with this because everything depends on it. Moore's Law repeats across AI, sensors, bandwidth, and storage."
-      },
-      {
-        name: "The Power of Convergence",
-        desc: "When AI converges with sensors, VR, networks, and robotics simultaneously, the result is multiplicative, not additive.",
-        sport: "One NFL broadcast in 2025: AI cameras + RFID tracking + AR overlays + auto highlights + personalized betting feeds. None existed together a decade ago.",
-        insight: "Central thesis: don't study technologies in isolation — study how they crash into each other."
-      },
-      {
-        name: "The Six D's of Disruption",
-        desc: "Digitization → Deception → Disruption → Demonetization → Dematerialization → Democratization.",
-        sport: "Sports journalism: Digitized → Deceptive (blogs minor) → Disrupted (layoffs) → Demonetized (free content) → Dematerialized → Democratized (anyone with phone + AI = creator).",
-        insight: "Most sports media is in Disruption-to-Demonetization. Know where your career sits on this curve."
-      }
+    id: 1, title: "The Future is Faster Than You Think", subtitle: "The Frameworks That Explain What's Coming", icon: "📖", color: "#E8A838",
+    desc: "The big ideas from Diamandis & Kotler that explain why every industry — especially sports — is being transformed faster than anyone expects.",
+    segments: [
+      { title: "Moore's Law: The Engine Under Everything", content: "In 1965, Gordon Moore observed that computing power doubles roughly every two years while cost stays flat or drops. This has held for 60 years. Your smartphone has more computing power than the systems that landed astronauts on the moon. But here's what makes it profound: the pattern isn't limited to chips. The same doubling shows up in storage capacity, bandwidth, sensor resolution, and AI capability. Every digital technology inherits this exponential curve. When people say 'AI is moving fast,' Moore's Law is the underlying engine.", keyTerm: "Moore's Law: Computing power doubles approximately every two years at the same cost. This pattern has held for 60 years and drives the acceleration of every digital technology.", exercise: "Look up the price of 1 GB of storage in 2000, 2010, and 2024. Does the curve look linear or exponential? What does that mean for a league that wants to store and analyze every frame of every game?" },
+      { title: "The Law of Accelerating Returns", content: "Ray Kurzweil extended Moore's observation into a broader principle: the rate of technological improvement itself accelerates. Each generation of technology builds the next generation faster. The internet was built on computers. AI was built on the internet's data. Now AI designs better AI. This compounding creates a curve that bends upward more steeply over time. The gap between 2020 and 2025 feels bigger than 2010 to 2015, even though both are five years. The pace isn't constant — it's accelerating.", keyTerm: "Law of Accelerating Returns: The rate of progress speeds up over time because each generation of technology enables the next to be built faster. Progress compounds on progress.", exercise: "Think about sports broadcasting in 2005, 2015, and 2025. List what was possible in each era. Is the 2015-2025 gap bigger than 2005-2015? What does that predict about 2025-2035?" },
+      { title: "Exponential vs. Linear Thinking", content: "Humans think linearly — our brains evolved for a world where things changed slowly. 30 linear steps = 30 meters. But 30 exponential (doubling) steps = 26 trips around Earth. This mismatch between how we instinctively think and how technology actually grows is the single biggest reason people underestimate disruption. Executives, journalists, even technologists consistently predict the future by drawing a straight line from today. The future isn't a straight line. It's a hockey stick.", keyTerm: "Exponential Growth: Doubling at regular intervals. Feels slow at first (1, 2, 4, 8) but quickly becomes enormous (... 512, 1024, 2048). Human brains are wired to think linearly, making us systematically underestimate exponential change.", exercise: "Take a piece of paper. Fold it in half 42 times (conceptually). How thick would it be? Answer: it would reach the moon. That's exponential growth. Now apply that intuition to AI capability doubling every 12-18 months." },
+      { title: "The Six D's of Disruption", content: "Diamandis identifies a chain reaction that happens once a product or service becomes digital. It's predictable and unstoppable: Digitization (becomes information) → Deception (early growth looks flat) → Disruption (incumbents collapse) → Demonetization (cost drops toward zero) → Dematerialization (physical form disappears) → Democratization (everyone gets access). This isn't theory — it's a pattern that has played out across music, photography, publishing, maps, and now sports media.", keyTerm: "The Six D's: Digitization → Deception → Disruption → Demonetization → Dematerialization → Democratization. Once something becomes digital, this chain is unstoppable.", exercise: "Walk sports journalism through all Six D's. Where is it on the chain right now? Then do the same for sports broadcasting. Are they at the same stage?" },
+      { title: "The Deceptive Phase", content: "This is the most dangerous D because it's where people get blindsided. When an exponential technology first appears, its early growth doubles look tiny: 0.01, 0.02, 0.04, 0.08. Easy to dismiss. 'It's a toy.' 'It'll never work.' But doubling doesn't stop. 0.08 becomes 0.16, then 0.32, then suddenly 1, 2, 4, 8, 16 — and by then it's too late for incumbents. The iPhone seemed like a gimmick to BlackBerry in 2007. AI-generated content seemed like a novelty in 2021. The deceptive phase is where fortunes are made by those paying attention — and lost by those who aren't.", keyTerm: "Deceptive Phase: The early period of exponential growth where doublings are small and easy to dismiss. By the time the technology is obviously powerful, the disruption window for incumbents has already closed.", exercise: "AI-generated sports recaps were laughably bad in 2020. By 2023, the AP was publishing thousands of AI game summaries. Were there any signals in the 'deceptive' 2020-2022 period that this was coming? What technology today looks like a toy but might be in its deceptive phase?" },
+      { title: "Demonetization & Dematerialization", content: "Once something is digitized and disrupts the incumbent model, costs crash toward zero (demonetization) and physical products disappear (dematerialization). Think about what your smartphone replaced: camera, GPS, map, calculator, flashlight, compass, level, recorder, scanner, alarm clock, stopwatch, dictionary, encyclopedia, music player, video player, game console, newspaper, boarding pass, wallet. Dozens of physical products and the industries behind them — demonetized and dematerialized. In sports: producing a highlight reel once required an edit bay, a producer, tape stock, and hours of work. Now an AI platform does it in seconds at near-zero cost.", keyTerm: "Demonetization: The cost of a product or service drops toward zero as technology improves. Dematerialization: Physical products disappear into software. Combined, they eliminate entire industries while creating new ones.", exercise: "List everything a sports media professional used in 2005 that has been dematerialized into software or AI. What jobs existed to operate that equipment? What replaced those jobs?" },
+      { title: "Democratization", content: "The final D: once something is demonetized and dematerialized, it becomes accessible to everyone. You don't need a TV network to broadcast. You don't need a production team to create highlights. You don't need a printing press to publish. The tools that were once gated behind millions of dollars in infrastructure are now available to anyone with a laptop and an internet connection. This is the most consequential D for your career: the same forces that disrupted industries create unprecedented opportunity for individuals. A single person with AI tools in 2025 can produce what required a full team in 2020.", keyTerm: "Democratization: When powerful tools become accessible to everyone, not just those with capital and infrastructure. The final stage of the Six D's — and the source of both massive opportunity and massive disruption.", exercise: "Find a creator, athlete, or small sports organization that's producing professional-quality content without a traditional production team. What tools are they using? Could they have done this five years ago?" },
+      { title: "Convergence: Where the Real Disruption Lives", content: "Individual exponential technologies are powerful on their own. But the book's central thesis is that the real disruption happens at the CONVERGENCE — when multiple exponential technologies crash into each other simultaneously. AI alone is powerful. AI + 5G networks + cheap sensors + cloud computing + smartphone ubiquity hitting sports media at the same time is transformative. A single NFL broadcast in 2025 uses AI cameras, RFID player tracking, real-time AR graphics, automated highlights, and personalized betting feeds. None existed together a decade ago.", keyTerm: "Technological Convergence: Multiple independently advancing technologies combining to create capabilities none could achieve alone. The result is multiplicative, not additive — and it's where the biggest disruptions originate.", exercise: "Pick a sports moment from last week. List every technology involved in how it reached your phone — cameras, networks, AI, apps, algorithms, social platforms. How many separate exponential technologies converged?" },
+      { title: "The Eight Exponential Technologies", content: "Diamandis identifies eight technologies all on exponential curves and all beginning to converge: (1) Artificial Intelligence, (2) Robotics, (3) Virtual/Augmented Reality, (4) 3D Printing, (5) Blockchain, (6) Sensors & IoT, (7) Networks (5G and beyond), (8) Quantum Computing. You don't need to be an expert in all eight. But you need to understand that sports media is being directly impacted by at least five of them right now: AI (content creation, analytics), VR/AR (immersive fan experiences), sensors (player tracking, biometrics), networks (mobile streaming, real-time data), and blockchain (digital collectibles, ticketing).", keyTerm: "Eight Exponential Technologies: AI, Robotics, VR/AR, 3D Printing, Blockchain, Sensors/IoT, Networks, Quantum Computing. Each on its own exponential curve. Their convergence is reshaping every industry.", exercise: "For each of the five technologies directly hitting sports (AI, VR/AR, sensors, networks, blockchain), name one specific product or company in sports that uses it. Which convergence of two or more of these do you think will be most disruptive in the next five years?" },
+      { title: "Network Effects & Platforms", content: "A network effect occurs when a product becomes more valuable as more people use it. The telephone was useless with one user. With a billion users, it's indispensable. Social media platforms, streaming services, and sports apps all benefit from network effects. This concept is critical for understanding why certain platforms become dominant and why disruption can happen so suddenly: once a new platform hits critical mass, the network effect creates explosive growth while the incumbent's network effect works in reverse as users leave.", keyTerm: "Network Effect: A product or service becomes more valuable as more people use it. This creates winner-take-most dynamics and explains why platform shifts happen suddenly rather than gradually.", exercise: "Why did ESPN's cable bundle resist disruption for so long? (Hint: network effects — every bar, gym, and waiting room had ESPN because everyone expected it.) What happens when that network effect reverses?" },
+      { title: "Industries Transformed: The Pattern", content: "Chapters 5 through 12 of the book walk through industry after industry — retail, advertising, entertainment, education, healthcare, food, finance — showing the same pattern: exponential technology + convergence = total disruption of the existing model. Every single one has a sports parallel. Healthcare AI → sports medicine and injury prediction. Entertainment disruption → streaming wars. Education transformation → how fans learn and engage. Finance disruption → betting and tokenized ownership. The lesson: disruption doesn't stay in its lane.", keyTerm: "Cross-Industry Convergence: The same exponential technologies disrupting healthcare, finance, and entertainment are simultaneously disrupting sports — often in interconnected ways.", exercise: "Pick one non-sports industry from the book (healthcare, finance, education, retail). Identify how AI is disrupting it, then find the direct parallel in sports. How are the patterns similar?" },
+      { title: "The Dark Side: Threats", content: "After twelve optimistic chapters, Diamandis confronts what can go wrong: deepfakes eroding trust, job displacement from automation, privacy erosion through ubiquitous sensors, algorithmic bias reinforcing inequity, and dangerous concentration of power among those who control AI. All of these are already manifesting in sports: deepfake athlete videos manipulating betting markets, biometric data controversies, AI-generated coverage that systematically under-represents women's sports.", keyTerm: "Exponential Threats: The same technologies enabling extraordinary progress also enable extraordinary harm — deepfakes, surveillance, bias, job displacement, and power concentration.", exercise: "Pick one threat from this segment. Find a real example of it happening in sports right now. How would you mitigate it if you were running a sports media company?" },
+      { title: "The Five Migrations", content: "The book closes with five Great Migrations reshaping civilization: (1) Climate migration — populations moving due to environmental change, (2) Urban migration — smart cities and urbanization, (3) Virtual migration — life and work moving into digital spaces, (4) Space migration — commercialization beyond Earth, (5) Meta-intelligence migration — humans merging with AI tools. For sports, two are immediately relevant: virtual migration (Gen Alpha experiences sports primarily through gaming and social, not broadcast TV) and meta-intelligence (AI coaching, scouting, content creation, and analytics merging with human expertise).", keyTerm: "Five Great Migrations: Climate, Urban, Virtual, Space, Meta-intelligence. The virtual and meta-intelligence migrations are actively reshaping how sports are experienced, produced, and consumed.", exercise: "How does Gen Alpha discover and follow sports differently than you did? If their primary entry point is gaming (EA FC, NBA 2K) and social media rather than TV, what does that mean for every sports media company's strategy?" }
     ],
     quiz: [
-      { q: "Technology doubling yearly — power after 10 years?", o: ["10x", "100x", "~1,000x", "20x"], a: 2 },
-      { q: "What makes convergence powerful?", o: ["Cheaper", "Multiple exponentials = multiplicative change", "Slower", "One industry"], a: 1 },
-      { q: "'Deception' in Six D's means:", o: ["Companies lying", "Early growth that looks flat", "Consumers tricked", "AI misinfo"], a: 1 }
+      { q: "Moore's Law matters because:", o: ["Only about chips", "Drives exponential improvement in computing, storage, bandwidth — all digital tech", "Predicts failures", "Only hardware"], a: 1 },
+      { q: "The Law of Accelerating Returns means:", o: ["Steady improvement", "The rate of improvement itself speeds up — progress compounds on progress", "Financial returns increase", "Technology plateaus"], a: 1 },
+      { q: "30 exponential (doubling) steps equals:", o: ["30 meters", "300 meters", "About 26 trips around Earth", "1 kilometer"], a: 2 },
+      { q: "The 'Deceptive' phase is dangerous because:", o: ["Companies lie", "Early doublings look tiny, so people dismiss the technology until it's too late", "It's always deceptive", "Only affects startups"], a: 1 },
+      { q: "Demonetization + Dematerialization means:", o: ["Everything is free", "Costs crash toward zero and physical products disappear into software", "Companies lose money", "Only digital products"], a: 1 },
+      { q: "Democratization in the Six D's means:", o: ["Political democracy", "Powerful tools become accessible to everyone, not just those with capital", "Everyone votes on technology", "Government controls tech"], a: 1 },
+      { q: "Convergence creates disruption because:", o: ["One technology improves", "Multiple exponentials hitting simultaneously = multiplicative change", "Companies merge", "It slows things down"], a: 1 },
+      { q: "The two 'Five Migrations' most reshaping sports:", o: ["Climate and space", "Virtual worlds and meta-intelligence", "Urban and climate", "Space and meta-intelligence"], a: 1 }
     ]
   },
   {
-    id: 2,
-    title: "AI Foundations for Sports Media",
-    subtitle: "What AI Actually Is — and Isn't",
-    icon: "🧠",
-    color: "#007AFF",
-    week: "Weeks 3–5",
-    book: "Ch 5–8: Shopping, Advertising, Entertainment, Education",
-    bookNote: "Every transformation in retail, advertising, entertainment is ALSO happening in sports — often faster due to live data, passionate fans, massive economics.",
-    events: [
-      "Compare ChatGPT/Grok/Gemini/Claude on same sports prompt",
-      "ESPN, Fox, The Athletic deploying AI in newsrooms",
-      "AI sports market: $8.9B (2024) → $27B (2030)",
-      "WEF 2025 paper: AI in Media & Sport"
-    ],
-    concepts: [
-      {
-        name: "The 'AI or Not AI' Test",
-        desc: "AI = pattern recognition at scale. ML learns from data. GenAI creates content. Most sports 'AI' claims are marketing — know the difference.",
-        sport: "Hawk-Eye = real AI. AI recaps = real GenAI. 'AI picks' averaging stats = hype.",
-        insight: "AI's real power: personalization at scale — different content for every fan simultaneously."
-      },
-      {
-        name: "AI Use Cases in Sports Media",
-        desc: "AI across the value chain: content creation, production, distribution, analytics, business ops.",
-        sport: "FOX CTO at CES 2025: natural language queries against footage. AWS: 1M+ data points per F1 race. 81% of execs expanded AI in 2025.",
-        insight: "Not experimental — operational. 75% of pro teams use real-time AI analytics."
-      },
-      {
-        name: "AI as Co-Pilot",
-        desc: "AI eliminates commodity work, amplifies creativity. AP uses AI for recaps no human would write — best storytelling is more valued than ever.",
-        sport: "Teams need humans to interpret data, tell stories, build relationships, make judgment calls. Roles changed, didn't disappear.",
-        insight: "Course AI Scale (Levels 1–5) mirrors the industry: know when AI brainstorms, edits, or co-pilots."
-      }
+    id: 2, title: "AI Foundations & Your Toolkit", subtitle: "Understanding AI and Mastering the Tools", icon: "\u{1F9E0}", color: "#007AFF",
+    desc: "What AI actually is, how it works, and hands-on mastery of the major models. From definitions to practical fluency.",
+    segments: [
+      { title: "What Is Artificial Intelligence?", content: "AI is pattern recognition at scale. It refers to computer systems performing tasks that typically require human intelligence — recognizing images, understanding language, making predictions, generating content. Key distinction: AI doesn't 'think' like you. It identifies statistical patterns in massive data and uses those patterns to generate outputs. When someone says 'AI wrote this article' or 'AI generated that highlight,' what actually happened is a system found patterns in millions of examples and produced something statistically similar.", keyTerm: "Artificial Intelligence (AI): Computer systems performing tasks requiring human intelligence by identifying patterns in large datasets. Not thinking — pattern matching at extraordinary scale.", exercise: "Think of three things you did today. Which could AI do by recognizing patterns? Which require something AI can't replicate yet?" },
+      { title: "Machine Learning & Deep Learning", content: "Machine Learning is how AI learns — instead of explicit rules, the system learns from examples. Show it 10,000 basketball highlights labeled 'dunk' and it learns to identify dunks in footage it's never seen. Deep Learning is a type of ML using 'neural networks' — layers of math loosely inspired by the brain. Deep learning is what made the current revolution possible because it can handle unstructured data like images, audio, and video — the raw material of sports media.", keyTerm: "Machine Learning: AI learning from data examples rather than rules. Deep Learning: ML using layered neural networks, enabling processing of images, video, and language.", exercise: "If you showed an ML system 50,000 hours of NBA footage labeled with player names, what could it learn? What couldn't it learn from that data alone?" },
+      { title: "Large Language Models (LLMs)", content: "An LLM is trained on enormous text — books, websites, code — to predict the next word. That's it. ChatGPT, Claude, Gemini, Grok are all sophisticated next-word-prediction machines. But at massive scale, emergent behavior appears: writing, analysis, summarization, coding, reasoning. The 'Large' refers to parameters (adjustable knobs in the model) — GPT-4 has over a trillion. The key insight: LLMs don't 'know' things the way you do. They predict statistically likely sequences of words, which at scale resembles knowledge and reasoning.", keyTerm: "Large Language Model (LLM): Deep learning model trained on massive text to predict the next word. At sufficient scale, produces emergent capabilities like reasoning and content generation.", exercise: "Open ChatGPT or Claude. Ask it to explain the offside rule. Then ask it to explain to a 5-year-old. Notice how the same underlying capability produces different outputs based on your prompt." },
+      { title: "Vision Language Models & Multimodal AI", content: "LLMs process text. The frontier is multimodal AI — models processing text, images, video, and audio simultaneously. Vision Language Models (VLMs) can 'see' an image and discuss it intelligently. This is what enables AI to analyze game footage, identify plays from video, read stadium crowd density, and generate highlights from raw broadcast streams. This is where sports media gets disrupted hardest — because sports IS visual.", keyTerm: "Multimodal AI: Systems processing multiple input types (text, image, video, audio) simultaneously. VLM: A model combining vision and language understanding.", exercise: "Take a photo of a sports scene — a game on TV, a stadium, a scoreboard. Upload to ChatGPT or Claude and ask it to describe what it sees. How accurate? What does it miss?" },
+      { title: "Training vs. Inference", content: "Training is the expensive part — feeding massive datasets through the model over weeks using thousands of GPUs, costing millions. This happens once (or periodically). Inference is cheap — using the trained model for your specific prompt. When you ask Claude a question, that's inference. Critical economics: training costs drop roughly 10x per year. Tasks costing $100 in 2023 cost about $1 in 2025. This is why AI is expanding so fast and why small organizations can now afford tools that were enterprise-only two years ago.", keyTerm: "Training: Expensive one-time process of teaching a model. Inference: Cheap real-time use of the trained model. Training costs drop ~10x/year.", exercise: "If training costs drop 10x/year, what does that mean for a small sports media company that couldn't afford AI in 2023? What about in 2026?" },
+      { title: "Hallucinations & the Limits of AI", content: "AI generates confident, plausible nonsense — called hallucinations. It doesn't 'know' facts; it predicts statistically likely word sequences. It can fabricate statistics, invent quotes, misattribute information — all while sounding authoritative. Guardrails are safety measures built into models to prevent harmful outputs. Understanding both is essential: your job in any AI-assisted role is to be the quality filter. AI generates; humans verify. That skill separates valuable professionals from people who get replaced.", keyTerm: "Hallucination: AI generating plausible but factually incorrect content. Guardrails: Safety measures preventing harmful outputs. Your value = knowing when to trust and when to verify.", exercise: "Ask an AI the top 5 scorers in last night's NBA games. Check against a real source. How many right? What does this teach you about using AI for factual claims in sports media?" },
+      { title: "Recursive Self-Improvement", content: "AI is increasingly used to improve AI itself. Models help design better training data, better architectures, better evaluation methods. This creates a feedback loop: better AI → faster AI improvement → even better AI. Combined with the Law of Accelerating Returns from Module 1, this means AI capability growth is accelerating, not plateauing. The AI you're using today will look primitive within two years. Planning your career around today's AI capabilities is like planning around 2015's smartphone.", keyTerm: "Recursive Self-Improvement: AI accelerating the development of more capable AI, creating a compounding feedback loop that drives faster and faster progress.", exercise: "Claude launched early 2023. Compare its capabilities then vs now. Project that improvement rate 2 years forward. What becomes possible in sports media that isn't possible today?" },
+      { title: "The Foundation Model Landscape", content: "There are now several world-class AI models competing, each with different strengths. The major players: OpenAI (ChatGPT/GPT-4o), Anthropic (Claude), Google (Gemini), xAI (Grok), and Perplexity (search-focused). Think of them like different networks covering the same game — same sport, different commentary, different camera angles, different strengths. No single model is best at everything. The skill isn't picking one — it's knowing which to use when.", keyTerm: "Foundation Model: A large AI model trained on broad data that can be adapted to many tasks. The 'foundation' that specialized applications build on top of.", exercise: "Open ChatGPT, Claude, and Gemini. Ask each: 'Biggest sports media story this week?' Compare: which is most current? Most detailed? Most accurate?" },
+      { title: "ChatGPT (OpenAI)", content: "The model that started the mainstream AI era. Strengths: broad general knowledge, strong coding, image generation (DALL-E), voice conversations, massive plugin ecosystem, widest user base, most polished consumer experience. Weaknesses: can be confidently wrong, tends toward people-pleasing answers, knowledge cutoff limitations. Best for: first drafts, brainstorming, image creation, general-purpose tasks where you need breadth over depth.", keyTerm: "GPT (Generative Pre-trained Transformer): OpenAI's architecture. 'Pre-trained' = learned from data before you ever interacted with it.", exercise: "Ask ChatGPT for a 200-word NBA game recap. Then rewrite it for a betting audience vs a casual fan. Notice how it adapts tone and emphasis based on your instruction." },
+      { title: "Claude (Anthropic)", content: "Built with a focus on being helpful, harmless, and honest. Strengths: longest context window (processes entire books or massive documents at once), strongest at nuanced analysis and writing, most careful about accuracy, excellent at following complex multi-step instructions. Best for: deep analysis, long document processing, writing that requires nuance, research synthesis, tasks where getting it RIGHT matters more than getting it fast. This course app was built entirely with Claude.", keyTerm: "Context Window: How much text a model can process at once. Claude's is among the largest — enabling analysis of entire reports, books, or datasets in a single conversation.", exercise: "Upload a long article about a sports business topic into Claude. Ask for three career implications. Compare the depth of analysis to the same task in ChatGPT." },
+      { title: "Gemini, Grok & Perplexity", content: "Gemini (Google): integrated with Search, YouTube, Gmail. Always current via Google Search, multimodal from the ground up. Best for current events and Google ecosystem tasks. Grok (xAI): integrated with X/Twitter. Real-time social trends, less filtered, strong at internet culture and sports discourse. Best for real-time fan sentiment. Perplexity: AI-powered search that cites sources. Transparent sourcing reduces hallucination. Best for research where you need verifiable claims.", keyTerm: "Grounded AI: Models tying responses to verifiable sources (like Perplexity), reducing hallucination by anchoring outputs to real documents and citations.", exercise: "Ask Perplexity about AI in sports broadcasting — read its cited sources. Ask Grok the same. How does sourced research compare to social-media-informed analysis?" },
+      { title: "Choosing the Right Tool: AI Orchestration", content: "The most valuable skill isn't mastering one AI — it's orchestrating multiple models for different parts of your workflow. Quick framework: Need a first draft or brainstorm? → ChatGPT. Deep analysis of a long document? → Claude. Current information? → Gemini. Real-time social pulse? → Grok. Sourced research? → Perplexity. The best professionals in sports media won't use one AI. They'll move between models the way a chef uses different knives — right tool, right task, right moment.", keyTerm: "AI Orchestration: Strategically using multiple AI models for different tasks within a single workflow, rather than relying on one model for everything.", exercise: "Design a complete post-game social media workflow: Which AI for the written recap? Image creation? Stat verification? Fan sentiment? Historical context? Map each task to the best tool." }
     ],
     quiz: [
-      { q: "Core function of machine learning:", o: ["Pre-programmed rules", "Learning patterns from data", "Replacing workers", "Text only"], a: 1 },
-      { q: "'AI picks' using simple averages is:", o: ["Cutting-edge", "Marketing hype", "ML at work", "GenAI"], a: 1 },
-      { q: "% of execs expanding AI in 2025:", o: ["~25%", "~50%", "~81%", "~95%"], a: 2 }
+      { q: "AI fundamentally works by:", o: ["Thinking like a brain", "Pre-programmed rules for every scenario", "Identifying statistical patterns in large datasets", "Connecting to the internet"], a: 2 },
+      { q: "Training vs inference:", o: ["Same thing", "Training = expensive/once; inference = cheap/every use", "Training fast; inference slow", "Only big companies do both"], a: 1 },
+      { q: "An LLM is fundamentally:", o: ["A fact database", "Next-word prediction at massive scale", "A search engine", "A rule-based chatbot"], a: 1 },
+      { q: "AI hallucinations are dangerous because:", o: ["They crash systems", "AI generates confident, plausible content that's factually wrong", "Only affect cheap models", "They're easy to identify"], a: 1 },
+      { q: "VLMs matter most for sports media because:", o: ["They're cheaper", "They process video/images, enabling automated analysis of game footage", "They only work with text", "They replace cameras"], a: 1 },
+      { q: "Claude's biggest advantage:", o: ["It's free", "Largest context window + strongest nuanced analysis", "Best images", "Fastest responses"], a: 1 },
+      { q: "For real-time fan sentiment during a game:", o: ["Claude", "Gemini", "Grok (X/Twitter integration)", "Perplexity"], a: 2 },
+      { q: "AI Orchestration means:", o: ["Using one AI for everything", "Strategically using different models for different tasks", "Making AI play music", "Letting AI manage your calendar"], a: 1 }
     ]
   },
   {
-    id: 3,
-    title: "AI Presentations & Hands-On",
-    subtitle: "From Theory to Practice",
-    icon: "🎯",
-    color: "#5856D6",
-    week: "Weeks 5–7",
-    book: "Ch 9–14: Healthcare, Food, Finance, Threats, Migrations",
-    bookNote: "Later chapters expand the lens. Same pattern everywhere: exponential + convergence = disruption. Ch 13–14 on threats and migrations: it's not all positive.",
-    events: [
-      "Students present use cases from Sportico/SportsTechie",
-      "Guest speakers: ground truth vs hype",
-      "Hands-on: AI tools for a broadcast package",
-      "Sportradar acquires Vaix for AI highlights (2025)"
-    ],
-    concepts: [
-      {
-        name: "Building an AI Use Case",
-        desc: "Framework: Problem → AI solution → Evidence → Risks. Identify real value vs hype.",
-        sport: "WSC Sports: AI generates personalized highlights across NBA, NFL, hundreds of leagues. Solves content-at-scale humans can't.",
-        insight: "Great analysis = understanding business models. WHO pays? WHY better? HOW scales?"
-      },
-      {
-        name: "AI Tool Fluency",
-        desc: "Using AI ≠ knowing about AI. Fluency = prompting, comparing tools, evaluating outputs.",
-        sport: "Same game, same prompt, four tools. Compare accuracy, engagement, hallucinations.",
-        insight: "Ch 13: AI hallucinates. Verifying output is YOUR value."
-      },
-      {
-        name: "Cross-Industry Convergence",
-        desc: "Healthcare/food/finance disruption patterns hit sports too. Don't just see the sports angle.",
-        sport: "Healthcare AI → Zone7 injury prediction. Food tech → automated concessions. Fintech → betting + tokenized ownership.",
-        insight: "Disruption doesn't stay in its lane. Cross-industry awareness = competitive advantage."
-      }
+    id: 3, title: "The Sports Business Revolution", subtitle: "From ESPN's Monopoly to Every Rights Holder as a Media Company", icon: "\u{1F4E1}", color: "#FF3B30",
+    desc: "The sports media business is being fundamentally restructured. This is the industry you're entering.",
+    segments: [
+      { title: "The ESPN Era: How We Got Here", content: "In 1979, ESPN launched 24-hour sports TV. Over three decades, live sports became the most valuable content in media — the only programming watched live, in real time, with commercials. ESPN became the most profitable cable network in history. Here's how the money actually works: ESPN's revenue comes from two main sources — advertising and affiliate fees. Advertising is straightforward: brands pay to run commercials during live games. But the real money machine is affiliate fees. Every cable company — Comcast, Charter, DirecTV — pays ESPN a per-subscriber fee for the right to carry the channel. At its peak, that fee was roughly $9 per subscriber per month — the highest of any cable channel by far. The critical part: every cable household paid this fee whether they watched ESPN or not. If you had cable to watch HGTV, you were still paying $9/month for ESPN. Multiply $9 by 100 million cable households and you get roughly $10 billion per year in affiliate fees alone — before a single ad was sold. This is why ESPN could afford to pay billions for NFL, NBA, MLB, and college football rights. The entire model depended on one thing: the bundle. As long as cable companies bundled ESPN into their basic packages, and as long as most American households subscribed to cable, the money machine was unstoppable. Every household was effectively subsidizing ESPN whether they wanted to or not.", keyTerm: "Affiliate Fees: The per-subscriber fee that cable companies pay to carry a channel. ESPN's ~$9/month fee was the highest in cable — paid by every cable household regardless of whether they watched sports. At 100M subscribers, that's ~$10B/year before ad revenue.", exercise: "ESPN charges cable companies ~$9/subscriber/month. A niche channel might charge $0.25. If 40% of cable subscribers actually watch ESPN, what is each actual viewer effectively paying? What does this tell you about why the bundle was so valuable to ESPN — and so vulnerable to cord-cutting?" },
+      { title: "The Great Unbundling", content: "Cord-cutting broke the bundle. ESPN dropped from ~100M subscribers (2011) to below 70M (2024). But total sports rights spending INCREASED. The NFL signed ~$113B through 2033 across CBS, Fox, NBC, ESPN, Amazon, Netflix, Peacock, YouTube. More platforms paying more money. The pie got bigger but shattered into pieces.", keyTerm: "Cord-Cutting: Canceling cable for streaming. Broke the economic model that made ESPN the most profitable network in TV.", exercise: "List every platform showing NFL games. How many subs for every game? Cost vs a single cable package?" },
+      { title: "The Streaming Wars", content: "Amazon has Thursday Night Football. Apple has MLS. Netflix streamed NFL on Christmas 2024. YouTube has Sunday Ticket. Peacock carries exclusive playoff games. ESPN launching standalone streaming. Every tech and media company concluded: live sports is the last way to aggregate massive, engaged audiences in real time.", keyTerm: "Rights Fragmentation: Live sports distributed across increasing platforms, requiring multiple subscriptions to follow your teams.", exercise: "You're a league commissioner. Amazon, Apple, Netflix, ESPN all want your rights. Beyond price, what factors matter?" },
+      { title: "Direct-to-Consumer: The Real Revolution", content: "The streaming shift isn't just about where games air — it's about who owns the customer relationship. Cable era: Comcast owned the viewer data. D2C flips this. When you subscribe to ESPN+ or a league app, the content provider owns YOUR data directly. They know who you are, what you watch, when you stop, what you'll pay for. This is transformative.", keyTerm: "Direct-to-Consumer (D2C): Distributing directly to viewers, gaining access to subscriber data and payment relationships without cable middlemen.", exercise: "Disney owns ESPN, ABC, Hulu, Disney+. If they know you watched every Yankees game, visited Disney World twice, and stream Marvel — what can they offer that Comcast never could?" },
+      { title: "Data Unlocks New Experiences", content: "D2C isn't just data collection — it enables entirely new products. FuboTV integrates live betting into viewing. Disney connects ESPN habits to personalized park experiences. A league app offers your favorite player's camera angle, your language commentary, fantasy stats — simultaneously. AI powers all of this personalization at scale. The Diamandis frameworks from Module 1 are playing out in real time.", keyTerm: "Personalization at Scale: AI delivering individually customized content to millions simultaneously — impossible in the broadcast era, now the foundation of sports media's future.", exercise: "Design your ideal viewing experience if the platform knew everything about you. What's different from today? What data would it need?" },
+      { title: "Every Rights Holder Is a Media Company", content: "The marginal cost of content creation and distribution has collapsed — and it happened because of multiple cost curves crashing simultaneously. Start with production: twenty years ago, creating a professional highlight package required a linear tape edit suite ($50K+), a trained editor (hours of labor), and physical distribution infrastructure. Today, AI content platforms like WSC Sports ingest live game feeds, use computer vision to identify key moments (goals, dunks, touchdowns, big plays), and automatically generate hundreds of highlight clips — tagged, formatted for every platform, personalized by team or player — in seconds, with no human editor. Then distribution: social media platforms (Instagram, TikTok, X, YouTube) gave every rights holder an essentially free means to develop and reach an audience — casual fans discovering a sport for the first time, hardcore fans who want every clip, and everyone in between. The cost of reaching a fan went from millions (buying airtime) to virtually zero (posting a clip). Cloud computing (AWS, Google Cloud) replaced on-premise servers. A league doesn't need a data center — they rent compute by the hour. Mobile-first cameras and production tools mean a single person with an iPhone and software like Riverside or StreamYard can produce broadcast-quality content that would have required a truck and crew of 20 in 2010. Layer these together: AI creates the content automatically, social platforms provide free audience reach across every fan segment, cloud handles the infrastructure, and mobile tools handle everything in between. The result: every rights holder — NFL to a D-III conference — is now a media company. They don't need ESPN to reach fans. They can do it themselves, own the audience data, and capture the revenue directly.", keyTerm: "Zero Marginal Cost Content: The convergence of AI content platforms (WSC Sports), free social distribution (TikTok, Instagram, YouTube), cloud computing (AWS), and mobile production tools collapsed the cost of creating and distributing professional sports content to near zero — enabling any rights holder to become a media company.", exercise: "Find a D-II or D-III school's social media. How sophisticated is their content? Now list the tools they'd need to produce it: an AI highlight platform, a social media scheduler, a smartphone, a Canva account. Total cost vs. what a broadcast production would have cost in 2010?" },
+      { title: "The Fan Continuum", content: "VISUALIZE_FUNNEL", keyTerm: "Fan Continuum: The strategic framework for how sports rights holders grow and monetize their audience — moving fans from discovery (new) to engagement (casual) to conversion (hardcore) through progressively deeper content and direct relationships.", exercise: "Pick a sports league or team you follow. Find one piece of their content on social media that seems designed for NEW fans (viral, shareable, no context needed). Then find one designed for CASUAL fans (team-specific, requires some knowledge). Then find their app or OTT platform aimed at HARDCORE fans. How does the content differ at each level? What's the call-to-action at each stage?" }
+      { title: "The WSC Sports Model", content: "WSC Sports sits at the center of this transformation. Using AI, the platform ingests live footage, identifies key moments, generates highlights, and distributes personalized clips across every platform — in real time. Leagues that relied entirely on broadcasters now do it themselves, at scale. NBA, NFL, hundreds of organizations worldwide. This is 'every rights holder is a media company' in practice — powered by the exponential technologies and convergence we covered in Module 1.", keyTerm: "AI-Enabled Content Platform: Technology using computer vision and ML to automatically ingest, analyze, create, and distribute sports content — replacing hours of manual work with seconds of automation.", exercise: "Check three leagues' social accounts. How much looks AI-generated (auto highlights, stat graphics)? How much human-created? What does the ratio tell you about where the industry is heading?" }
     ],
     quiz: [
-      { q: "Strong AI use case includes:", o: ["Cool tech only", "Problem, solution, evidence, limits", "Marketing copy", "Tech details only"], a: 1 },
-      { q: "Test same prompt across tools because:", o: ["Waste time", "Compare accuracy & catch hallucinations", "Identical answers", "One is correct"], a: 1 },
-      { q: "Other industry chapters matter because:", o: ["They don't", "Same patterns disrupt all industries", "Sports is immune", "Only finance"], a: 1 }
-    ]
-  },
-  {
-    id: 4,
-    title: "Blockchain, NFTs & Creators",
-    subtitle: "Owning the Game — New Value Models",
-    icon: "⛓️",
-    color: "#FF9500",
-    week: "Week 9",
-    book: "Ch 3 (Blockchain) & Ch 12 (Finance)",
-    bookNote: "Blockchain as exponential tech disrupting finance. In sports: NFTs (hype wave), tokenized engagement (ongoing), creator economy (structural shift).",
-    events: [
-      "NBA Top Shot: peak → sustainable model",
-      "Athlete media: LeBron, Durant, McAfee",
-      "PlayersTV + AI ad-insertion (2024)",
-      "Socios fan tokens in European football"
-    ],
-    concepts: [
-      {
-        name: "Blockchain Beyond Hype",
-        desc: "Trustless verification — no intermediary needed. Sports: collectibles, tickets, revenue sharing, achievements.",
-        sport: "NBA Top Shot: $700M+ in highlight NFTs. Bubble burst, but digital ownership evolved into sustainable models.",
-        insight: "Followed Six D's: Digitized → Deceptive → Disrupted → Demonetizing. Democratization next."
-      },
-      {
-        name: "The Creator Economy",
-        desc: "Structural shift: athletes/creators reach audiences directly, bypassing traditional media.",
-        sport: "McAfee → ESPN. LeBron (Uninterrupted), Durant (Boardroom) compete with traditional outlets.",
-        insight: "One creator with AI in 2025 = a full production team in 2020."
-      },
-      {
-        name: "Tokenized Fan Engagement",
-        desc: "Fans with verifiable stakes: voting, rewards, ownership. Already live in European football.",
-        sport: "Socios: Barcelona, Juventus, PSG, 100+ orgs. Token holders vote on club decisions.",
-        insight: "Digital ownership stakes shift the power dynamic between leagues, media, and fans."
-      }
-    ],
-    quiz: [
-      { q: "Blockchain's key capability:", o: ["Speed", "Trustless verification without intermediaries", "Video quality", "Payments only"], a: 1 },
-      { q: "Creator economy is structural because:", o: ["Better writing", "Athletes bypass gatekeepers entirely", "Media shut down", "Temporary"], a: 1 },
-      { q: "NBA Top Shot & Six D's:", o: ["No pattern", "Digitized → Deceptive → Disrupted → Demonetizing", "Stable", "Only Disruption"], a: 1 }
-    ]
-  },
-  {
-    id: 5,
-    title: "Immersive: AR, VR & Metaverse",
-    subtitle: "The Future of Being a Fan",
-    icon: "🥽",
-    color: "#AF52DE",
-    week: "Week 10",
-    book: "Ch 2–3 (VR/AR) & Ch 8 (Entertainment)",
-    bookNote: "VR/AR approaching tipping point. Entertainment chapter predicts immersive, personalized experiences replacing one-size-fits-all broadcasts.",
-    events: [
-      "Apple Vision Pro sports viewing",
-      "Cosm LED dome venues (2024, LA)",
-      "Meta AR glasses + NFL (2025)",
-      "Fortnite/Roblox sports activations"
-    ],
-    concepts: [
-      {
-        name: "VR/AR Inflection Point",
-        desc: "Years of 'deceptive' phase → rapid explosion. Quality, content, price converging.",
-        sport: "NBA VR via Meta Quest. Apple Vision Pro spatial multi-game. Cosm 360° dome. Products, not prototypes.",
-        insight: "Better displays + 5G + AI adaptation + spatial computing = new medium beyond TV or attending."
-      },
-      {
-        name: "Digital Twins & Virtual Venues",
-        desc: "AI replicas of stadiums, players, scenarios for simulation and new fan experiences.",
-        sport: "NFL 'Digital Athlete' predicts injuries. Digital stadiums = infinite seats.",
-        insight: "Dematerialization: digital copies dissolve physical constraints."
-      },
-      {
-        name: "Virtual-First Fandom",
-        desc: "Gen Z/Alpha found sports through gaming. EA Sports FC IS soccer for many.",
-        sport: "Fortnite: tens of millions at live events. Roblox has league partnerships. Fans who may never watch traditional broadcasts.",
-        insight: "Your future audience may never have experienced sports primarily through broadcast TV."
-      }
-    ],
-    quiz: [
-      { q: "VR/AR inflection because:", o: ["Dying", "Quality + content + price + networks converging", "Gaming only", "Too expensive"], a: 1 },
-      { q: "Digital twin:", o: ["Backup player", "AI replica for simulation", "Duplicate feed", "Social account"], a: 1 },
-      { q: "Virtual-first fandom matters:", o: ["TV dominates", "Younger fans may never use broadcasts", "No spending", "Esports only"], a: 1 }
-    ]
-  },
-  {
-    id: 6,
-    title: "Disrupting Sports Business",
-    subtitle: "How Money Moves Now",
-    icon: "💰",
-    color: "#34C759",
-    week: "Weeks 11–12",
-    book: "Full book synthesis applied to sports business",
-    bookNote: "Apply the complete framework: how convergence reshapes money flows in sports. Midterm territory.",
-    events: [
-      "NFL $113B rights across 8+ platforms",
-      "Netflix live sports push",
-      "AI dynamic pricing → 2026 World Cup",
-      "Betting integration everywhere"
-    ],
-    concepts: [
-      {
-        name: "Unbundling Sports Rights",
-        desc: "One-network exclusivity → multi-platform. More total revenue, more complexity.",
-        sport: "NFL 2025: CBS, Fox, NBC, ESPN, Amazon, Netflix, Peacock, YouTube. ~$113B through 2033.",
-        insight: "Old model Demonetizes per-viewer while ecosystem generates more total."
-      },
-      {
-        name: "Betting as Content",
-        desc: "Changed what content IS. Every broadcast integrates odds and AI probability.",
-        sport: "DraftKings/FanDuel billions in content. In-game micro-betting fastest segment.",
-        insight: "AI + mobile + sensors + legalization = entirely new industry from nothing in 10 years."
-      },
-      {
-        name: "Athletes as Media Companies",
-        desc: "Leagues/teams/athletes build direct audiences, capture broadcaster revenue.",
-        sport: "Every league has its own platform. Athletes with massive followings ARE media companies.",
-        insight: "Democratization: accessible tools → gatekeepers lose power."
-      }
-    ],
-    quiz: [
-      { q: "Unbundling is significant:", o: ["Less revenue", "More revenue, fragmented audiences", "NFL only", "Free sports"], a: 1 },
-      { q: "Betting changed content:", o: ["No change", "Data/probability = core content", "Gambling only", "Shorter"], a: 1 },
-      { q: "Athletes as media companies:", o: ["Quit sports", "Direct audiences, no intermediaries", "Instagram only", "Always existed"], a: 1 }
-    ]
-  },
-  {
-    id: 7,
-    title: "Ethics, Deepfakes & Dark Side",
-    subtitle: "Chapter 13 — What Could Go Wrong",
-    icon: "⚖️",
-    color: "#FF2D55",
-    week: "Weeks 11–12",
-    book: "Chapter 13: Threats",
-    bookNote: "Reality check after 12 optimistic chapters. Deepfakes, displacement, privacy, bias — all manifesting in sports.",
-    events: [
-      "Deepfake athlete videos spreading",
-      "EU AI Act (2025) + sports biometrics",
-      "22% of sports AI uploads = sensitive data",
-      "AI bias: under-representing women's sports"
-    ],
-    concepts: [
-      {
-        name: "Deepfakes in Sports",
-        desc: "Realistic fake athlete video/audio. Risks: betting manipulation, defamation, trust erosion.",
-        sport: "Deepfake athlete statements gone viral. Fake injury reports could move billion-dollar markets.",
-        insight: "Same tech enabling content enables deception at scale. Media literacy = survival."
-      },
-      {
-        name: "Data Privacy & Athlete Rights",
-        desc: "24/7 tracking via wearables. Performance vs ownership. Legal frameworks lag.",
-        sport: "22% of sports AI uploads = sensitive biometrics. Unions push back. EU AI Act adds complexity.",
-        insight: "Collection tech accelerates faster than governance. Bridging = invaluable skill."
-      },
-      {
-        name: "Algorithmic Bias",
-        desc: "AI trained on biased history inherits bias. Under-represents women's sports, smaller leagues.",
-        sport: "Highlight algorithms deprioritize women's sports because training data reflects decades of unequal coverage.",
-        insight: "Technology isn't neutral. Inclusive AI = larger audiences + regulatory compliance."
-      }
-    ],
-    quiz: [
-      { q: "Deepfakes dangerous in sports:", o: ["Bad highlights", "Manipulate betting & erode trust", "Too expensive", "Amateur only"], a: 1 },
-      { q: "Core privacy tension:", o: ["No useful data", "Tech faster than legal frameworks", "Only owners care", "Not a concern"], a: 1 },
-      { q: "AI bias:", o: ["Always neutral", "Biased data → self-reinforcing cycles", "Human only", "By design"], a: 1 }
-    ]
-  },
-  {
-    id: 8,
-    title: "Convergence & Your Career",
-    subtitle: "Five Migrations — Your Place In It",
-    icon: "🚀",
-    color: "#00C7BE",
-    week: "Weeks 12–15",
-    book: "Ch 14: Five Migrations + Full Synthesis",
-    bookNote: "Five migrations: virtual worlds and meta-intelligence are happening NOW in sports. Final presentations synthesize the entire framework.",
-    events: [
-      "Future job board: postings that didn't exist 5 years ago",
-      "Score Diamandis's 2020 predictions",
-      "AI agents managing athlete media autonomously?"
-    ],
-    concepts: [
-      {
-        name: "Five Migrations & Sports",
-        desc: "Virtual worlds + meta-intelligence directly predict current sports trends.",
-        sport: "Gen Alpha in gaming. AI coaching merges humans with machines. Smart cities with AI sports infrastructure.",
-        insight: "Position where human creativity meets AI capability."
-      },
-      {
-        name: "Emerging Roles",
-        desc: "New careers blending tech, media, business, domain expertise.",
-        sport: "Sports AI PM, Fan Experience Technologist, Data Ethicist, Athlete Brand Strategist — none existed 2019.",
-        insight: "Build versatile skill stacks for roles not yet invented. T-shaped professional."
-      },
-      {
-        name: "Build in Public — Start Now",
-        desc: "Portfolio > credentials. Same disruption = your tools to build.",
-        sport: "Sports analytics blog, AI content, niche podcast. Tools are free. Barrier = willingness.",
-        insight: "Same forces disrupting industry lower barriers to building your own."
-      }
-    ],
-    quiz: [
-      { q: "Which migration reshapes fandom?", o: ["Climate", "Space", "Virtual worlds", "None"], a: 2 },
-      { q: "T-shaped professional:", o: ["Tech only", "Deep + broad across fields", "No specialization", "Multiple sports"], a: 1 },
-      { q: "Key career takeaway:", o: ["All jobs gone", "One AI tool", "Skills at human creativity × AI", "Doesn't apply"], a: 2 }
+      { q: "ESPN's cable model was profitable because:", o: ["Great programming", "Every household paid whether they watched or not (bundle economics)", "Low production costs", "No competition"], a: 1 },
+      { q: "After cord-cutting, sports rights spending:", o: ["Collapsed", "Stayed flat", "Increased — more platforms, more money, but fragmented", "Only decreased for small leagues"], a: 2 },
+      { q: "The most significant thing about D2C:", o: ["Lower prices", "Who owns the customer relationship and data", "Better quality", "More channels"], a: 1 },
+      { q: "Disney's D2C advantage:", o: ["Nothing beyond streaming", "Connect viewing to parks, merch, personalized offers across entire ecosystem", "Only competes with Netflix", "Only helps ESPN"], a: 1 },
+      { q: "Every rights holder can be a media company because:", o: ["More money", "Content creation/distribution costs collapsed — AI enables near-zero marginal cost", "ESPN shut down", "Fans prefer amateur content"], a: 1 },
+      { q: "AI's role in the sports business revolution:", o: ["Minor", "Central — powers personalization and automation making D2C and rights-holder-as-media-company viable", "Only highlights", "Overhyped"], a: 1 }
     ]
   }
-];
-
-const DISCUSSIONS = [
-  { p: "If AI generates a perfect recap in 3 seconds, what unique value does a human journalist bring?", w: "Weeks 2–3", t: "AI & Content" },
-  { p: "Walk your favorite sport through the Six D's. Where on the curve?", w: "Weeks 2–3", t: "Framework" },
-  { p: "Pick one 2019 prediction from Ch 1–8. Right, wrong, or partial?", w: "Weeks 3–5", t: "Book Analysis" },
-  { p: "$1M budget: AI tools, immersive tech, analytics, or talent?", w: "Weeks 5–7", t: "Strategy" },
-  { p: "Should athletes veto commercial use of biometric data?", w: "Week 9", t: "Ethics" },
-  { p: "Pat McAfee: replicable model or one-time? What would YOU build?", w: "Week 9", t: "Creator Economy" },
-  { p: "Gen Alpha: screens or stadiums? Business implications?", w: "Week 10", t: "Immersive" },
-  { p: "Deepfakes: existential or overblown? Position with examples.", w: "Weeks 11–12", t: "Ethics" },
-  { p: "Design your ideal job 5 years out. Title, skills, exists today?", w: "Weeks 12–15", t: "Career" },
-  { p: "60-second course thesis for someone who hasn't taken it.", w: "Week 15", t: "Synthesis" }
-];
-
-const SOURCES = [
-  { n: "Techmeme", d: "Real-time tech news", u: "techmeme.com" },
-  { n: "Sportico", d: "Sports business intelligence", u: "sportico.com" },
-  { n: "SportsTechie", d: "Sports tech coverage", u: "sportstechie.com" },
-  { n: "Sports Business Journal", d: "Industry reporting", u: "sportsbusinessjournal.com" },
-  { n: "Moonshots Podcast", d: "Diamandis on exponential tech", u: "diamandis.com/podcast" },
-  { n: "Sports Video Group", d: "Broadcast & production tech", u: "sportsvideo.org" },
-  { n: "WEF AI in Sport", d: "2025 white paper", u: "weforum.org" }
 ];
 
 function Bg() {
   const ref = useRef(null);
   useEffect(() => {
-    const c = ref.current;
-    const ctx = c.getContext("2d");
-    let frame;
-    const ps = [];
-    const resize = () => { c.width = c.offsetWidth; c.height = c.offsetHeight; };
-    resize();
-    window.addEventListener("resize", resize);
-    for (let i = 0; i < 35; i++) {
-      ps.push({ x: Math.random() * c.width, y: Math.random() * c.height, vx: (Math.random() - 0.5) * 0.2, vy: (Math.random() - 0.5) * 0.2, r: Math.random() + 0.5, o: Math.random() * 0.15 + 0.05 });
-    }
-    const draw = () => {
-      ctx.clearRect(0, 0, c.width, c.height);
-      ps.forEach((p, i) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0) p.x = c.width;
-        if (p.x > c.width) p.x = 0;
-        if (p.y < 0) p.y = c.height;
-        if (p.y > c.height) p.y = 0;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255,255,255," + p.o + ")";
-        ctx.fill();
-        for (let j = i + 1; j < ps.length; j++) {
-          const d = Math.hypot(p.x - ps[j].x, p.y - ps[j].y);
-          if (d < 100) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(ps[j].x, ps[j].y);
-            ctx.strokeStyle = "rgba(255,255,255," + (0.03 * (1 - d / 100)) + ")";
-            ctx.stroke();
-          }
-        }
-      });
-      frame = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => { cancelAnimationFrame(frame); window.removeEventListener("resize", resize); };
-  }, []);
-  return <canvas ref={ref} style={{ position: "fixed", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }} />;
+    const c = ref.current, ctx = c.getContext("2d"); let frame, ps = [];
+    const rs = () => { c.width = c.offsetWidth; c.height = c.offsetHeight; }; rs(); window.addEventListener("resize", rs);
+    for (let i = 0; i < 30; i++) ps.push({ x: Math.random()*c.width, y: Math.random()*c.height, vx:(Math.random()-.5)*.15, vy:(Math.random()-.5)*.15, r:Math.random()*.8+.3, o:Math.random()*.12+.03 });
+    const d = () => { ctx.clearRect(0,0,c.width,c.height); ps.forEach((p,i) => { p.x+=p.vx;p.y+=p.vy; if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;if(p.y<0)p.y=c.height;if(p.y>c.height)p.y=0; ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${p.o})`;ctx.fill(); for(let j=i+1;j<ps.length;j++){const dd=Math.hypot(p.x-ps[j].x,p.y-ps[j].y);if(dd<100){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(ps[j].x,ps[j].y);ctx.strokeStyle=`rgba(255,255,255,${.025*(1-dd/100)})`;ctx.stroke();}}}); frame=requestAnimationFrame(d); }; d();
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("resize", rs); };
+  }, []); return <canvas ref={ref} style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0}} />;
 }
 
-function Ring({ p, size = 48, sw = 4, color = "#fff" }) {
-  const r = (size - sw) / 2;
-  const c = 2 * Math.PI * r;
-  return (
-    <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={sw} />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={sw} strokeDasharray={c} strokeDashoffset={c - (p / 100) * c} strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.5s" }} />
-    </svg>
-  );
-}
+function Ring({p,size=48,sw=4,color="#fff"}) { const r=(size-sw)/2,c=2*Math.PI*r; return <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}><circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={sw}/><circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={sw} strokeDasharray={c} strokeDashoffset={c-(p/100)*c} strokeLinecap="round" style={{transition:"stroke-dashoffset 0.5s"}}/></svg>; }
+function Tag({children,color:cl="#666",bg="rgba(255,255,255,0.05)"}) { return <span style={{display:"inline-block",background:bg,color:cl,padding:"3px 10px",borderRadius:16,fontSize:10,fontWeight:700,letterSpacing:.3}}>{children}</span>; }
+function SegProg({cur,total,color}) { return <div style={{display:"flex",gap:4,marginBottom:20}}>{Array.from({length:total}).map((_,i)=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<=cur?color:"rgba(255,255,255,0.08)",transition:"background 0.3s"}}/>)}</div>; }
 
-function Tag({ children, color = "#666", bg = "rgba(255,255,255,0.05)" }) {
-  return <span style={{ display: "inline-block", background: bg, color: color, padding: "3px 10px", borderRadius: 16, fontSize: 10, fontWeight: 700 }}>{children}</span>;
-}
-
-const gs = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#999", padding: "7px 14px", borderRadius: 7, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit" };
-const bs = (bg) => ({ background: bg, border: "none", color: "#fff", padding: "11px 22px", borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" });
+const gs={background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",color:"#888",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit"};
+const bs=(bg)=>({background:bg,border:"none",color:"#fff",padding:"12px 24px",borderRadius:9,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"});
 
 export default function App() {
-  const [view, setView] = useState("home");
-  const [mi, setMi] = useState(0);
-  const [ci, setCi] = useState(0);
-  const [panel, setPanel] = useState(null);
-  const [ans, setAns] = useState({});
-  const [done, setDone] = useState({});
-  const [scores, setScores] = useState({});
-  const [fade, setFade] = useState(true);
+  const [view,setView]=useState("home");
+  const [mi,setMi]=useState(0);
+  const [si,setSi]=useState(0);
+  const [ans,setAns]=useState({});
+  const [done,setDone]=useState({});
+  const [scores,setScores]=useState({});
+  const [fade,setFade]=useState(true);
 
-  const go = (v, m) => {
-    setFade(false);
-    setTimeout(() => {
-      setView(v);
-      if (m !== undefined) setMi(m);
-      setCi(0);
-      setPanel(null);
-      setAns({});
-      setFade(true);
-      window.scrollTo({ top: 0 });
-    }, 150);
-  };
+  const go=(v,m)=>{setFade(false);setTimeout(()=>{setView(v);if(m!==undefined)setMi(m);setSi(0);setAns({});setFade(true);window.scrollTo({top:0});},120);};
+  const progress=Math.round(Object.keys(done).length/MODULES.length*100);
+  const F={opacity:fade?1:0,transform:fade?"translateY(0)":"translateY(6px)",transition:"opacity .15s,transform .15s"};
+  const W={maxWidth:880,margin:"0 auto",padding:"0 20px",position:"relative",zIndex:2};
+  const S={fontFamily:"'DM Sans',sans-serif",background:"#06060a",color:"#ddd",minHeight:"100vh"};
+  const font=<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>;
 
-  const submit = () => {
-    const m = MODULES[mi];
-    let s = 0;
-    m.quiz.forEach((q, i) => { if (ans[i] === q.a) s++; });
-    setScores((prev) => ({ ...prev, [mi]: s }));
-    setDone((prev) => ({ ...prev, [mi]: true }));
-    go("results");
-  };
-
-  const tc = Object.keys(done).length;
-  const op = Math.round((tc / MODULES.length) * 100);
-  const fst = { opacity: fade ? 1 : 0, transform: fade ? "translateY(0)" : "translateY(8px)", transition: "opacity 0.2s, transform 0.2s" };
-  const wrap = { maxWidth: 900, margin: "0 auto", padding: "0 20px", position: "relative", zIndex: 2 };
-  const shell = { fontFamily: "'Sora', sans-serif", background: "#07070c", color: "#ddd", minHeight: "100vh" };
-
-  // HOME
-  if (view === "home") return (
-    <div style={shell}>
-      <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      <Bg />
-      <div style={{ ...wrap, ...fst }}>
-        <div style={{ textAlign: "center", paddingTop: 64, paddingBottom: 36 }}>
-          <div style={{ display: "inline-block", background: "linear-gradient(135deg,#b22,#d44)", borderRadius: 12, padding: "8px 20px", marginBottom: 18, fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase" }}>SPTC 243 · Montclair State University</div>
-          <h1 style={{ fontSize: "clamp(26px, 4.5vw, 48px)", fontWeight: 800, lineHeight: 1.08, margin: "0 0 12px", background: "linear-gradient(135deg, #fff 30%, #889)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>AI & Emerging Technologies<br />in Sports Communication</h1>
-          <p style={{ fontSize: 15, color: "#666", maxWidth: 540, margin: "0 auto 24px", lineHeight: 1.6 }}>Your interactive course companion. Explore how exponential technologies transform sports media — and your career.</p>
-          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={() => go("module", 0)} style={bs("linear-gradient(135deg,#b22,#d44)")}>Start Learning →</button>
-            <button onClick={() => go("discuss")} style={{ ...gs, padding: "11px 22px" }}>💬 Discussions</button>
-            <button onClick={() => go("sources")} style={{ ...gs, padding: "11px 22px" }}>📡 Sources</button>
-          </div>
+  if(view==="home") return(
+    <div style={S}>{font}<Bg/><div style={{...W,...F}}>
+      <div style={{paddingTop:52,paddingBottom:40}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+          <div style={{width:10,height:10,borderRadius:"50%",background:"#FF3B30",boxShadow:"0 0 12px #FF3B3088"}}/>
+          <span style={{fontSize:11,fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:"#666"}}>SPTC 243 · Montclair State</span>
         </div>
-        <div style={{ background: "rgba(255,255,255,0.025)", borderRadius: 12, padding: 18, marginBottom: 36, border: "1px solid rgba(255,255,255,0.05)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <span style={{ fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: 1.5, color: "#555" }}>Course Progress</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Ring p={op} size={28} sw={2.5} color="#34C759" /><span style={{ fontWeight: 700, fontSize: 16 }}>{op}%</span></div>
-          </div>
-          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 5, height: 5 }}><div style={{ background: "linear-gradient(90deg,#34C759,#30D158)", height: "100%", width: op + "%", borderRadius: 5, transition: "width 0.5s" }} /></div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 14, paddingBottom: 36 }}>
-          {MODULES.map((m, i) => (
-            <div key={m.id} onClick={() => go("module", i)} style={{ background: done[i] ? (m.color + "0a") : "rgba(255,255,255,0.015)", border: "1px solid " + (done[i] ? m.color + "30" : "rgba(255,255,255,0.05)"), borderRadius: 13, padding: 20, cursor: "pointer", transition: "all 0.2s", position: "relative" }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = m.color + "50"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = done[i] ? m.color + "30" : "rgba(255,255,255,0.05)"; }}>
-              {done[i] && <div style={{ position: "absolute", top: 12, right: 12, background: "#34C759", borderRadius: 14, padding: "2px 8px", fontSize: 9, fontWeight: 700 }}>✓ {scores[i]}/{m.quiz.length}</div>}
-              <div style={{ fontSize: 24, marginBottom: 6 }}>{m.icon}</div>
-              <div style={{ display: "flex", gap: 5, marginBottom: 7, flexWrap: "wrap" }}><Tag color={m.color} bg={m.color + "15"}>Module {m.id}</Tag><Tag>{m.week}</Tag></div>
-              <h3 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 3px", color: "#fff" }}>{m.title}</h3>
-              <p style={{ fontSize: 12, color: "#555", margin: 0 }}>{m.subtitle}</p>
-            </div>
-          ))}
-        </div>
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", padding: "28px 0 40px", textAlign: "center" }}>
-          <p style={{ color: "#333", fontSize: 11 }}>Professor Ben Fairclough · Fall 2025 · Wed 5:20–8:05 PM<br />Built on <em>The Future is Faster Than You Think</em></p>
-        </div>
+        <h1 style={{fontSize:"clamp(28px,5vw,52px)",fontWeight:800,lineHeight:1.05,margin:"0 0 14px",color:"#fff"}}>AI & Emerging Tech<br/><span style={{color:"#FF3B30"}}>in Sports Communication</span></h1>
+        <p style={{fontSize:16,color:"#555",maxWidth:520,lineHeight:1.65,margin:"0 0 28px"}}>Your guided course companion. Each module builds on the last — from the big ideas driving disruption, to understanding AI, to seeing how it's reshaping the business of sports.</p>
+        <button onClick={()=>go("module",0)} style={bs("linear-gradient(135deg,#E8A838,#D4872E)")}>Start Module 1 →</button>
       </div>
-    </div>
-  );
-
-  // MODULE
-  if (view === "module") {
-    const m = MODULES[mi];
-    const con = m.concepts[ci];
-    return (
-      <div style={shell}>
-        <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-        <Bg />
-        <div style={{ ...wrap, ...fst }}>
-          <div style={{ paddingTop: 24, display: "flex", gap: 8, flexWrap: "wrap", paddingBottom: 10 }}>
-            <button onClick={() => go("home")} style={gs}>← Modules</button>
-            <Tag color={m.color} bg={m.color + "15"}>Module {m.id}</Tag><Tag>{m.week}</Tag>
-          </div>
-          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 34px)", fontWeight: 800, margin: "0 0 4px" }}>{m.title}</h2>
-          <p style={{ color: "#555", fontSize: 14, margin: "0 0 16px" }}>{m.subtitle}</p>
-          <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
-            <button onClick={() => setPanel(panel === "book" ? null : "book")} style={{ ...gs, background: panel === "book" ? "rgba(255,149,0,0.1)" : undefined, color: panel === "book" ? "#FF9500" : "#888" }}>📖 Book Connection</button>
-            <button onClick={() => setPanel(panel === "ev" ? null : "ev")} style={{ ...gs, background: panel === "ev" ? "rgba(0,199,190,0.1)" : undefined, color: panel === "ev" ? "#00C7BE" : "#888" }}>📡 Current Events</button>
-          </div>
-          {panel === "book" && (
-            <div style={{ background: "rgba(255,149,0,0.05)", border: "1px solid rgba(255,149,0,0.2)", borderRadius: 12, padding: 20, marginBottom: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#FF9500", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>📖 CHAPTERS</div>
-              <p style={{ fontSize: 13, color: "#ccc", margin: "0 0 10px", fontWeight: 600 }}>{m.book}</p>
-              <p style={{ fontSize: 13, color: "#999", margin: 0, lineHeight: 1.7 }}>{m.bookNote}</p>
-            </div>
-          )}
-          {panel === "ev" && (
-            <div style={{ background: "rgba(0,199,190,0.05)", border: "1px solid rgba(0,199,190,0.2)", borderRadius: 12, padding: 20, marginBottom: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#00C7BE", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>📡 TRACK THESE</div>
-              {m.events.map((e, i) => <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}><span style={{ color: "#00C7BE", fontWeight: 700, fontSize: 12 }}>→</span><span style={{ fontSize: 12, color: "#999", lineHeight: 1.6 }}>{e}</span></div>)}
-            </div>
-          )}
-          <div style={{ display: "flex", gap: 5, marginBottom: 20, flexWrap: "wrap" }}>
-            {m.concepts.map((c, i) => (
-              <button key={i} onClick={() => setCi(i)} style={{ background: ci === i ? m.color : "rgba(255,255,255,0.03)", border: "1px solid " + (ci === i ? m.color : "rgba(255,255,255,0.07)"), color: ci === i ? "#fff" : "#666", padding: "8px 14px", borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "inherit" }}>{c.name}</button>
-            ))}
-          </div>
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "clamp(18px, 3vw, 32px)", marginBottom: 20 }}>
-            <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 14px" }}>{con.name}</h3>
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#aaa", margin: "0 0 20px" }}>{con.desc}</p>
-            <div style={{ background: m.color + "0a", border: "1px solid " + m.color + "20", borderRadius: 11, padding: 18, marginBottom: 16 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: m.color, letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>🏟️ SPORTS EXAMPLE</div>
-              <p style={{ fontSize: 13, lineHeight: 1.7, color: "#bbb", margin: 0 }}>{con.sport}</p>
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 11, padding: 18 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: "#FF9500", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>💡 KEY INSIGHT</div>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: "#ddd", margin: 0, fontWeight: 500, fontStyle: "italic" }}>{con.insight}</p>
-            </div>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: 40, gap: 8, flexWrap: "wrap" }}>
-            <button onClick={() => ci > 0 && setCi(ci - 1)} disabled={ci === 0} style={{ ...gs, opacity: ci === 0 ? 0.4 : 1 }}>← Previous</button>
-            {ci < m.concepts.length - 1
-              ? <button onClick={() => setCi(ci + 1)} style={bs(m.color)}>Next Concept →</button>
-              : <button onClick={() => go("quiz")} style={bs("linear-gradient(135deg,#FF9500,#FF3B30)")}>Take the Quiz →</button>}
-          </div>
+      <div style={{background:"rgba(255,255,255,0.02)",borderRadius:14,padding:20,marginBottom:32,border:"1px solid rgba(255,255,255,0.04)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <span style={{fontWeight:700,fontSize:10,textTransform:"uppercase",letterSpacing:2,color:"#444"}}>Course Progress</span>
+          <div style={{display:"flex",alignItems:"center",gap:8}}><Ring p={progress} size={30} sw={3} color="#34C759"/><span style={{fontWeight:800,fontSize:17}}>{progress}%</span></div>
         </div>
+        <div style={{background:"rgba(255,255,255,0.04)",borderRadius:6,height:5}}><div style={{background:"linear-gradient(90deg,#34C759,#30D158)",height:"100%",width:progress+"%",borderRadius:6,transition:"width 0.5s"}}/></div>
       </div>
-    );
-  }
-
-  // QUIZ
-  if (view === "quiz") {
-    const m = MODULES[mi];
-    const ok = Object.keys(ans).length >= m.quiz.length;
-    return (
-      <div style={shell}>
-        <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-        <Bg />
-        <div style={{ ...wrap, ...fst }}>
-          <div style={{ paddingTop: 24, paddingBottom: 10 }}><button onClick={() => go("module")} style={gs}>← Back to Module</button></div>
-          <h2 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 4px" }}>Knowledge Check</h2>
-          <p style={{ color: "#555", fontSize: 14, margin: "0 0 28px" }}>{m.title} — {m.quiz.length} questions</p>
-          {m.quiz.map((q, qi) => (
-            <div key={qi} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 13, padding: 20, marginBottom: 14 }}>
-              <p style={{ fontSize: 14, fontWeight: 700, margin: "0 0 12px" }}>{qi + 1}. {q.q}</p>
-              {q.o.map((opt, oi) => (
-                <button key={oi} onClick={() => setAns((p) => ({ ...p, [qi]: oi }))} style={{ display: "block", width: "100%", textAlign: "left", background: ans[qi] === oi ? m.color + "15" : "rgba(255,255,255,0.02)", border: "1px solid " + (ans[qi] === oi ? m.color : "rgba(255,255,255,0.07)"), color: ans[qi] === oi ? "#fff" : "#888", padding: "10px 14px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: "inherit", fontWeight: ans[qi] === oi ? 600 : 400, marginBottom: 6 }}>{opt}</button>
-              ))}
-            </div>
-          ))}
-          <button onClick={submit} disabled={!ok} style={{ ...bs(ok ? "linear-gradient(135deg,#34C759,#30D158)" : "#333"), width: "100%", marginBottom: 40, cursor: ok ? "pointer" : "default" }}>Submit Answers</button>
-        </div>
-      </div>
-    );
-  }
-
-  // RESULTS
-  if (view === "results") {
-    const m = MODULES[mi];
-    const sc = scores[mi] || 0;
-    const t = m.quiz.length;
-    const pct = Math.round((sc / t) * 100);
-    return (
-      <div style={shell}>
-        <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-        <Bg />
-        <div style={{ ...wrap, ...fst }}>
-          <div style={{ textAlign: "center", paddingTop: 56, paddingBottom: 36 }}>
-            <Ring p={pct} size={90} sw={6} color={pct >= 75 ? "#34C759" : pct >= 50 ? "#FF9500" : "#FF3B30"} />
-            <h2 style={{ fontSize: 36, fontWeight: 800, margin: "14px 0 4px" }}>{sc}/{t}</h2>
-            <p style={{ color: "#666", fontSize: 15, margin: "0 0 24px" }}>
-              {pct === 100 ? "Perfect!" : pct >= 67 ? "Strong understanding." : "Review the material and try again."}
-            </p>
-            <div style={{ textAlign: "left", maxWidth: 580, margin: "0 auto 28px" }}>
-              {m.quiz.map((q, qi) => {
-                const correct = ans[qi] === q.a;
-                return (
-                  <div key={qi} style={{ background: correct ? "rgba(52,199,89,0.06)" : "rgba(255,59,48,0.06)", border: "1px solid " + (correct ? "rgba(52,199,89,0.2)" : "rgba(255,59,48,0.2)"), borderRadius: 9, padding: 14, marginBottom: 8 }}>
-                    <p style={{ fontSize: 12, fontWeight: 700, margin: "0 0 4px" }}>{qi + 1}. {q.q}</p>
-                    <p style={{ fontSize: 11, margin: "0 0 2px", color: correct ? "#34C759" : "#FF3B30" }}>You: {q.o[ans[qi]]} {correct ? "✓" : "✗"}</p>
-                    {!correct && <p style={{ fontSize: 11, margin: 0, color: "#34C759" }}>Correct: {q.o[q.a]}</p>}
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-              <button onClick={() => go("home")} style={gs}>All Modules</button>
-              {mi < MODULES.length - 1 && <button onClick={() => go("module", mi + 1)} style={bs("linear-gradient(135deg,#007AFF,#5856D6)")}>Next Module →</button>}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // DISCUSSIONS
-  if (view === "discuss") return (
-    <div style={shell}>
-      <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      <Bg />
-      <div style={{ ...wrap, ...fst }}>
-        <div style={{ paddingTop: 24, paddingBottom: 10 }}><button onClick={() => go("home")} style={gs}>← Back</button></div>
-        <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 4px" }}>Discussion Prompts</h2>
-        <p style={{ color: "#555", fontSize: 14, margin: "0 0 24px" }}>Critical thinking mapped to the course schedule.</p>
-        {DISCUSSIONS.map((d, i) => (
-          <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 11, padding: 18, marginBottom: 10 }}>
-            <div style={{ display: "flex", gap: 5, marginBottom: 8, flexWrap: "wrap" }}><Tag color="#FF9500" bg="rgba(255,149,0,0.1)">{d.w}</Tag><Tag>{d.t}</Tag></div>
-            <p style={{ fontSize: 14, lineHeight: 1.6, color: "#bbb", margin: 0 }}>{d.p}</p>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"#444",marginBottom:10}}>COURSE MODULES</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12,paddingBottom:32}}>
+        {MODULES.map((m,i)=>(
+          <div key={m.id} onClick={()=>go("module",i)} style={{background:done[i]?m.color+"0a":"rgba(255,255,255,0.015)",border:"1px solid "+(done[i]?m.color+"25":"rgba(255,255,255,0.04)"),borderRadius:14,padding:22,cursor:"pointer",transition:"all 0.2s",position:"relative"}}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor=m.color+"40";}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=done[i]?m.color+"25":"rgba(255,255,255,0.04)";}}>
+            {done[i]&&<div style={{position:"absolute",top:12,right:12,background:"#34C759",borderRadius:14,padding:"3px 9px",fontSize:9,fontWeight:700}}>✓ {scores[i]}/{m.quiz.length}</div>}
+            <div style={{fontSize:22,marginBottom:8}}>{m.icon}</div>
+            <div style={{display:"flex",gap:5,marginBottom:8}}><Tag color={m.color} bg={m.color+"15"}>Module {m.id}</Tag><Tag>{m.segments.length} segments</Tag></div>
+            <h3 style={{fontSize:16,fontWeight:700,margin:"0 0 3px",color:"#fff"}}>{m.title}</h3>
+            <p style={{fontSize:12,color:"#555",margin:0,lineHeight:1.5}}>{m.subtitle}</p>
           </div>
         ))}
-        <div style={{ height: 40 }} />
+        <div style={{background:"rgba(255,255,255,0.01)",border:"1px dashed rgba(255,255,255,0.06)",borderRadius:14,padding:22,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <p style={{fontSize:12,color:"#333",textAlign:"center",margin:0}}>More modules coming</p>
+        </div>
       </div>
-    </div>
+      <div style={{borderTop:"1px solid rgba(255,255,255,0.03)",padding:"24px 0 40px",textAlign:"center"}}>
+        <p style={{color:"#2a2a2a",fontSize:11}}>Professor Ben Fairclough · Fall 2025 · Wed 5:20-8:05 PM</p>
+      </div>
+    </div></div>
   );
 
-  // SOURCES
-  if (view === "sources") return (
-    <div style={shell}>
-      <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      <Bg />
-      <div style={{ ...wrap, ...fst }}>
-        <div style={{ paddingTop: 24, paddingBottom: 10 }}><button onClick={() => go("home")} style={gs}>← Back</button></div>
-        <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 4px" }}>Recommended Sources</h2>
-        <p style={{ color: "#555", fontSize: 14, margin: "0 0 24px" }}>Stay current with sports & tech. Many paywalled — Prof. Fairclough shares via Canvas.</p>
-        {SOURCES.map((s, i) => (
-          <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 11, padding: 18, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <div><h3 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 2px", color: "#fff" }}>{s.n}</h3><p style={{ fontSize: 12, color: "#666", margin: 0 }}>{s.d}</p></div>
-            <span style={{ fontSize: 11, color: "#444", fontFamily: "monospace" }}>{s.u}</span>
-          </div>
-        ))}
-        <div style={{ height: 40 }} />
+  if(view==="module"){const m=MODULES[mi],seg=m.segments[si]; return(
+    <div style={S}>{font}<Bg/><div style={{...W,...F}}>
+      <div style={{paddingTop:20,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",paddingBottom:12}}>
+        <button onClick={()=>go("home")} style={gs}>← Home</button>
+        <Tag color={m.color} bg={m.color+"15"}>Module {m.id}</Tag>
+        <span style={{fontSize:11,color:"#444",marginLeft:"auto",fontFamily:"'DM Mono',monospace"}}>{si+1}/{m.segments.length}</span>
       </div>
-    </div>
-  );
+      <SegProg cur={si} total={m.segments.length} color={m.color}/>
+      <h2 style={{fontSize:"clamp(20px,3.5vw,30px)",fontWeight:800,margin:"0 0 4px",color:"#fff"}}>{seg.title}</h2>
+      <p style={{fontSize:12,color:m.color,margin:"0 0 20px",fontWeight:600}}>{m.title} — Segment {si+1}</p>
+      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:14,padding:"clamp(16px,3vw,28px)",marginBottom:14}}>
+        {seg.content === "VISUALIZE_FUNNEL" ? <>
+          <p style={{fontSize:15,lineHeight:1.75,color:"#bbb",margin:"0 0 24px"}}>Every sports rights holder — from the NFL to a college conference — is trying to grow its fan base. The fan continuum is the strategic framework for how they do it: move people from never having heard of your sport, to casually engaged, to deeply invested and spending money. Social media, AI content, and owned digital platforms each play a specific role at each stage.</p>
+          {/* Inverted Triangle */}
+          <div style={{maxWidth:480,margin:"0 auto 28px",position:"relative"}}>
+            <svg viewBox="0 0 400 320" style={{width:"100%",height:"auto"}}>
+              {/* Top tier - New Fans (widest) */}
+              <polygon points="20,10 380,10 330,105 70,105" fill="rgba(255,149,0,0.15)" stroke="#FF9500" strokeWidth="1.5"/>
+              <text x="200" y="42" textAnchor="middle" fill="#FF9500" fontSize="13" fontWeight="800" fontFamily="DM Sans,sans-serif">NEW FANS</text>
+              <text x="200" y="62" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">Social algorithms surface content to people</text>
+              <text x="200" y="76" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">who never sought it out — viral discovery</text>
+              <text x="200" y="93" textAnchor="middle" fill="#666" fontSize="8" fontFamily="DM Mono,monospace">TikTok · Instagram Reels · YouTube Shorts · X</text>
+
+              {/* Middle tier - Casual Fans */}
+              <polygon points="70,115 330,115 280,210 120,210" fill="rgba(0,122,255,0.15)" stroke="#007AFF" strokeWidth="1.5"/>
+              <text x="200" y="147" textAnchor="middle" fill="#007AFF" fontSize="13" fontWeight="800" fontFamily="DM Sans,sans-serif">CASUAL FANS</text>
+              <text x="200" y="167" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">Follow leagues, teams, players on social —</text>
+              <text x="200" y="181" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">opted in to receive content regularly</text>
+              <text x="200" y="198" textAnchor="middle" fill="#666" fontSize="8" fontFamily="DM Mono,monospace">Follows · Subscribes · Engages · Shares</text>
+
+              {/* Bottom tier - Hardcore Fans (narrowest) */}
+              <polygon points="120,220 280,220 220,310 180,310" fill="rgba(255,59,48,0.15)" stroke="#FF3B30" strokeWidth="1.5"/>
+              <text x="200" y="252" textAnchor="middle" fill="#FF3B30" fontSize="13" fontWeight="800" fontFamily="DM Sans,sans-serif">HARDCORE FANS</text>
+              <text x="200" y="270" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">Driven to owned platforms —</text>
+              <text x="200" y="284" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">subscribe, buy, attend</text>
+              <text x="200" y="301" textAnchor="middle" fill="#666" fontSize="8" fontFamily="DM Mono,monospace">Apps · OTT · Tickets · Merch · Subscriptions</text>
+
+              {/* Arrows between tiers */}
+              <line x1="200" y1="107" x2="200" y2="113" stroke="#555" strokeWidth="1.5" markerEnd="url(#arrow)"/>
+              <line x1="200" y1="212" x2="200" y2="218" stroke="#555" strokeWidth="1.5" markerEnd="url(#arrow)"/>
+              <defs><marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/></marker></defs>
+            </svg>
+          </div>
+          {/* Detailed breakdown */}
+          <div style={{background:"rgba(255,149,0,0.05)",border:"1px solid rgba(255,149,0,0.15)",borderRadius:10,padding:14,marginBottom:10}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:1.5,textTransform:"uppercase",marginBottom:4}}>🔍 NEW FANS — DISCOVERY</div>
+            <p style={{fontSize:13,lineHeight:1.65,color:"#bbb",margin:0}}>This is where social media's recommendation algorithms are transformative. A highlight clip of an incredible play doesn't just reach existing followers — platforms like TikTok, Instagram Reels, and YouTube Shorts actively surface it to people who have never followed the sport, team, or league. The content goes viral not because fans share it (though they do), but because the algorithm identifies it as engaging and pushes it to millions of non-followers. This is how a rugby clip reaches someone who's never watched rugby, or how an MLS goal reaches a soccer-curious teenager. The rights holder didn't pay for this reach — the algorithm delivered it for free based on engagement signals.</p>
+          </div>
+          <div style={{background:"rgba(0,122,255,0.05)",border:"1px solid rgba(0,122,255,0.15)",borderRadius:10,padding:14,marginBottom:10}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#007AFF",letterSpacing:1.5,textTransform:"uppercase",marginBottom:4}}>📱 CASUAL FANS — ENGAGEMENT</div>
+            <p style={{fontSize:13,lineHeight:1.65,color:"#bbb",margin:0}}>Once that viral moment hooks someone, the next step is opting in. They follow the league's Instagram, subscribe to the team's YouTube channel, turn on notifications for a player they like. Now they're receiving content regularly — highlights, behind-the-scenes, storylines — without actively searching for it. They've moved from accidental discovery to intentional engagement. The rights holder now has a direct content relationship with this fan through social channels. AI-generated content is critical here because the volume of personalized clips needed to keep millions of casual fans engaged across every platform would be impossible to produce manually.</p>
+          </div>
+          <div style={{background:"rgba(255,59,48,0.05)",border:"1px solid rgba(255,59,48,0.15)",borderRadius:10,padding:14,marginBottom:10}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#FF3B30",letterSpacing:1.5,textTransform:"uppercase",marginBottom:4}}>💰 HARDCORE FANS — CONVERSION</div>
+            <p style={{fontSize:13,lineHeight:1.65,color:"#bbb",margin:0}}>The ultimate goal: drive casual fans off of social media platforms (which you don't own) and onto owned-and-operated properties where real monetization happens. Marketing calls-to-action embedded in social content push fans to download the league app, subscribe to the OTT streaming platform, buy tickets, purchase merchandise, or sign up for a fantasy game. These fans have purchase intent — they've been warmed up through the discovery and engagement stages. On owned platforms, the rights holder captures first-party data, owns the customer relationship directly (the D2C model from earlier in this module), and captures revenue without sharing it with a social media middleman.</p>
+          </div>
+        </> : <p style={{fontSize:15,lineHeight:1.75,color:"#bbb",margin:0}}>{seg.content}</p>}
+      </div>
+      <div style={{background:m.color+"08",border:"1px solid "+m.color+"20",borderRadius:12,padding:16,marginBottom:14}}>
+        <div style={{fontSize:9,fontWeight:700,color:m.color,letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>📌 KEY TERM</div>
+        <p style={{fontSize:13,lineHeight:1.65,color:"#ccc",margin:0,fontFamily:"'DM Mono',monospace"}}>{seg.keyTerm}</p>
+      </div>
+      <div style={{background:"rgba(52,199,89,0.04)",border:"1px solid rgba(52,199,89,0.12)",borderRadius:12,padding:16,marginBottom:22}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#34C759",letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>🎯 TRY IT NOW</div>
+        <p style={{fontSize:13,lineHeight:1.65,color:"#aaa",margin:0}}>{seg.exercise}</p>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",paddingBottom:36,gap:8,flexWrap:"wrap"}}>
+        <button onClick={()=>{if(si>0){setSi(si-1);window.scrollTo({top:0});}}} disabled={si===0} style={{...gs,opacity:si===0?.35:1}}>← Previous</button>
+        {si<m.segments.length-1
+          ?<button onClick={()=>{setSi(si+1);window.scrollTo({top:0});}} style={bs(m.color)}>Next Segment →</button>
+          :<button onClick={()=>go("quiz")} style={bs("linear-gradient(135deg,#FF9500,#FF3B30)")}>Take the Quiz →</button>}
+      </div>
+    </div></div>
+  );}
+
+  if(view==="quiz"){const m=MODULES[mi],ok=Object.keys(ans).length>=m.quiz.length; return(
+    <div style={S}>{font}<Bg/><div style={{...W,...F}}>
+      <div style={{paddingTop:20,paddingBottom:12}}><button onClick={()=>go("module")} style={gs}>← Back</button></div>
+      <h2 style={{fontSize:24,fontWeight:800,margin:"0 0 4px"}}>Knowledge Check</h2>
+      <p style={{color:"#555",fontSize:13,margin:"0 0 24px"}}>{m.title} — {m.quiz.length} questions</p>
+      {m.quiz.map((q,qi)=>(
+        <div key={qi} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:18,marginBottom:12}}>
+          <p style={{fontSize:13,fontWeight:700,margin:"0 0 10px"}}>{qi+1}. {q.q}</p>
+          {q.o.map((opt,oi)=><button key={oi} onClick={()=>setAns(p=>({...p,[qi]:oi}))} style={{display:"block",width:"100%",textAlign:"left",background:ans[qi]===oi?m.color+"15":"rgba(255,255,255,0.02)",border:"1px solid "+(ans[qi]===oi?m.color:"rgba(255,255,255,0.06)"),color:ans[qi]===oi?"#fff":"#777",padding:"9px 13px",borderRadius:8,cursor:"pointer",fontSize:12,fontFamily:"inherit",fontWeight:ans[qi]===oi?600:400,marginBottom:5}}>{opt}</button>)}
+        </div>
+      ))}
+      <button onClick={()=>{let s=0;MODULES[mi].quiz.forEach((q,i)=>{if(ans[i]===q.a)s++;});setScores(p=>({...p,[mi]:s}));setDone(p=>({...p,[mi]:true}));go("results");}} disabled={!ok} style={{...bs(ok?"linear-gradient(135deg,#34C759,#30D158)":"#333"),width:"100%",marginBottom:36,cursor:ok?"pointer":"default"}}>Submit</button>
+    </div></div>
+  );}
+
+  if(view==="results"){const m=MODULES[mi],sc=scores[mi]||0,t=m.quiz.length,pct=Math.round(sc/t*100); return(
+    <div style={S}>{font}<Bg/><div style={{...W,...F,textAlign:"center",paddingTop:48}}>
+      <Ring p={pct} size={90} sw={6} color={pct>=80?"#34C759":pct>=60?"#FF9500":"#FF3B30"}/>
+      <h2 style={{fontSize:34,fontWeight:800,margin:"12px 0 4px"}}>{sc}/{t}</h2>
+      <p style={{color:"#555",fontSize:14,margin:"0 0 24px"}}>{pct===100?"Perfect!":pct>=75?"Strong understanding.":"Review the segments and try again."}</p>
+      <div style={{textAlign:"left",maxWidth:560,margin:"0 auto 28px"}}>
+        {m.quiz.map((q,qi)=>{const ok=ans[qi]===q.a; return(
+          <div key={qi} style={{background:ok?"rgba(52,199,89,0.05)":"rgba(255,59,48,0.05)",border:"1px solid "+(ok?"rgba(52,199,89,0.15)":"rgba(255,59,48,0.15)"),borderRadius:9,padding:13,marginBottom:7}}>
+            <p style={{fontSize:11,fontWeight:700,margin:"0 0 3px"}}>{qi+1}. {q.q}</p>
+            <p style={{fontSize:11,margin:"0 0 1px",color:ok?"#34C759":"#FF3B30"}}>You: {q.o[ans[qi]]} {ok?"✓":"✗"}</p>
+            {!ok&&<p style={{fontSize:11,margin:0,color:"#34C759"}}>Correct: {q.o[q.a]}</p>}
+          </div>
+        );})}
+      </div>
+      <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap",paddingBottom:40}}>
+        <button onClick={()=>go("home")} style={gs}>Home</button>
+        {mi<MODULES.length-1&&<button onClick={()=>go("module",mi+1)} style={bs("linear-gradient(135deg,#007AFF,#5856D6)")}>Next Module →</button>}
+      </div>
+    </div></div>
+  );}
 
   return null;
 }
