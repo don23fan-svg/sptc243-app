@@ -1,4 +1,22 @@
 import { useState, useEffect, useRef } from "react";
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, get, child } from "firebase/database";
+
+// FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyB4BFDRuCHUg9fPT9PIMpChd4_FbiS2ITQ",
+  authDomain: "sptc243.firebaseapp.com",
+  databaseURL: "https://sptc243-default-rtdb.firebaseio.com",
+  projectId: "sptc243",
+  storageBucket: "sptc243.firebasestorage.app",
+  messagingSenderId: "274091952679",
+  appId: "1:274091952679:web:140b9abb01f5c9b62b9c02"
+};
+
+let db = null;
+try { const app = initializeApp(firebaseConfig); db = getDatabase(app); } catch(e) { console.warn("Firebase init failed:", e); }
+
+const fbKey = (name) => name.toLowerCase().replace(/\s+/g,"-").replace(/[.#$[\]]/g,"_");
 
 const MASTERY_THRESHOLD = 75;
 
@@ -137,65 +155,63 @@ export default function App() {
   const [dashTab,setDashTab]=useState("progress");
   const [dashMod,setDashMod]=useState(0);
   const [expanded,setExpanded]=useState({});
+  const [dashAuthed,setDashAuthed]=useState(false);
 
-  // Load student identity and progress from storage on mount
+  // Load student identity from localStorage, progress from Firebase
   useEffect(()=>{
     (async()=>{
       try {
-        const id = await window.storage.get("student-identity");
-        if(id){
-          const parsed = JSON.parse(id.value);
+        const saved = localStorage.getItem("sptc243-student");
+        if(saved){
+          const parsed = JSON.parse(saved);
           setStudentName(parsed.name);
-          // Load their progress
-          try {
-            const prog = await window.storage.get("progress:"+parsed.name.toLowerCase().replace(/\s+/g,"-"));
-            if(prog){
-              const p = JSON.parse(prog.value);
-              if(p.done) setDone(p.done);
-              if(p.scores) setScores(p.scores);
-            }
-          } catch(e){}
+          if(db){
+            try {
+              const snap = await get(child(ref(db), "students/"+fbKey(parsed.name)));
+              if(snap.exists()){
+                const p = snap.val();
+                if(p.done) setDone(p.done);
+                if(p.scores) setScores(p.scores);
+              }
+            } catch(e){}
+          }
         }
       } catch(e){}
       setLoading(false);
     })();
   },[]);
 
-  // Sync progress to storage
+  // Sync progress to Firebase
   const syncProgress = async (newDone, newScores) => {
-    if(!studentName) return;
-    const key = "progress:"+studentName.toLowerCase().replace(/\s+/g,"-");
+    if(!studentName||!db) return;
     const data = { name: studentName, done: newDone, scores: newScores, lastActive: new Date().toISOString() };
-    try {
-      await window.storage.set(key, JSON.stringify(data));
-      // Also sync to shared storage so instructor can see
-      await window.storage.set("class:"+studentName.toLowerCase().replace(/\s+/g,"-"), JSON.stringify(data), true);
-    } catch(e){ console.error("Sync failed:", e); }
+    try { await set(ref(db, "students/"+fbKey(studentName)), data); } catch(e){ console.error("Sync failed:", e); }
   };
 
   // Register student
+  // Register student — save name locally, create Firebase record
   const registerStudent = async (name) => {
     const trimmed = name.trim();
     if(!trimmed) return;
     try {
-      await window.storage.set("student-identity", JSON.stringify({ name: trimmed, registered: new Date().toISOString() }));
+      localStorage.setItem("sptc243-student", JSON.stringify({ name: trimmed }));
+      if(db) await set(ref(db, "students/"+fbKey(trimmed)), { name: trimmed, done: {}, scores: {}, lastActive: new Date().toISOString() });
       setStudentName(trimmed);
     } catch(e){ console.error("Registration failed:", e); setStudentName(trimmed); }
   };
 
   // Load instructor dashboard data
+  // Load instructor dashboard data from Firebase
   const loadDashboard = async () => {
+    setDashAuthed(true);
     setDashLoading(true);
     try {
-      const keys = await window.storage.list("class:", true);
+      if(!db){setDashData([]);setDashLoading(false);return;}
+      const snap = await get(ref(db, "students"));
       const students = [];
-      if(keys && keys.keys) {
-        for(const k of keys.keys) {
-          try {
-            const r = await window.storage.get(k, true);
-            if(r) students.push(JSON.parse(r.value));
-          } catch(e){}
-        }
+      if(snap.exists()){
+        const data = snap.val();
+        Object.keys(data).forEach(k=>{ if(data[k].name) students.push(data[k]); });
       }
       students.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
       setDashData(students);
@@ -208,84 +224,84 @@ export default function App() {
   const LESSON_PLANS = [
     {
       title: "The Future is Faster Than You Think",
-      goal: "Students understand why exponential change is the defining force of their careers \u2014 and why most people consistently underestimate it.",
+      goal: "Students understand why exponential change is the defining force of their careers — and why most people consistently underestimate it.",
       hooks: [
-        { name: "\u201CThe Folding Paper Problem\u201D", icon: "📌", content: "Start with: \u201CIf I fold a piece of paper in half 42 times, how thick is it?\u201D Take guesses. Most will say a few feet. Answer: it reaches the moon. Let the silence land.\n\nThen: \u201CThat\u2019s exponential growth. Your brain just failed you \u2014 it drew a straight line when the reality is a curve. AI capability is on that same doubling curve. The question isn\u2019t whether this will disrupt sports media. It\u2019s whether you\u2019ll be the one doing the disrupting or the one getting disrupted.\u201D" },
-        { name: "\u201CWhat\u2019s in Your Pocket?\u201D", icon: "📱", content: "Hold up your phone. Ask: \u201CHow many separate devices is this replacing?\u201D Write them on the board: camera, GPS, map, calculator, flashlight, compass, recorder, scanner, alarm clock, stopwatch, music player, game console, newspaper, boarding pass, wallet. 20+.\n\n\u201CEvery one of those was an industry with companies, employees, business models. They\u2019re gone \u2014 not because the phone was better day one, but because it was on an exponential curve. The same thing is happening right now in sports media. By the end of this module you\u2019ll understand the framework that predicts which industries survive and which don\u2019t.\u201D" },
-        { name: "\u201CThe Story I Saw Firsthand\u201D (WSC Sports)", icon: "🎬", content: "Tell a specific story from your time at WSC Sports where you watched an exponential shift happen in real time. Maybe the moment you realized AI could generate in seconds what took a production team hours. Be specific: names, dates, the look on someone\u2019s face.\n\nEnd with: \u201CWhat I saw happen to sports media production is what Diamandis calls the Six D\u2019s. By the end of today, you\u2019ll name all six and predict where the NEXT disruption is coming.\u201D" }
+        { name: "“The Folding Paper Problem”", icon: "📌", content: "Start with: “If I fold a piece of paper in half 42 times, how thick is it?” Take guesses. Most will say a few feet. Answer: it reaches the moon. Let the silence land.\n\nThen: “That’s exponential growth. Your brain just failed you — it drew a straight line when the reality is a curve. AI capability is on that same doubling curve. The question isn’t whether this will disrupt sports media. It’s whether you’ll be the one doing the disrupting or the one getting disrupted.”" },
+        { name: "“What’s in Your Pocket?”", icon: "📱", content: "Hold up your phone. Ask: “How many separate devices is this replacing?” Write them on the board: camera, GPS, map, calculator, flashlight, compass, recorder, scanner, alarm clock, stopwatch, music player, game console, newspaper, boarding pass, wallet. 20+.\n\n“Every one of those was an industry with companies, employees, business models. They’re gone — not because the phone was better day one, but because it was on an exponential curve. The same thing is happening right now in sports media. By the end of this module you’ll understand the framework that predicts which industries survive and which don’t.”" },
+        { name: "“The Story I Saw Firsthand” (WSC Sports)", icon: "🎬", content: "Tell a specific story from your time at WSC Sports where you watched an exponential shift happen in real time. Maybe the moment you realized AI could generate in seconds what took a production team hours. Be specific: names, dates, the look on someone’s face.\n\nEnd with: “What I saw happen to sports media production is what Diamandis calls the Six D’s. By the end of today, you’ll name all six and predict where the NEXT disruption is coming.”" }
       ],
-      unanswerable: "Name a technology in sports media currently in its \u2018deceptive phase\u2019 \u2014 something that looks like a toy today but will be transformative in 3 years.",
+      unanswerable: "Name a technology in sports media currently in its ‘deceptive phase’ — something that looks like a toy today but will be transformative in 3 years.",
       timeline: [
-        { time: "5:20\u20135:35", activity: "The Hook", desc: "Tell the story, show something current, pose the unanswerable question.", note: "The paper folding hook is the most interactive for a first class." },
-        { time: "5:35\u20135:40", activity: "App Orientation", desc: "Show the app on projector. Walk through registration, segments, quiz, mastery gate.", note: "First class only. Remind: 75% to unlock Module 2." },
-        { time: "5:40\u20137:10", activity: "Module 1 App Work", desc: "Students work through 13 segments at their own pace. You circulate as guide.", note: "Challenge fast finishers (\u201CWhich D is Netflix in right now?\u201D). Help stuck students." },
-        { time: "7:10\u20137:20", activity: "Break", desc: "10-minute break.", note: "Check instructor dashboard \u2014 who\u2019s passed?" },
-        { time: "7:20\u20138:00", activity: "Group Discussion", desc: "2\u20133 discussion prompts. Small groups first (5 min), then full class.", note: "Connect answers to real industry examples. Your career experience IS the content." },
-        { time: "8:00\u20138:05", activity: "Preview + Close", desc: "Tease Module 2: \u201CNext week we get hands-on with the AI tools themselves.\u201D", note: "Remind: Module 1 quiz must be passed before next class." }
+        { time: "5:20–5:35", activity: "The Hook", desc: "Tell the story, show something current, pose the unanswerable question.", note: "The paper folding hook is the most interactive for a first class." },
+        { time: "5:35–5:40", activity: "App Orientation", desc: "Show the app on projector. Walk through registration, segments, quiz, mastery gate.", note: "First class only. Remind: 75% to unlock Module 2." },
+        { time: "5:40–7:10", activity: "Module 1 App Work", desc: "Students work through 13 segments at their own pace. You circulate as guide.", note: "Challenge fast finishers (“Which D is Netflix in right now?”). Help stuck students." },
+        { time: "7:10–7:20", activity: "Break", desc: "10-minute break.", note: "Check instructor dashboard — who’s passed?" },
+        { time: "7:20–8:00", activity: "Group Discussion", desc: "2–3 discussion prompts. Small groups first (5 min), then full class.", note: "Connect answers to real industry examples. Your career experience IS the content." },
+        { time: "8:00–8:05", activity: "Preview + Close", desc: "Tease Module 2: “Next week we get hands-on with the AI tools themselves.”", note: "Remind: Module 1 quiz must be passed before next class." }
       ],
       discussions: [
         { title: "The Deceptive Phase", prompt: "What technology in sports media looks like a toy right now but might be in its deceptive phase? VR game attendance? AI play-by-play? Holographic displays? Make your case." },
-        { title: "Convergence Spotting", prompt: "Pick a moment from last weekend\u2019s sports. How many exponential technologies converged to bring that moment to your phone?" },
-        { title: "The Dark Side", prompt: "A deepfake video of an NFL quarterback saying something controversial goes viral during a playoff game. It\u2019s fake. How does the league respond? How fast?" },
-        { title: "Career Implications", prompt: "If AI can generate highlights, recaps, and stat graphics automatically \u2014 what\u2019s the human\u2019s job? What skills become MORE valuable?" }
+        { title: "Convergence Spotting", prompt: "Pick a moment from last weekend’s sports. How many exponential technologies converged to bring that moment to your phone?" },
+        { title: "The Dark Side", prompt: "A deepfake video of an NFL quarterback saying something controversial goes viral during a playoff game. It’s fake. How does the league respond? How fast?" },
+        { title: "Career Implications", prompt: "If AI can generate highlights, recaps, and stat graphics automatically — what’s the human’s job? What skills become MORE valuable?" }
       ],
       guideTips: [
         "The paper folding exercise works best when you let students commit to a wrong answer before revealing. The surprise IS the lesson.",
-        "During app work, watch for students lingering on the Six D\u2019s segment \u2014 it\u2019s the most conceptually dense. Walk over and ask them to apply it to a sport they care about.",
-        "For discussion, \u201CThe Deceptive Phase\u201D prompt generates the best debate. Let students argue \u2014 don\u2019t resolve it. The framework matters more than the answer."
+        "During app work, watch for students lingering on the Six D’s segment — it’s the most conceptually dense. Walk over and ask them to apply it to a sport they care about.",
+        "For discussion, “The Deceptive Phase” prompt generates the best debate. Let students argue — don’t resolve it. The framework matters more than the answer."
       ]
     },
     {
       title: "AI Foundations & Your Toolkit",
-      goal: "Students go from \u201CI\u2019ve used ChatGPT\u201D to understanding what AI actually is, how it works, and how to choose the right tool for the right task.",
+      goal: "Students go from “I’ve used ChatGPT” to understanding what AI actually is, how it works, and how to choose the right tool for the right task.",
       hooks: [
-        { name: "\u201CThe Live Hallucination Demo\u201D", icon: "💥", content: "Pull up ChatGPT on the projector. Ask: \u201CWho scored the most points in last night\u2019s NBA games?\u201D Read the answer aloud. Then pull up the actual box scores. High chance it\u2019s confidently wrong.\n\n\u201CThis tool just lied to your face with total confidence. If you published that in a game recap, you\u2019d be fired. So why is every sports media company still adopting AI? Because the value isn\u2019t in trusting it blindly \u2014 it\u2019s in knowing how it works, what it\u2019s good at, where it fails, and which tool to use when.\u201D" },
-        { name: "\u201CThe Same Prompt, Five Models\u201D", icon: "🔍", content: "Before class, run the same prompt through ChatGPT, Claude, Gemini, Grok, and Perplexity: \u201CSummarize the biggest sports media story this week in 100 words.\u201D Screenshot all five.\n\nShow side by side. Different stories, angles, accuracy levels. \u201CThese are all \u2018AI\u2019 but they\u2019re not the same tool. Choosing the right one matters as much as knowing how to use them.\u201D" },
-        { name: "\u201CThe $0.01 Task\u201D", icon: "💰", content: "Show: \u201CIn 2023, asking AI to summarize a 10-page document cost about $1 in compute. In 2025, about a penny. What does that mean for every entry-level task that involves reading, summarizing, or rewriting content?\u201D Pause.\n\n\u201CThis isn\u2019t about whether AI replaces you. It\u2019s about what happens when the cost of doing your current job approaches zero. The people who thrive understand HOW these tools work \u2014 not just that they exist.\u201D" }
+        { name: "“The Live Hallucination Demo”", icon: "💥", content: "Pull up ChatGPT on the projector. Ask: “Who scored the most points in last night’s NBA games?” Read the answer aloud. Then pull up the actual box scores. High chance it’s confidently wrong.\n\n“This tool just lied to your face with total confidence. If you published that in a game recap, you’d be fired. So why is every sports media company still adopting AI? Because the value isn’t in trusting it blindly — it’s in knowing how it works, what it’s good at, where it fails, and which tool to use when.”" },
+        { name: "“The Same Prompt, Five Models”", icon: "🔍", content: "Before class, run the same prompt through ChatGPT, Claude, Gemini, Grok, and Perplexity: “Summarize the biggest sports media story this week in 100 words.” Screenshot all five.\n\nShow side by side. Different stories, angles, accuracy levels. “These are all ‘AI’ but they’re not the same tool. Choosing the right one matters as much as knowing how to use them.”" },
+        { name: "“The $0.01 Task”", icon: "💰", content: "Show: “In 2023, asking AI to summarize a 10-page document cost about $1 in compute. In 2025, about a penny. What does that mean for every entry-level task that involves reading, summarizing, or rewriting content?” Pause.\n\n“This isn’t about whether AI replaces you. It’s about what happens when the cost of doing your current job approaches zero. The people who thrive understand HOW these tools work — not just that they exist.”" }
       ],
-      unanswerable: "Design a complete workflow for producing post-game social media content for an NBA team. Which AI tool handles each step \u2014 and which step still needs a human?",
+      unanswerable: "Design a complete workflow for producing post-game social media content for an NBA team. Which AI tool handles each step — and which step still needs a human?",
       timeline: [
-        { time: "5:20\u20135:40", activity: "The Hook", desc: "Live demo or screenshots. Make it interactive \u2014 ask students to predict what the AI got wrong.", note: "Hallucination demo is most engaging. Bring backup screenshots in case AI happens to nail it." },
-        { time: "5:40\u20137:10", activity: "Module 2 App Work", desc: "12 segments. Encourage students to open AI tools during exercises.", note: "Works best if students test ChatGPT, Claude, Perplexity side by side on their own devices." },
-        { time: "7:10\u20137:20", activity: "Break", desc: "Let students keep experimenting if they want.", note: "Dashboard check: who\u2019s passed? Common sticking points?" },
-        { time: "7:20\u20137:45", activity: "Live Workshop", desc: "Same task in 2+ models: \u201CWrite a 3-sentence pitch for why the Big East should invest in AI highlights.\u201D Compare results.", note: "Have students share best and worst outputs. Identify which tool won and why." },
-        { time: "7:45\u20138:00", activity: "Group Discussion", desc: "Focus on the orchestration concept \u2014 right tool, right task.", note: "Push past \u201CI like ChatGPT\u201D toward \u201CI use ChatGPT for X and Claude for Y because...\u201D" },
-        { time: "8:00\u20138:05", activity: "Preview + Close", desc: "\u201CNext week: how all of this is reshaping the business of sports. The economics will surprise you.\u201D", note: "Mastery reminder: Module 2 quiz at 75%+ for next week\u2019s workshop." }
+        { time: "5:20–5:40", activity: "The Hook", desc: "Live demo or screenshots. Make it interactive — ask students to predict what the AI got wrong.", note: "Hallucination demo is most engaging. Bring backup screenshots in case AI happens to nail it." },
+        { time: "5:40–7:10", activity: "Module 2 App Work", desc: "12 segments. Encourage students to open AI tools during exercises.", note: "Works best if students test ChatGPT, Claude, Perplexity side by side on their own devices." },
+        { time: "7:10–7:20", activity: "Break", desc: "Let students keep experimenting if they want.", note: "Dashboard check: who’s passed? Common sticking points?" },
+        { time: "7:20–7:45", activity: "Live Workshop", desc: "Same task in 2+ models: “Write a 3-sentence pitch for why the Big East should invest in AI highlights.” Compare results.", note: "Have students share best and worst outputs. Identify which tool won and why." },
+        { time: "7:45–8:00", activity: "Group Discussion", desc: "Focus on the orchestration concept — right tool, right task.", note: "Push past “I like ChatGPT” toward “I use ChatGPT for X and Claude for Y because...”" },
+        { time: "8:00–8:05", activity: "Preview + Close", desc: "“Next week: how all of this is reshaping the business of sports. The economics will surprise you.”", note: "Mastery reminder: Module 2 quiz at 75%+ for next week’s workshop." }
       ],
       discussions: [
-        { title: "Cheat vs. Tool", prompt: "Alpha Schools says: using AI chat during academics is cheating, but NOT using it during workshops is failing. Where\u2019s that line for sports communication professionals?" },
-        { title: "Workflow Design", prompt: "You\u2019re a one-person social media team for a minor league baseball club. Map your daily workflow to specific AI tools. Defend every choice." },
-        { title: "The Hallucination Problem", prompt: "Your AI draft says a player scored 28 points when they scored 18. It\u2019s published for 6 minutes. What\u2019s the damage? What\u2019s the prevention process?" },
-        { title: "Recursive Self-Improvement", prompt: "If AI capability doubles every 12\u201318 months, what tasks that need a human today won\u2019t in 2028? What does that mean for your career?" }
+        { title: "Cheat vs. Tool", prompt: "Alpha Schools says: using AI chat during academics is cheating, but NOT using it during workshops is failing. Where’s that line for sports communication professionals?" },
+        { title: "Workflow Design", prompt: "You’re a one-person social media team for a minor league baseball club. Map your daily workflow to specific AI tools. Defend every choice." },
+        { title: "The Hallucination Problem", prompt: "Your AI draft says a player scored 28 points when they scored 18. It’s published for 6 minutes. What’s the damage? What’s the prevention process?" },
+        { title: "Recursive Self-Improvement", prompt: "If AI capability doubles every 12–18 months, what tasks that need a human today won’t in 2028? What does that mean for your career?" }
       ],
       guideTips: [
-        "The hallucination demo occasionally backfires \u2014 AI gets it right. Have pre-screenshotted failures as backup.",
-        "During app work, Module 2\u2019s \u201COrchestration\u201D segment is the payoff. If students are running short on time, have them skip to it after the foundations.",
-        "The live workshop comparing model outputs is usually the highlight of this class. Give students enough time \u2014 don\u2019t rush it for discussion."
+        "The hallucination demo occasionally backfires — AI gets it right. Have pre-screenshotted failures as backup.",
+        "During app work, Module 2’s “Orchestration” segment is the payoff. If students are running short on time, have them skip to it after the foundations.",
+        "The live workshop comparing model outputs is usually the highlight of this class. Give students enough time — don’t rush it for discussion."
       ]
     },
     {
       title: "The Sports Business Revolution",
-      goal: "Students understand the economic forces reshaping sports media \u2014 from ESPN\u2019s cable monopoly to the model where every rights holder is a media company.",
+      goal: "Students understand the economic forces reshaping sports media — from ESPN’s cable monopoly to the model where every rights holder is a media company.",
       hooks: [
-        { name: "\u201CHow Much to Watch Every NFL Game?\u201D", icon: "🏈", content: "Ask: \u201CIf you wanted to watch every NFL game this season, how many subscriptions would you need?\u201D Write platforms on the board as they call them: ESPN/ABC, Fox, CBS, NBC, Amazon Prime, Netflix, Peacock, YouTube TV.\n\n\u201CTen years ago: one cable subscription, everything. Your parents subsidized ESPN whether they watched or not. Now? The bundle is gone. The pie is bigger but shattered. This isn\u2019t an accident \u2014 it\u2019s the inevitable outcome of the exponential forces from Module 1.\u201D" },
-        { name: "\u201CThe $9 You Never Knew You Were Paying\u201D", icon: "💵", content: "Write $9.00 on the board. Ask: \u201CWho knows what this number is?\u201D Nobody will.\n\n\u201CThis is what your family paid ESPN every month through cable \u2014 whether anyone watched a single game. Multiply by 100 million households. That\u2019s $10 billion/year BEFORE ads. That\u2019s how ESPN could pay $2B/year for Monday Night Football. Now those 100M households are 68M and dropping. But total rights spending went UP. How is that possible? That paradox is the entire story of the sports business revolution.\u201D" },
-        { name: "\u201CThe D-III School That\u2019s a Media Company\u201D", icon: "🏫", content: "Find a small college or minor league team with surprisingly good social content before class. Show their TikTok/Instagram.\n\n\u201CThis would have cost $50K to produce in 2012. Full edit suite, trained editor, distribution infrastructure. Today? One person, a laptop, an AI tool, and Canva. The tools gated behind millions are now free. That\u2019s not a slogan \u2014 it\u2019s a business model.\u201D" }
+        { name: "“How Much to Watch Every NFL Game?”", icon: "🏈", content: "Ask: “If you wanted to watch every NFL game this season, how many subscriptions would you need?” Write platforms on the board as they call them: ESPN/ABC, Fox, CBS, NBC, Amazon Prime, Netflix, Peacock, YouTube TV.\n\n“Ten years ago: one cable subscription, everything. Your parents subsidized ESPN whether they watched or not. Now? The bundle is gone. The pie is bigger but shattered. This isn’t an accident — it’s the inevitable outcome of the exponential forces from Module 1.”" },
+        { name: "“The $9 You Never Knew You Were Paying”", icon: "💵", content: "Write $9.00 on the board. Ask: “Who knows what this number is?” Nobody will.\n\n“This is what your family paid ESPN every month through cable — whether anyone watched a single game. Multiply by 100 million households. That’s $10 billion/year BEFORE ads. That’s how ESPN could pay $2B/year for Monday Night Football. Now those 100M households are 68M and dropping. But total rights spending went UP. How is that possible? That paradox is the entire story of the sports business revolution.”" },
+        { name: "“The D-III School That’s a Media Company”", icon: "🏫", content: "Find a small college or minor league team with surprisingly good social content before class. Show their TikTok/Instagram.\n\n“This would have cost $50K to produce in 2012. Full edit suite, trained editor, distribution infrastructure. Today? One person, a laptop, an AI tool, and Canva. The tools gated behind millions are now free. That’s not a slogan — it’s a business model.”" }
       ],
-      unanswerable: "If you were hired as Head of Digital for a mid-market NBA team, what\u2019s your Fan Continuum strategy? How do you move someone who\u2019s never heard of your team to buying season tickets?",
+      unanswerable: "If you were hired as Head of Digital for a mid-market NBA team, what’s your Fan Continuum strategy? How do you move someone who’s never heard of your team to buying season tickets?",
       timeline: [
-        { time: "5:20\u20135:45", activity: "The Hook", desc: "Slightly longer hook \u2014 the economics are counterintuitive. Use the $9 hook.", note: "Write affiliate fee math step by step. $9 \u00d7 100M = $10B. Let students react. The cognitive dissonance IS the hook." },
-        { time: "5:45\u20137:00", activity: "Module 3 App Work", desc: "8 segments including Fan Continuum visualization. Circulate and guide.", note: "ESPN affiliate fees and Fan Continuum generate the most questions. Be ready to expand." },
-        { time: "7:00\u20137:10", activity: "Break", desc: "Shorter app time because discussion is richer for this module.", note: "ESPN economics are the most common quiz stumbling point." },
-        { time: "7:10\u20137:50", activity: "Workshop: Build a Fan Continuum", desc: "Groups of 3\u20134 pick a real sports property. Design content for Discovery, Engagement, Conversion tiers. Present.", note: "20 min to build, 15 min to present and critique. Push for specifics: platform, format, CTA." },
-        { time: "7:50\u20138:00", activity: "Career Connection", desc: "\u201CWhere do YOU fit in this landscape? What role? What skills from this course make you hireable?\u201D", note: "Connect frameworks to actual job postings and career paths. Make it personal." },
-        { time: "8:00\u20138:05", activity: "Course Wrap", desc: "Celebrate completions. Tease what\u2019s next if more modules coming.", note: "Check dashboard. Acknowledge students who completed all three modules." }
+        { time: "5:20–5:45", activity: "The Hook", desc: "Slightly longer hook — the economics are counterintuitive. Use the $9 hook.", note: "Write affiliate fee math step by step. $9 × 100M = $10B. Let students react. The cognitive dissonance IS the hook." },
+        { time: "5:45–7:00", activity: "Module 3 App Work", desc: "8 segments including Fan Continuum visualization. Circulate and guide.", note: "ESPN affiliate fees and Fan Continuum generate the most questions. Be ready to expand." },
+        { time: "7:00–7:10", activity: "Break", desc: "Shorter app time because discussion is richer for this module.", note: "ESPN economics are the most common quiz stumbling point." },
+        { time: "7:10–7:50", activity: "Workshop: Build a Fan Continuum", desc: "Groups of 3–4 pick a real sports property. Design content for Discovery, Engagement, Conversion tiers. Present.", note: "20 min to build, 15 min to present and critique. Push for specifics: platform, format, CTA." },
+        { time: "7:50–8:00", activity: "Career Connection", desc: "“Where do YOU fit in this landscape? What role? What skills from this course make you hireable?”", note: "Connect frameworks to actual job postings and career paths. Make it personal." },
+        { time: "8:00–8:05", activity: "Course Wrap", desc: "Celebrate completions. Tease what’s next if more modules coming.", note: "Check dashboard. Acknowledge students who completed all three modules." }
       ],
       discussions: [
-        { title: "The Bundle Dilemma", prompt: "You\u2019re ESPN\u2019s CEO. Cable subs drop 5%/year. Launch standalone streaming that cannibalizes cable revenue, or wait? What data do you need?" },
+        { title: "The Bundle Dilemma", prompt: "You’re ESPN’s CEO. Cable subs drop 5%/year. Launch standalone streaming that cannibalizes cable revenue, or wait? What data do you need?" },
         { title: "Fan Continuum in the Wild", prompt: "Find a piece of sports content on your phone right now. Where on the Fan Continuum? New fans, casual, or hardcore? How can you tell?" },
         { title: "The WSC Sports Question", prompt: "If AI generates hundreds of personalized highlights in seconds, what happens to the highlight editor role? Disappear or transform?" },
-        { title: "D2C Economics", prompt: "Disney knows you watched every Yankees game, visited Disney World twice, stream Marvel. Design the personalized offer they could send. Why couldn\u2019t Comcast do this?" }
+        { title: "D2C Economics", prompt: "Disney knows you watched every Yankees game, visited Disney World twice, stream Marvel. Design the personalized offer they could send. Why couldn’t Comcast do this?" }
       ],
       guideTips: [
         "The $9 affiliate fee hook lands hardest when you write the math on the board slowly. Let students do the multiplication themselves.",
@@ -325,7 +341,7 @@ export default function App() {
   // Collapsible section helper
   const Section=({id,title,icon,color,children})=>{const open=expanded[id]; return <div style={{marginBottom:10}}>
     <button onClick={()=>toggle(id)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",textAlign:"left",background:open?(color||"rgba(255,255,255,0.04)"):"rgba(255,255,255,0.02)",border:"1px solid "+(open?(color?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.08)"):"rgba(255,255,255,0.05)"),borderRadius:10,padding:"12px 16px",cursor:"pointer",fontFamily:"inherit",color:"#ddd",fontSize:13,fontWeight:700}}>
-      <span>{icon}</span><span style={{flex:1}}>{title}</span><span style={{color:"#555",fontSize:11}}>{open?"\u25B2":"\u25BC"}</span>
+      <span>{icon}</span><span style={{flex:1}}>{title}</span><span style={{color:"#555",fontSize:11}}>{open?"▲":"▼"}</span>
     </button>
     {open&&<div style={{border:"1px solid rgba(255,255,255,0.05)",borderTop:"none",borderRadius:"0 0 10px 10px",padding:16,background:"rgba(255,255,255,0.015)"}}>{children}</div>}
   </div>;};
@@ -334,9 +350,9 @@ export default function App() {
   if(view==="instructor") return(
     <div style={S}>{font}<Bg/><div style={{...W,...F}}>
       <div style={{paddingTop:40,paddingBottom:20}}>
-        <button onClick={()=>{setView("home");setDashPass("");setDashData([]);setExpanded({});}} style={gs}>\u2190 Back</button>
+        <button onClick={()=>{setView("home");setDashPass("");setDashData([]);setExpanded({});setDashAuthed(false);}} style={gs}>← Back</button>
       </div>
-      {dashData.length===0&&!dashLoading?<div style={{maxWidth:420,margin:"0 auto",textAlign:"center"}}>
+      {!dashAuthed?<div style={{maxWidth:420,margin:"0 auto",textAlign:"center"}}>
         <div style={{fontSize:40,marginBottom:16}}>📊</div>
         <h2 style={{fontSize:24,fontWeight:800,margin:"0 0 8px",color:"#fff"}}>Instructor Dashboard</h2>
         <p style={{fontSize:13,color:"#555",margin:"0 0 24px"}}>Enter passcode to access</p>
@@ -347,7 +363,7 @@ export default function App() {
       </div>:dashLoading?<p style={{textAlign:"center",color:"#555"}}>Loading student data...</p>:<div>
         {/* Tab bar */}
         <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",borderRadius:10,padding:4}}>
-          {[["progress","📊 Class Progress"],["lessons","📖 Lesson Plans"],["tips","\u2699\uFE0F Guide Tips"]].map(([k,label])=>
+          {[["progress","📊 Class Progress"],["lessons","📖 Lesson Plans"],["tips","⚙️ Guide Tips"]].map(([k,label])=>
             <button key={k} onClick={()=>setDashTab(k)} style={{flex:1,padding:"10px 12px",borderRadius:8,border:"none",background:dashTab===k?"rgba(255,255,255,0.08)":"transparent",color:dashTab===k?"#fff":"#555",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"}}>{label}</button>
           )}
         </div>
@@ -359,7 +375,7 @@ export default function App() {
               <h2 style={{fontSize:24,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Class Progress</h2>
               <p style={{fontSize:13,color:"#555",margin:0}}>{dashData.length} student{dashData.length!==1?"s":""} registered</p>
             </div>
-            <button onClick={loadDashboard} style={gs}>\u21BB Refresh</button>
+            <button onClick={loadDashboard} style={gs}>↻ Refresh</button>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:10,marginBottom:20}}>
             {MODULES.map((m,i)=>{
@@ -390,7 +406,7 @@ export default function App() {
                     const pct2=sc!==null?Math.round((sc/m.quiz.length)*100):null;
                     const p2=pct2!==null&&pct2>=MASTERY_THRESHOLD;
                     return <td key={i} style={{textAlign:"center",padding:"10px 8px"}}>
-                      {!attempted?<span style={{color:"#333"}}>\u2014</span>:
+                      {!attempted?<span style={{color:"#333"}}>—</span>:
                       <span style={{background:p2?"rgba(52,199,89,0.15)":"rgba(255,149,0,0.15)",color:p2?"#34C759":"#FF9500",padding:"3px 8px",borderRadius:10,fontSize:11,fontWeight:700}}>{pct2}%</span>}
                     </td>;
                   })}
@@ -411,7 +427,7 @@ export default function App() {
             <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>{lp.title}</h2>
             <p style={{fontSize:13,color:"#888",margin:"0 0 6px",lineHeight:1.5}}>{lp.goal}</p>
             <div style={{background:m.color+"08",border:"1px solid "+m.color+"20",borderRadius:8,padding:"8px 12px",marginBottom:20}}>
-              <div style={{fontSize:9,fontWeight:700,color:m.color,letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>\u2753 UNANSWERABLE QUESTION</div>
+              <div style={{fontSize:9,fontWeight:700,color:m.color,letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>❓ UNANSWERABLE QUESTION</div>
               <p style={{fontSize:12,color:"#bbb",margin:0,lineHeight:1.5,fontStyle:"italic"}}>{lp.unanswerable}</p>
             </div>
 
@@ -447,40 +463,40 @@ export default function App() {
           <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 16px",color:"#fff"}}>Guide Mode: Your Playbook</h2>
 
           <Section id="philosophy" title="Teaching Philosophy" icon="🧭">
-            <p style={{fontSize:13,color:"#bbb",margin:"0 0 12px",lineHeight:1.7}}>The app delivers content. You deliver context, motivation, and real-world connection. Your WSC Sports experience is your superpower \u2014 a 2-minute story from your career will land harder than any textbook chapter.</p>
+            <p style={{fontSize:13,color:"#bbb",margin:"0 0 12px",lineHeight:1.7}}>The app delivers content. You deliver context, motivation, and real-world connection. Your WSC Sports experience is your superpower — a 2-minute story from your career will land harder than any textbook chapter.</p>
             <p style={{fontSize:13,color:"#bbb",margin:0,lineHeight:1.7}}>Every class follows the 30/90/60 rhythm: 30 minutes of your hook, 90 minutes of app work + workshop (you circulating as guide), 60 minutes of discussion where you connect everything to careers and current events.</p>
           </Section>
 
           <Section id="during-app" title="During App Work Time" icon="🚶">
-            <p style={{fontSize:12,color:"#999",margin:"0 0 12px",lineHeight:1.6}}>This looks like you\u2019re doing nothing. You\u2019re not. You\u2019re circulating, observing, intervening at the right moments:</p>
+            <p style={{fontSize:12,color:"#999",margin:"0 0 12px",lineHeight:1.6}}>This looks like you’re doing nothing. You’re not. You’re circulating, observing, intervening at the right moments:</p>
             <div style={{background:"rgba(52,199,89,0.05)",border:"1px solid rgba(52,199,89,0.15)",borderRadius:8,padding:12,marginBottom:8}}>
               <div style={{fontSize:10,fontWeight:700,color:"#34C759",marginBottom:3}}>FAST FINISHERS</div>
               <p style={{fontSize:12,color:"#aaa",margin:0,lineHeight:1.5}}>Challenge with Go Deeper questions. Ask them to explain a concept to a struggling classmate. Have them start exercises before discussion.</p>
             </div>
             <div style={{background:"rgba(255,149,0,0.05)",border:"1px solid rgba(255,149,0,0.15)",borderRadius:8,padding:12,marginBottom:8}}>
               <div style={{fontSize:10,fontWeight:700,color:"#FF9500",marginBottom:3}}>STUCK STUDENTS</div>
-              <p style={{fontSize:12,color:"#aaa",margin:0,lineHeight:1.5}}>Don\u2019t explain the content \u2014 the app does that. Ask: \u201CWhich segment are you on? Have you read the key term? What part is confusing?\u201D Coach HOW to learn, not WHAT to learn.</p>
+              <p style={{fontSize:12,color:"#aaa",margin:0,lineHeight:1.5}}>Don’t explain the content — the app does that. Ask: “Which segment are you on? Have you read the key term? What part is confusing?” Coach HOW to learn, not WHAT to learn.</p>
             </div>
             <div style={{background:"rgba(255,59,48,0.05)",border:"1px solid rgba(255,59,48,0.15)",borderRadius:8,padding:12}}>
               <div style={{fontSize:10,fontWeight:700,color:"#FF3B30",marginBottom:3}}>DISENGAGED STUDENTS</div>
-              <p style={{fontSize:12,color:"#aaa",margin:0,lineHeight:1.5}}>Walk over casually. Ask what they\u2019re on. Often stuck but not asking. Quick motivational nudge: \u201CYou\u2019re 3 segments from the quiz. Crush it and you\u2019ll be first to unlock Module 2.\u201D</p>
+              <p style={{fontSize:12,color:"#aaa",margin:0,lineHeight:1.5}}>Walk over casually. Ask what they’re on. Often stuck but not asking. Quick motivational nudge: “You’re 3 segments from the quiz. Crush it and you’ll be first to unlock Module 2.”</p>
             </div>
           </Section>
 
           <Section id="dashboard-tips" title="Using Your Dashboard" icon="📊">
             <p style={{fontSize:12,color:"#999",margin:"0 0 10px",lineHeight:1.6}}>Check the Class Progress tab during breaks and at end of class:</p>
             <p style={{fontSize:12,color:"#aaa",margin:"0 0 6px",lineHeight:1.5}}><strong style={{color:"#34C759"}}>Passed students</strong> should be doing workshop activities, not sitting idle.</p>
-            <p style={{fontSize:12,color:"#aaa",margin:"0 0 6px",lineHeight:1.5}}><strong style={{color:"#FF9500"}}>Failed attempts</strong> \u2014 these students need targeted help. Which questions they missed tells you which concepts to emphasize.</p>
-            <p style={{fontSize:12,color:"#aaa",margin:0,lineHeight:1.5}}><strong style={{color:"#555"}}>No attempt</strong> \u2014 may not have finished segments. Check in directly.</p>
+            <p style={{fontSize:12,color:"#aaa",margin:"0 0 6px",lineHeight:1.5}}><strong style={{color:"#FF9500"}}>Failed attempts</strong> — these students need targeted help. Which questions they missed tells you which concepts to emphasize.</p>
+            <p style={{fontSize:12,color:"#aaa",margin:0,lineHeight:1.5}}><strong style={{color:"#555"}}>No attempt</strong> — may not have finished segments. Check in directly.</p>
           </Section>
 
           <Section id="mastery-mgmt" title="Mastery Gate as Classroom Management" icon="🔒">
-            <p style={{fontSize:13,color:"#bbb",margin:0,lineHeight:1.7}}>The 75% threshold is your classroom management tool. Students who pass before class earn the workshop (the fun part). Students who haven\u2019t passed work through the module while others build projects and discuss. Natural incentive to prepare, without being punitive. The message: \u201CMastery unlocks access to the best parts of this class.\u201D</p>
+            <p style={{fontSize:13,color:"#bbb",margin:0,lineHeight:1.7}}>The 75% threshold is your classroom management tool. Students who pass before class earn the workshop (the fun part). Students who haven’t passed work through the module while others build projects and discuss. Natural incentive to prepare, without being punitive. The message: “Mastery unlocks access to the best parts of this class.”</p>
           </Section>
 
           <Section id="adapting" title="Adapting Week to Week" icon="🔄">
-            <p style={{fontSize:13,color:"#bbb",margin:"0 0 12px",lineHeight:1.7}}>These lesson plans are frameworks, not scripts. The best hooks come from what happened THAT WEEK. Train yourself to notice: every headline about streaming rights, AI in sports, a deepfake, a social media moment \u2014 screenshot it. That\u2019s next week\u2019s hook.</p>
-            <p style={{fontSize:13,color:"#bbb",margin:0,lineHeight:1.7}}>The more current your examples, the more students feel like this course is about the world they\u2019re living in, not a textbook they\u2019re reading.</p>
+            <p style={{fontSize:13,color:"#bbb",margin:"0 0 12px",lineHeight:1.7}}>These lesson plans are frameworks, not scripts. The best hooks come from what happened THAT WEEK. Train yourself to notice: every headline about streaming rights, AI in sports, a deepfake, a social media moment — screenshot it. That’s next week’s hook.</p>
+            <p style={{fontSize:13,color:"#bbb",margin:0,lineHeight:1.7}}>The more current your examples, the more students feel like this course is about the world they’re living in, not a textbook they’re reading.</p>
           </Section>
 
           <div style={{fontSize:10,fontWeight:700,color:"#444",letterSpacing:2,textTransform:"uppercase",marginTop:20,marginBottom:10}}>MODULE-SPECIFIC TIPS</div>
