@@ -38,7 +38,7 @@ const MODULES = [
     ]
   },
   {
-    id: 2, title: "AI Foundations & Your Toolkit", subtitle: "Understanding AI and Mastering the Tools", icon: "\u{1F9E0}", color: "#007AFF",
+    id: 2, title: "AI Foundations & Your Toolkit", subtitle: "Understanding AI and Mastering the Tools", icon: "🧠", color: "#007AFF",
     desc: "What AI actually is, how it works, and hands-on mastery of the major models. From definitions to practical fluency.",
     goDeeper: [
       { q: "Design a complete AI-powered workflow for a sports media role of your choice (social media manager, content producer, analyst). Map every task in a typical day to the best AI tool, explain WHY that tool fits, and identify which tasks still require human judgment.", type: "open" },
@@ -71,7 +71,7 @@ const MODULES = [
     ]
   },
   {
-    id: 3, title: "The Sports Business Revolution", subtitle: "From ESPN's Monopoly to Every Rights Holder as a Media Company", icon: "\u{1F4E1}", color: "#FF3B30",
+    id: 3, title: "The Sports Business Revolution", subtitle: "From ESPN's Monopoly to Every Rights Holder as a Media Company", icon: "📡", color: "#FF3B30",
     desc: "The sports media business is being fundamentally restructured. This is the industry you're entering.",
     goDeeper: [
       { q: "You're the Head of Digital for a mid-market NBA team. The league provides AI-generated highlights via WSC Sports. Build a complete Fan Continuum strategy: what content for new fans, casual fans, and hardcore fans? What platforms? What CTAs move fans down the funnel?", type: "open" },
@@ -210,9 +210,9 @@ export default function App() {
       title: "The Future is Faster Than You Think",
       goal: "Students understand why exponential change is the defining force of their careers \u2014 and why most people consistently underestimate it.",
       hooks: [
-        { name: "\u201CThe Folding Paper Problem\u201D", icon: "\u{1F4CC}", content: "Start with: \u201CIf I fold a piece of paper in half 42 times, how thick is it?\u201D Take guesses. Most will say a few feet. Answer: it reaches the moon. Let the silence land.\n\nThen: \u201CThat\u2019s exponential growth. Your brain just failed you \u2014 it drew a straight line when the reality is a curve. AI capability is on that same doubling curve. The question isn\u2019t whether this will disrupt sports media. It\u2019s whether you\u2019ll be the one doing the disrupting or the one getting disrupted.\u201D" },
-        { name: "\u201CWhat\u2019s in Your Pocket?\u201D", icon: "\u{1F4F1}", content: "Hold up your phone. Ask: \u201CHow many separate devices is this replacing?\u201D Write them on the board: camera, GPS, map, calculator, flashlight, compass, recorder, scanner, alarm clock, stopwatch, music player, game console, newspaper, boarding pass, wallet. 20+.\n\n\u201CEvery one of those was an industry with companies, employees, business models. They\u2019re gone \u2014 not because the phone was better day one, but because it was on an exponential curve. The same thing is happening right now in sports media. By the end of this module you\u2019ll understand the framework that predicts which industries survive and which don\u2019t.\u201D" },
-        { name: "\u201CThe Story I Saw Firsthand\u201D (WSC Sports)", icon: "\u{1F3AC}", content: "Tell a specific story from your time at WSC Sports where you watched an exponential shift happen in real time. Maybe the moment you realized AI could generate in seconds what took a production team hours. Be specific: names, dates, the look on someone\u2019s face.\n\nEnd with: \u201CWhat I saw happen to sports media production is what Diamandis calls the Six D\u2019s. By the end of today, you\u2019ll name all six and predict where the NEXT disruption is coming.\u201D" }
+        { name: "\u201CThe Folding Paper Problem\u201D", icon: "📌", content: "Start with: \u201CIf I fold a piece of paper in half 42 times, how thick is it?\u201D Take guesses. Most will say a few feet. Answer: it reaches the moon. Let the silence land.\n\nThen: \u201CThat\u2019s exponential growth. Your brain just failed you \u2014 it drew a straight line when the reality is a curve. AI capability is on that same doubling curve. The question isn\u2019t whether this will disrupt sports media. It\u2019s whether you\u2019ll be the one doing the disrupting or the one getting disrupted.\u201D" },
+        { name: "\u201CWhat\u2019s in Your Pocket?\u201D", icon: "📱", content: "Hold up your phone. Ask: \u201CHow many separate devices is this replacing?\u201D Write them on the board: camera, GPS, map, calculator, flashlight, compass, recorder, scanner, alarm clock, stopwatch, music player, game console, newspaper, boarding pass, wallet. 20+.\n\n\u201CEvery one of those was an industry with companies, employees, business models. They\u2019re gone \u2014 not because the phone was better day one, but because it was on an exponential curve. The same thing is happening right now in sports media. By the end of this module you\u2019ll understand the framework that predicts which industries survive and which don\u2019t.\u201D" },
+        { name: "\u201CThe Story I Saw Firsthand\u201D (WSC Sports)", icon: "🎬", content: "Tell a specific story from your time at WSC Sports where you watched an exponential shift happen in real time. Maybe the moment you realized AI could generate in seconds what took a production team hours. Be specific: names, dates, the look on someone\u2019s face.\n\nEnd with: \u201CWhat I saw happen to sports media production is what Diamandis calls the Six D\u2019s. By the end of today, you\u2019ll name all six and predict where the NEXT disruption is coming.\u201D" }
       ],
       unanswerable: "Name a technology in sports media currently in its \u2018deceptive phase\u2019 \u2014 something that looks like a toy today but will be transformative in 3 years.",
       timeline: [
@@ -239,9 +239,9 @@ export default function App() {
       title: "AI Foundations & Your Toolkit",
       goal: "Students go from \u201CI\u2019ve used ChatGPT\u201D to understanding what AI actually is, how it works, and how to choose the right tool for the right task.",
       hooks: [
-        { name: "\u201CThe Live Hallucination Demo\u201D", icon: "\u{1F4A5}", content: "Pull up ChatGPT on the projector. Ask: \u201CWho scored the most points in last night\u2019s NBA games?\u201D Read the answer aloud. Then pull up the actual box scores. High chance it\u2019s confidently wrong.\n\n\u201CThis tool just lied to your face with total confidence. If you published that in a game recap, you\u2019d be fired. So why is every sports media company still adopting AI? Because the value isn\u2019t in trusting it blindly \u2014 it\u2019s in knowing how it works, what it\u2019s good at, where it fails, and which tool to use when.\u201D" },
-        { name: "\u201CThe Same Prompt, Five Models\u201D", icon: "\u{1F50D}", content: "Before class, run the same prompt through ChatGPT, Claude, Gemini, Grok, and Perplexity: \u201CSummarize the biggest sports media story this week in 100 words.\u201D Screenshot all five.\n\nShow side by side. Different stories, angles, accuracy levels. \u201CThese are all \u2018AI\u2019 but they\u2019re not the same tool. Choosing the right one matters as much as knowing how to use them.\u201D" },
-        { name: "\u201CThe $0.01 Task\u201D", icon: "\u{1F4B0}", content: "Show: \u201CIn 2023, asking AI to summarize a 10-page document cost about $1 in compute. In 2025, about a penny. What does that mean for every entry-level task that involves reading, summarizing, or rewriting content?\u201D Pause.\n\n\u201CThis isn\u2019t about whether AI replaces you. It\u2019s about what happens when the cost of doing your current job approaches zero. The people who thrive understand HOW these tools work \u2014 not just that they exist.\u201D" }
+        { name: "\u201CThe Live Hallucination Demo\u201D", icon: "💥", content: "Pull up ChatGPT on the projector. Ask: \u201CWho scored the most points in last night\u2019s NBA games?\u201D Read the answer aloud. Then pull up the actual box scores. High chance it\u2019s confidently wrong.\n\n\u201CThis tool just lied to your face with total confidence. If you published that in a game recap, you\u2019d be fired. So why is every sports media company still adopting AI? Because the value isn\u2019t in trusting it blindly \u2014 it\u2019s in knowing how it works, what it\u2019s good at, where it fails, and which tool to use when.\u201D" },
+        { name: "\u201CThe Same Prompt, Five Models\u201D", icon: "🔍", content: "Before class, run the same prompt through ChatGPT, Claude, Gemini, Grok, and Perplexity: \u201CSummarize the biggest sports media story this week in 100 words.\u201D Screenshot all five.\n\nShow side by side. Different stories, angles, accuracy levels. \u201CThese are all \u2018AI\u2019 but they\u2019re not the same tool. Choosing the right one matters as much as knowing how to use them.\u201D" },
+        { name: "\u201CThe $0.01 Task\u201D", icon: "💰", content: "Show: \u201CIn 2023, asking AI to summarize a 10-page document cost about $1 in compute. In 2025, about a penny. What does that mean for every entry-level task that involves reading, summarizing, or rewriting content?\u201D Pause.\n\n\u201CThis isn\u2019t about whether AI replaces you. It\u2019s about what happens when the cost of doing your current job approaches zero. The people who thrive understand HOW these tools work \u2014 not just that they exist.\u201D" }
       ],
       unanswerable: "Design a complete workflow for producing post-game social media content for an NBA team. Which AI tool handles each step \u2014 and which step still needs a human?",
       timeline: [
@@ -268,9 +268,9 @@ export default function App() {
       title: "The Sports Business Revolution",
       goal: "Students understand the economic forces reshaping sports media \u2014 from ESPN\u2019s cable monopoly to the model where every rights holder is a media company.",
       hooks: [
-        { name: "\u201CHow Much to Watch Every NFL Game?\u201D", icon: "\u{1F3C8}", content: "Ask: \u201CIf you wanted to watch every NFL game this season, how many subscriptions would you need?\u201D Write platforms on the board as they call them: ESPN/ABC, Fox, CBS, NBC, Amazon Prime, Netflix, Peacock, YouTube TV.\n\n\u201CTen years ago: one cable subscription, everything. Your parents subsidized ESPN whether they watched or not. Now? The bundle is gone. The pie is bigger but shattered. This isn\u2019t an accident \u2014 it\u2019s the inevitable outcome of the exponential forces from Module 1.\u201D" },
-        { name: "\u201CThe $9 You Never Knew You Were Paying\u201D", icon: "\u{1F4B5}", content: "Write $9.00 on the board. Ask: \u201CWho knows what this number is?\u201D Nobody will.\n\n\u201CThis is what your family paid ESPN every month through cable \u2014 whether anyone watched a single game. Multiply by 100 million households. That\u2019s $10 billion/year BEFORE ads. That\u2019s how ESPN could pay $2B/year for Monday Night Football. Now those 100M households are 68M and dropping. But total rights spending went UP. How is that possible? That paradox is the entire story of the sports business revolution.\u201D" },
-        { name: "\u201CThe D-III School That\u2019s a Media Company\u201D", icon: "\u{1F3EB}", content: "Find a small college or minor league team with surprisingly good social content before class. Show their TikTok/Instagram.\n\n\u201CThis would have cost $50K to produce in 2012. Full edit suite, trained editor, distribution infrastructure. Today? One person, a laptop, an AI tool, and Canva. The tools gated behind millions are now free. That\u2019s not a slogan \u2014 it\u2019s a business model.\u201D" }
+        { name: "\u201CHow Much to Watch Every NFL Game?\u201D", icon: "🏈", content: "Ask: \u201CIf you wanted to watch every NFL game this season, how many subscriptions would you need?\u201D Write platforms on the board as they call them: ESPN/ABC, Fox, CBS, NBC, Amazon Prime, Netflix, Peacock, YouTube TV.\n\n\u201CTen years ago: one cable subscription, everything. Your parents subsidized ESPN whether they watched or not. Now? The bundle is gone. The pie is bigger but shattered. This isn\u2019t an accident \u2014 it\u2019s the inevitable outcome of the exponential forces from Module 1.\u201D" },
+        { name: "\u201CThe $9 You Never Knew You Were Paying\u201D", icon: "💵", content: "Write $9.00 on the board. Ask: \u201CWho knows what this number is?\u201D Nobody will.\n\n\u201CThis is what your family paid ESPN every month through cable \u2014 whether anyone watched a single game. Multiply by 100 million households. That\u2019s $10 billion/year BEFORE ads. That\u2019s how ESPN could pay $2B/year for Monday Night Football. Now those 100M households are 68M and dropping. But total rights spending went UP. How is that possible? That paradox is the entire story of the sports business revolution.\u201D" },
+        { name: "\u201CThe D-III School That\u2019s a Media Company\u201D", icon: "🏫", content: "Find a small college or minor league team with surprisingly good social content before class. Show their TikTok/Instagram.\n\n\u201CThis would have cost $50K to produce in 2012. Full edit suite, trained editor, distribution infrastructure. Today? One person, a laptop, an AI tool, and Canva. The tools gated behind millions are now free. That\u2019s not a slogan \u2014 it\u2019s a business model.\u201D" }
       ],
       unanswerable: "If you were hired as Head of Digital for a mid-market NBA team, what\u2019s your Fan Continuum strategy? How do you move someone who\u2019s never heard of your team to buying season tickets?",
       timeline: [
@@ -337,7 +337,7 @@ export default function App() {
         <button onClick={()=>{setView("home");setDashPass("");setDashData([]);setExpanded({});}} style={gs}>\u2190 Back</button>
       </div>
       {dashData.length===0&&!dashLoading?<div style={{maxWidth:420,margin:"0 auto",textAlign:"center"}}>
-        <div style={{fontSize:40,marginBottom:16}}>\u{1F4CA}</div>
+        <div style={{fontSize:40,marginBottom:16}}>📊</div>
         <h2 style={{fontSize:24,fontWeight:800,margin:"0 0 8px",color:"#fff"}}>Instructor Dashboard</h2>
         <p style={{fontSize:13,color:"#555",margin:"0 0 24px"}}>Enter passcode to access</p>
         <input value={dashPass} onChange={e=>setDashPass(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&dashPass===INSTRUCTOR_PASSCODE){loadDashboard();}}} type="password" placeholder="Passcode" style={{width:"100%",maxWidth:280,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,textAlign:"center",boxSizing:"border-box"}}/>
@@ -347,7 +347,7 @@ export default function App() {
       </div>:dashLoading?<p style={{textAlign:"center",color:"#555"}}>Loading student data...</p>:<div>
         {/* Tab bar */}
         <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",borderRadius:10,padding:4}}>
-          {[["progress","\u{1F4CA} Class Progress"],["lessons","\u{1F4D6} Lesson Plans"],["tips","\u2699\uFE0F Guide Tips"]].map(([k,label])=>
+          {[["progress","📊 Class Progress"],["lessons","📖 Lesson Plans"],["tips","\u2699\uFE0F Guide Tips"]].map(([k,label])=>
             <button key={k} onClick={()=>setDashTab(k)} style={{flex:1,padding:"10px 12px",borderRadius:8,border:"none",background:dashTab===k?"rgba(255,255,255,0.08)":"transparent",color:dashTab===k?"#fff":"#555",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"}}>{label}</button>
           )}
         </div>
@@ -415,25 +415,25 @@ export default function App() {
               <p style={{fontSize:12,color:"#bbb",margin:0,lineHeight:1.5,fontStyle:"italic"}}>{lp.unanswerable}</p>
             </div>
 
-            <Section id="hooks" title={"Hook Options ("+lp.hooks.length+")"} icon="\u{1F3A3}" color="rgba(232,168,56,0.08)">
+            <Section id="hooks" title={"Hook Options ("+lp.hooks.length+")"} icon="🎣" color="rgba(232,168,56,0.08)">
               {lp.hooks.map((h,hi)=><div key={hi} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:9,padding:14,marginBottom:hi<lp.hooks.length-1?10:0}}>
                 <div style={{fontSize:12,fontWeight:700,color:"#fff",marginBottom:6}}>{h.icon} {h.name}</div>
                 {h.content.split("\n\n").map((p,pi)=><p key={pi} style={{fontSize:12,color:"#999",margin:pi<h.content.split("\n\n").length-1?"0 0 10px":"0",lineHeight:1.65}}>{p}</p>)}
               </div>)}
             </Section>
 
-            <Section id="timeline" title="Class Timeline" icon="\u{1F552}">
+            <Section id="timeline" title="Class Timeline" icon="🕒">
               {lp.timeline.map((t,ti)=><div key={ti} style={{display:"grid",gridTemplateColumns:"80px 1fr",gap:10,padding:"10px 0",borderBottom:ti<lp.timeline.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
                 <div style={{fontSize:11,fontWeight:700,color:m.color,fontFamily:"'DM Mono',monospace"}}>{t.time}</div>
                 <div>
                   <div style={{fontSize:12,fontWeight:700,color:"#ddd",marginBottom:2}}>{t.activity}</div>
                   <p style={{fontSize:11,color:"#888",margin:"0 0 4px",lineHeight:1.5}}>{t.desc}</p>
-                  <p style={{fontSize:11,color:"#666",margin:0,fontStyle:"italic",lineHeight:1.5}}>\u{1F4A1} {t.note}</p>
+                  <p style={{fontSize:11,color:"#666",margin:0,fontStyle:"italic",lineHeight:1.5}}>💡 {t.note}</p>
                 </div>
               </div>)}
             </Section>
 
-            <Section id="discussions" title={"Discussion Prompts ("+lp.discussions.length+")"} icon="\u{1F4AC}">
+            <Section id="discussions" title={"Discussion Prompts ("+lp.discussions.length+")"} icon="💬">
               {lp.discussions.map((d,di)=><div key={di} style={{padding:"10px 0",borderBottom:di<lp.discussions.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
                 <div style={{fontSize:11,fontWeight:700,color:m.color,marginBottom:3}}>{d.title}</div>
                 <p style={{fontSize:12,color:"#aaa",margin:0,lineHeight:1.6}}>{d.prompt}</p>
@@ -446,12 +446,12 @@ export default function App() {
         {dashTab==="tips"&&<div>
           <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 16px",color:"#fff"}}>Guide Mode: Your Playbook</h2>
 
-          <Section id="philosophy" title="Teaching Philosophy" icon="\u{1F9ED}">
+          <Section id="philosophy" title="Teaching Philosophy" icon="🧭">
             <p style={{fontSize:13,color:"#bbb",margin:"0 0 12px",lineHeight:1.7}}>The app delivers content. You deliver context, motivation, and real-world connection. Your WSC Sports experience is your superpower \u2014 a 2-minute story from your career will land harder than any textbook chapter.</p>
             <p style={{fontSize:13,color:"#bbb",margin:0,lineHeight:1.7}}>Every class follows the 30/90/60 rhythm: 30 minutes of your hook, 90 minutes of app work + workshop (you circulating as guide), 60 minutes of discussion where you connect everything to careers and current events.</p>
           </Section>
 
-          <Section id="during-app" title="During App Work Time" icon="\u{1F6B6}">
+          <Section id="during-app" title="During App Work Time" icon="🚶">
             <p style={{fontSize:12,color:"#999",margin:"0 0 12px",lineHeight:1.6}}>This looks like you\u2019re doing nothing. You\u2019re not. You\u2019re circulating, observing, intervening at the right moments:</p>
             <div style={{background:"rgba(52,199,89,0.05)",border:"1px solid rgba(52,199,89,0.15)",borderRadius:8,padding:12,marginBottom:8}}>
               <div style={{fontSize:10,fontWeight:700,color:"#34C759",marginBottom:3}}>FAST FINISHERS</div>
@@ -467,18 +467,18 @@ export default function App() {
             </div>
           </Section>
 
-          <Section id="dashboard-tips" title="Using Your Dashboard" icon="\u{1F4CA}">
+          <Section id="dashboard-tips" title="Using Your Dashboard" icon="📊">
             <p style={{fontSize:12,color:"#999",margin:"0 0 10px",lineHeight:1.6}}>Check the Class Progress tab during breaks and at end of class:</p>
             <p style={{fontSize:12,color:"#aaa",margin:"0 0 6px",lineHeight:1.5}}><strong style={{color:"#34C759"}}>Passed students</strong> should be doing workshop activities, not sitting idle.</p>
             <p style={{fontSize:12,color:"#aaa",margin:"0 0 6px",lineHeight:1.5}}><strong style={{color:"#FF9500"}}>Failed attempts</strong> \u2014 these students need targeted help. Which questions they missed tells you which concepts to emphasize.</p>
             <p style={{fontSize:12,color:"#aaa",margin:0,lineHeight:1.5}}><strong style={{color:"#555"}}>No attempt</strong> \u2014 may not have finished segments. Check in directly.</p>
           </Section>
 
-          <Section id="mastery-mgmt" title="Mastery Gate as Classroom Management" icon="\u{1F512}">
+          <Section id="mastery-mgmt" title="Mastery Gate as Classroom Management" icon="🔒">
             <p style={{fontSize:13,color:"#bbb",margin:0,lineHeight:1.7}}>The 75% threshold is your classroom management tool. Students who pass before class earn the workshop (the fun part). Students who haven\u2019t passed work through the module while others build projects and discuss. Natural incentive to prepare, without being punitive. The message: \u201CMastery unlocks access to the best parts of this class.\u201D</p>
           </Section>
 
-          <Section id="adapting" title="Adapting Week to Week" icon="\u{1F504}">
+          <Section id="adapting" title="Adapting Week to Week" icon="🔄">
             <p style={{fontSize:13,color:"#bbb",margin:"0 0 12px",lineHeight:1.7}}>These lesson plans are frameworks, not scripts. The best hooks come from what happened THAT WEEK. Train yourself to notice: every headline about streaming rights, AI in sports, a deepfake, a social media moment \u2014 screenshot it. That\u2019s next week\u2019s hook.</p>
             <p style={{fontSize:13,color:"#bbb",margin:0,lineHeight:1.7}}>The more current your examples, the more students feel like this course is about the world they\u2019re living in, not a textbook they\u2019re reading.</p>
           </Section>
