@@ -1,13 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 
+const MASTERY_THRESHOLD = 75;
+
 const MODULES = [
   {
     id: 1, title: "The Future is Faster Than You Think", subtitle: "The Frameworks That Explain What's Coming", icon: "📖", color: "#E8A838",
     desc: "The big ideas from Diamandis & Kotler that explain why every industry — especially sports — is being transformed faster than anyone expects.",
+    goDeeper: [
+      { q: "A sports league's digital content strategy followed the Six D's perfectly: they digitized highlights, entered the deceptive phase, then disrupted traditional broadcasters. Apply the REMAINING three D's (Demonetization, Dematerialization, Democratization) to predict what happens next for their content business.", type: "open" },
+      { q: "You're advising a Division III athletic conference. Using the concepts of convergence and accelerating returns, build a 3-year roadmap for how they should invest in technology. Which exponential technologies should they prioritize and why?", type: "open" },
+      { q: "Identify a technology currently in its 'deceptive phase' for sports media. Make the case for why it will disrupt an incumbent within 5 years, citing specific exponential trends.", type: "open" }
+    ],
     segments: [
       { title: "Moore's Law: The Engine Under Everything", content: "In 1965, Gordon Moore observed that computing power doubles roughly every two years while cost stays flat or drops. This has held for 60 years. Your smartphone has more computing power than the systems that landed astronauts on the moon. But here's what makes it profound: the pattern isn't limited to chips. The same doubling shows up in storage capacity, bandwidth, sensor resolution, and AI capability. Every digital technology inherits this exponential curve. When people say 'AI is moving fast,' Moore's Law is the underlying engine.", keyTerm: "Moore's Law: Computing power doubles approximately every two years at the same cost. This pattern has held for 60 years and drives the acceleration of every digital technology.", exercise: "Look up the price of 1 GB of storage in 2000, 2010, and 2024. Does the curve look linear or exponential? What does that mean for a league that wants to store and analyze every frame of every game?" },
       { title: "The Law of Accelerating Returns", content: "Ray Kurzweil extended Moore's observation into a broader principle: the rate of technological improvement itself accelerates. Each generation of technology builds the next generation faster. The internet was built on computers. AI was built on the internet's data. Now AI designs better AI. This compounding creates a curve that bends upward more steeply over time. The gap between 2020 and 2025 feels bigger than 2010 to 2015, even though both are five years. The pace isn't constant — it's accelerating.", keyTerm: "Law of Accelerating Returns: The rate of progress speeds up over time because each generation of technology enables the next to be built faster. Progress compounds on progress.", exercise: "Think about sports broadcasting in 2005, 2015, and 2025. List what was possible in each era. Is the 2015-2025 gap bigger than 2005-2015? What does that predict about 2025-2035?" },
-      { title: "Exponential vs. Linear Thinking", content: "Humans think linearly — our brains evolved for a world where things changed slowly. 30 linear steps = 30 meters. But 30 exponential (doubling) steps = 26 trips around Earth. This mismatch between how we instinctively think and how technology actually grows is the single biggest reason people underestimate disruption. Executives, journalists, even technologists consistently predict the future by drawing a straight line from today. The future isn't a straight line. It's a hockey stick.", keyTerm: "Exponential Growth: Doubling at regular intervals. Feels slow at first (1, 2, 4, 8) but quickly becomes enormous (... 512, 1024, 2048). Human brains are wired to think linearly, making us systematically underestimate exponential change.", exercise: "Take a piece of paper. Fold it in half 42 times (conceptually). How thick would it be? Answer: it would reach the moon. That's exponential growth. Now apply that intuition to AI capability doubling every 12-18 months." },
+      { title: "Exponential vs. Linear Thinking", content: "Humans think linearly — our brains evolved for a world where things changed slowly. 30 linear steps = 30 meters. But 30 exponential (doubling) steps = 26 trips around Earth. This mismatch between how we instinctively think and how technology actually grows is the single biggest reason people underestimate disruption. Executives, journalists, even technologists consistently predict the future by drawing a straight line from today. The future isn't a straight line. It's a hockey stick.", keyTerm: "Exponential Growth: Doubling at regular intervals. Feels slow at first (1, 2, 4, 8) but quickly becomes enormous (... 512, 1024, 2048). Human brains are wired to think linearly, making us systematically underestimate exponential change.", exercise: "Take a piece of paper. Fold it in half 42 times (conceptually). How thick would it be? Answer: it would reach the moon. Now apply that intuition to AI capability doubling every 12-18 months." },
       { title: "The Six D's of Disruption", content: "Diamandis identifies a chain reaction that happens once a product or service becomes digital. It's predictable and unstoppable: Digitization (becomes information) → Deception (early growth looks flat) → Disruption (incumbents collapse) → Demonetization (cost drops toward zero) → Dematerialization (physical form disappears) → Democratization (everyone gets access). This isn't theory — it's a pattern that has played out across music, photography, publishing, maps, and now sports media.", keyTerm: "The Six D's: Digitization → Deception → Disruption → Demonetization → Dematerialization → Democratization. Once something becomes digital, this chain is unstoppable.", exercise: "Walk sports journalism through all Six D's. Where is it on the chain right now? Then do the same for sports broadcasting. Are they at the same stage?" },
       { title: "The Deceptive Phase", content: "This is the most dangerous D because it's where people get blindsided. When an exponential technology first appears, its early growth doubles look tiny: 0.01, 0.02, 0.04, 0.08. Easy to dismiss. 'It's a toy.' 'It'll never work.' But doubling doesn't stop. 0.08 becomes 0.16, then 0.32, then suddenly 1, 2, 4, 8, 16 — and by then it's too late for incumbents. The iPhone seemed like a gimmick to BlackBerry in 2007. AI-generated content seemed like a novelty in 2021. The deceptive phase is where fortunes are made by those paying attention — and lost by those who aren't.", keyTerm: "Deceptive Phase: The early period of exponential growth where doublings are small and easy to dismiss. By the time the technology is obviously powerful, the disruption window for incumbents has already closed.", exercise: "AI-generated sports recaps were laughably bad in 2020. By 2023, the AP was publishing thousands of AI game summaries. Were there any signals in the 'deceptive' 2020-2022 period that this was coming? What technology today looks like a toy but might be in its deceptive phase?" },
       { title: "Demonetization & Dematerialization", content: "Once something is digitized and disrupts the incumbent model, costs crash toward zero (demonetization) and physical products disappear (dematerialization). Think about what your smartphone replaced: camera, GPS, map, calculator, flashlight, compass, level, recorder, scanner, alarm clock, stopwatch, dictionary, encyclopedia, music player, video player, game console, newspaper, boarding pass, wallet. Dozens of physical products and the industries behind them — demonetized and dematerialized. In sports: producing a highlight reel once required an edit bay, a producer, tape stock, and hours of work. Now an AI platform does it in seconds at near-zero cost.", keyTerm: "Demonetization: The cost of a product or service drops toward zero as technology improves. Dematerialization: Physical products disappear into software. Combined, they eliminate entire industries while creating new ones.", exercise: "List everything a sports media professional used in 2005 that has been dematerialized into software or AI. What jobs existed to operate that equipment? What replaced those jobs?" },
@@ -33,6 +40,11 @@ const MODULES = [
   {
     id: 2, title: "AI Foundations & Your Toolkit", subtitle: "Understanding AI and Mastering the Tools", icon: "\u{1F9E0}", color: "#007AFF",
     desc: "What AI actually is, how it works, and hands-on mastery of the major models. From definitions to practical fluency.",
+    goDeeper: [
+      { q: "Design a complete AI-powered workflow for a sports media role of your choice (social media manager, content producer, analyst). Map every task in a typical day to the best AI tool, explain WHY that tool fits, and identify which tasks still require human judgment.", type: "open" },
+      { q: "A sports league executive says: 'We tried ChatGPT and it hallucinated stats, so AI doesn't work for us.' Using concepts from this module, write a 200-word response explaining what went wrong and how to use AI correctly.", type: "open" },
+      { q: "Recursive self-improvement means AI is getting better at making AI better. Project this forward 3 years. What specific sports media tasks that currently require human expertise will be fully automated? What new roles will emerge?", type: "open" }
+    ],
     segments: [
       { title: "What Is Artificial Intelligence?", content: "AI is pattern recognition at scale. It refers to computer systems performing tasks that typically require human intelligence — recognizing images, understanding language, making predictions, generating content. Key distinction: AI doesn't 'think' like you. It identifies statistical patterns in massive data and uses those patterns to generate outputs. When someone says 'AI wrote this article' or 'AI generated that highlight,' what actually happened is a system found patterns in millions of examples and produced something statistically similar.", keyTerm: "Artificial Intelligence (AI): Computer systems performing tasks requiring human intelligence by identifying patterns in large datasets. Not thinking — pattern matching at extraordinary scale.", exercise: "Think of three things you did today. Which could AI do by recognizing patterns? Which require something AI can't replicate yet?" },
       { title: "Machine Learning & Deep Learning", content: "Machine Learning is how AI learns — instead of explicit rules, the system learns from examples. Show it 10,000 basketball highlights labeled 'dunk' and it learns to identify dunks in footage it's never seen. Deep Learning is a type of ML using 'neural networks' — layers of math loosely inspired by the brain. Deep learning is what made the current revolution possible because it can handle unstructured data like images, audio, and video — the raw material of sports media.", keyTerm: "Machine Learning: AI learning from data examples rather than rules. Deep Learning: ML using layered neural networks, enabling processing of images, video, and language.", exercise: "If you showed an ML system 50,000 hours of NBA footage labeled with player names, what could it learn? What couldn't it learn from that data alone?" },
@@ -61,6 +73,11 @@ const MODULES = [
   {
     id: 3, title: "The Sports Business Revolution", subtitle: "From ESPN's Monopoly to Every Rights Holder as a Media Company", icon: "\u{1F4E1}", color: "#FF3B30",
     desc: "The sports media business is being fundamentally restructured. This is the industry you're entering.",
+    goDeeper: [
+      { q: "You're the Head of Digital for a mid-market NBA team. The league provides AI-generated highlights via WSC Sports. Build a complete Fan Continuum strategy: what content for new fans, casual fans, and hardcore fans? What platforms? What CTAs move fans down the funnel?", type: "open" },
+      { q: "ESPN's affiliate fee model generated ~$10B/year from 100M subscribers. Model what happens as they drop to 50M subscribers but launch a $25/month standalone streaming product. At what subscriber count does streaming revenue replace cable? What are the risks?", type: "open" },
+      { q: "A D-III conference hires you as a consultant. They have zero media infrastructure and a $50K annual budget. Using every concept from this module, design their media strategy from scratch. What tools, what platforms, what content, what metrics?", type: "open" }
+    ],
     segments: [
       { title: "The ESPN Era: How We Got Here", content: "In 1979, ESPN launched 24-hour sports TV. Over three decades, live sports became the most valuable content in media — the only programming watched live, in real time, with commercials. ESPN became the most profitable cable network in history. Here's how the money actually works: ESPN's revenue comes from two main sources — advertising and affiliate fees. Advertising is straightforward: brands pay to run commercials during live games. But the real money machine is affiliate fees. Every cable company — Comcast, Charter, DirecTV — pays ESPN a per-subscriber fee for the right to carry the channel. At its peak, that fee was roughly $9 per subscriber per month — the highest of any cable channel by far. The critical part: every cable household paid this fee whether they watched ESPN or not. If you had cable to watch HGTV, you were still paying $9/month for ESPN. Multiply $9 by 100 million cable households and you get roughly $10 billion per year in affiliate fees alone — before a single ad was sold. This is why ESPN could afford to pay billions for NFL, NBA, MLB, and college football rights. The entire model depended on one thing: the bundle. As long as cable companies bundled ESPN into their basic packages, and as long as most American households subscribed to cable, the money machine was unstoppable. Every household was effectively subsidizing ESPN whether they wanted to or not.", keyTerm: "Affiliate Fees: The per-subscriber fee that cable companies pay to carry a channel. ESPN's ~$9/month fee was the highest in cable — paid by every cable household regardless of whether they watched sports. At 100M subscribers, that's ~$10B/year before ad revenue.", exercise: "ESPN charges cable companies ~$9/subscriber/month. A niche channel might charge $0.25. If 40% of cable subscribers actually watch ESPN, what is each actual viewer effectively paying? What does this tell you about why the bundle was so valuable to ESPN — and so vulnerable to cord-cutting?" },
       { title: "The Great Unbundling", content: "Cord-cutting broke the bundle. ESPN dropped from ~100M subscribers (2011) to below 70M (2024). But total sports rights spending INCREASED. The NFL signed ~$113B through 2033 across CBS, Fox, NBC, ESPN, Amazon, Netflix, Peacock, YouTube. More platforms paying more money. The pie got bigger but shattered into pieces.", keyTerm: "Cord-Cutting: Canceling cable for streaming. Broke the economic model that made ESPN the most profitable network in TV.", exercise: "List every platform showing NFL games. How many subs for every game? Cost vs a single cable package?" },
@@ -100,6 +117,8 @@ function SegProg({cur,total,color}) { return <div style={{display:"flex",gap:4,m
 const gs={background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",color:"#888",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit"};
 const bs=(bg)=>({background:bg,border:"none",color:"#fff",padding:"12px 24px",borderRadius:9,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"});
 
+const INSTRUCTOR_PASSCODE = "MSU12345!";
+
 export default function App() {
   const [view,setView]=useState("home");
   const [mi,setMi]=useState(0);
@@ -108,13 +127,172 @@ export default function App() {
   const [done,setDone]=useState({});
   const [scores,setScores]=useState({});
   const [fade,setFade]=useState(true);
+  const [showDeeper,setShowDeeper]=useState(false);
+  const [studentName,setStudentName]=useState(null);
+  const [nameInput,setNameInput]=useState("");
+  const [loading,setLoading]=useState(true);
+  const [dashPass,setDashPass]=useState("");
+  const [dashData,setDashData]=useState([]);
+  const [dashLoading,setDashLoading]=useState(false);
 
-  const go=(v,m)=>{setFade(false);setTimeout(()=>{setView(v);if(m!==undefined)setMi(m);setSi(0);setAns({});setFade(true);window.scrollTo({top:0});},120);};
+  // Load student identity and progress from storage on mount
+  useEffect(()=>{
+    (async()=>{
+      try {
+        const id = await window.storage.get("student-identity");
+        if(id){
+          const parsed = JSON.parse(id.value);
+          setStudentName(parsed.name);
+          // Load their progress
+          try {
+            const prog = await window.storage.get("progress:"+parsed.name.toLowerCase().replace(/\s+/g,"-"));
+            if(prog){
+              const p = JSON.parse(prog.value);
+              if(p.done) setDone(p.done);
+              if(p.scores) setScores(p.scores);
+            }
+          } catch(e){}
+        }
+      } catch(e){}
+      setLoading(false);
+    })();
+  },[]);
+
+  // Sync progress to storage
+  const syncProgress = async (newDone, newScores) => {
+    if(!studentName) return;
+    const key = "progress:"+studentName.toLowerCase().replace(/\s+/g,"-");
+    const data = { name: studentName, done: newDone, scores: newScores, lastActive: new Date().toISOString() };
+    try {
+      await window.storage.set(key, JSON.stringify(data));
+      // Also sync to shared storage so instructor can see
+      await window.storage.set("class:"+studentName.toLowerCase().replace(/\s+/g,"-"), JSON.stringify(data), true);
+    } catch(e){ console.error("Sync failed:", e); }
+  };
+
+  // Register student
+  const registerStudent = async (name) => {
+    const trimmed = name.trim();
+    if(!trimmed) return;
+    try {
+      await window.storage.set("student-identity", JSON.stringify({ name: trimmed, registered: new Date().toISOString() }));
+      setStudentName(trimmed);
+    } catch(e){ console.error("Registration failed:", e); setStudentName(trimmed); }
+  };
+
+  // Load instructor dashboard data
+  const loadDashboard = async () => {
+    setDashLoading(true);
+    try {
+      const keys = await window.storage.list("class:", true);
+      const students = [];
+      if(keys && keys.keys) {
+        for(const k of keys.keys) {
+          try {
+            const r = await window.storage.get(k, true);
+            if(r) students.push(JSON.parse(r.value));
+          } catch(e){}
+        }
+      }
+      students.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+      setDashData(students);
+    } catch(e){ console.error("Dashboard load failed:", e); setDashData([]); }
+    setDashLoading(false);
+  };
+
+  const go=(v,m)=>{setFade(false);setTimeout(()=>{setView(v);if(m!==undefined)setMi(m);setSi(0);setAns({});setShowDeeper(false);setFade(true);window.scrollTo({top:0});},120);};
+  const isUnlocked=(i)=>i===0||(done[i-1]&&Math.round((scores[i-1]/MODULES[i-1].quiz.length)*100)>=MASTERY_THRESHOLD);
   const progress=Math.round(Object.keys(done).length/MODULES.length*100);
   const F={opacity:fade?1:0,transform:fade?"translateY(0)":"translateY(6px)",transition:"opacity .15s,transform .15s"};
   const W={maxWidth:880,margin:"0 auto",padding:"0 20px",position:"relative",zIndex:2};
   const S={fontFamily:"'DM Sans',sans-serif",background:"#06060a",color:"#ddd",minHeight:"100vh"};
   const font=<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>;
+
+  if(loading) return <div style={S}>{font}<Bg/><div style={{...W,display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh"}}><p style={{color:"#444",fontSize:14}}>Loading...</p></div></div>;
+
+  // Student registration screen
+  if(!studentName && view!=="instructor") return(
+    <div style={S}>{font}<Bg/><div style={{...W,display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh"}}>
+      <div style={{maxWidth:420,width:"100%",textAlign:"center"}}>
+        <div style={{fontSize:40,marginBottom:16}}>🎓</div>
+        <h1 style={{fontSize:28,fontWeight:800,margin:"0 0 8px",color:"#fff"}}>Welcome to SPTC 243</h1>
+        <p style={{fontSize:14,color:"#555",margin:"0 0 28px",lineHeight:1.6}}>AI & Emerging Technologies in Sports Communication<br/>Professor Ben Fairclough · Montclair State University</p>
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:24,textAlign:"left"}}>
+          <label style={{fontSize:11,fontWeight:700,color:"#666",letterSpacing:2,textTransform:"uppercase",display:"block",marginBottom:8}}>Enter your full name to get started</label>
+          <input value={nameInput} onChange={e=>setNameInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&nameInput.trim())registerStudent(nameInput);}} placeholder="First Last" style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,boxSizing:"border-box"}}/>
+          <button onClick={()=>registerStudent(nameInput)} disabled={!nameInput.trim()} style={{...bs(nameInput.trim()?"linear-gradient(135deg,#34C759,#30D158)":"#333"),width:"100%",cursor:nameInput.trim()?"pointer":"default"}}>Start Learning →</button>
+        </div>
+        <button onClick={()=>setView("instructor")} style={{background:"none",border:"none",color:"#333",fontSize:11,cursor:"pointer",marginTop:16,fontFamily:"inherit"}}>Instructor Dashboard →</button>
+      </div>
+    </div></div>
+  );
+
+  // Instructor Dashboard
+  if(view==="instructor") return(
+    <div style={S}>{font}<Bg/><div style={{...W,...F}}>
+      <div style={{paddingTop:40,paddingBottom:20}}>
+        <button onClick={()=>{setView("home");setDashPass("");setDashData([]);}} style={gs}>← Back</button>
+      </div>
+      {dashData.length===0&&!dashLoading?<div style={{maxWidth:420,margin:"0 auto",textAlign:"center"}}>
+        <div style={{fontSize:40,marginBottom:16}}>📊</div>
+        <h2 style={{fontSize:24,fontWeight:800,margin:"0 0 8px",color:"#fff"}}>Instructor Dashboard</h2>
+        <p style={{fontSize:13,color:"#555",margin:"0 0 24px"}}>Enter passcode to view student progress</p>
+        <input value={dashPass} onChange={e=>setDashPass(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&dashPass===INSTRUCTOR_PASSCODE){loadDashboard();}}} type="password" placeholder="Passcode" style={{width:"100%",maxWidth:280,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,textAlign:"center",boxSizing:"border-box"}}/>
+        <br/>
+        <button onClick={()=>{if(dashPass===INSTRUCTOR_PASSCODE)loadDashboard();}} style={bs(dashPass?"linear-gradient(135deg,#007AFF,#5856D6)":"#333")}>{dashPass===INSTRUCTOR_PASSCODE?"Load Dashboard":"Enter Passcode"}</button>
+        {dashPass&&dashPass!==INSTRUCTOR_PASSCODE&&dashPass.length>3&&<p style={{color:"#FF3B30",fontSize:12,marginTop:10}}>Incorrect passcode</p>}
+      </div>:dashLoading?<p style={{textAlign:"center",color:"#555"}}>Loading student data...</p>:<div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:10}}>
+          <div>
+            <h2 style={{fontSize:24,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Class Progress</h2>
+            <p style={{fontSize:13,color:"#555",margin:0}}>{dashData.length} student{dashData.length!==1?"s":""} registered</p>
+          </div>
+          <button onClick={loadDashboard} style={gs}>↻ Refresh</button>
+        </div>
+        {/* Summary stats */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:10,marginBottom:20}}>
+          {MODULES.map((m,i)=>{
+            const completed=dashData.filter(s=>s.done&&s.done[i]).length;
+            const passed=dashData.filter(s=>s.scores&&s.scores[i]!==undefined&&Math.round((s.scores[i]/m.quiz.length)*100)>=MASTERY_THRESHOLD).length;
+            return <div key={i} style={{background:m.color+"08",border:"1px solid "+m.color+"20",borderRadius:10,padding:14}}>
+              <div style={{fontSize:9,fontWeight:700,color:m.color,letterSpacing:1.5,textTransform:"uppercase",marginBottom:4}}>Module {m.id}</div>
+              <div style={{fontSize:20,fontWeight:800,color:"#fff"}}>{passed}<span style={{fontSize:12,color:"#555",fontWeight:400}}>/{dashData.length}</span></div>
+              <div style={{fontSize:10,color:"#666"}}>passed ({completed} attempted)</div>
+            </div>;
+          })}
+        </div>
+        {/* Student table */}
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+            <thead>
+              <tr style={{borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+                <th style={{textAlign:"left",padding:"10px 12px",color:"#666",fontWeight:700,fontSize:10,letterSpacing:1.5,textTransform:"uppercase"}}>Student</th>
+                {MODULES.map((m,i)=><th key={i} style={{textAlign:"center",padding:"10px 8px",color:m.color,fontWeight:700,fontSize:10,letterSpacing:1}}>M{m.id}</th>)}
+                <th style={{textAlign:"right",padding:"10px 12px",color:"#666",fontWeight:700,fontSize:10,letterSpacing:1.5,textTransform:"uppercase"}}>Last Active</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dashData.map((s,si2)=><tr key={si2} style={{borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                <td style={{padding:"10px 12px",color:"#ddd",fontWeight:600}}>{s.name}</td>
+                {MODULES.map((m,i)=>{
+                  const attempted=s.done&&s.done[i];
+                  const sc=s.scores&&s.scores[i]!==undefined?s.scores[i]:null;
+                  const pct2=sc!==null?Math.round((sc/m.quiz.length)*100):null;
+                  const p2=pct2!==null&&pct2>=MASTERY_THRESHOLD;
+                  return <td key={i} style={{textAlign:"center",padding:"10px 8px"}}>
+                    {!attempted?<span style={{color:"#333"}}>—</span>:
+                    <span style={{background:p2?"rgba(52,199,89,0.15)":"rgba(255,149,0,0.15)",color:p2?"#34C759":"#FF9500",padding:"3px 8px",borderRadius:10,fontSize:11,fontWeight:700}}>{pct2}%</span>}
+                  </td>;
+                })}
+                <td style={{textAlign:"right",padding:"10px 12px",color:"#555",fontSize:11}}>{s.lastActive?new Date(s.lastActive).toLocaleDateString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):""}</td>
+              </tr>)}
+            </tbody>
+          </table>
+        </div>
+        {dashData.length===0&&<p style={{textAlign:"center",color:"#555",padding:20}}>No student data yet. Students will appear here after they register and complete quizzes.</p>}
+      </div>}
+    </div></div>
+  );
 
   if(view==="home") return(
     <div style={S}>{font}<Bg/><div style={{...W,...F}}>
@@ -122,9 +300,14 @@ export default function App() {
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
           <div style={{width:10,height:10,borderRadius:"50%",background:"#FF3B30",boxShadow:"0 0 12px #FF3B3088"}}/>
           <span style={{fontSize:11,fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:"#666"}}>SPTC 243 · Montclair State</span>
+          <span style={{marginLeft:"auto",fontSize:12,color:"#555"}}>{studentName}</span>
         </div>
         <h1 style={{fontSize:"clamp(28px,5vw,52px)",fontWeight:800,lineHeight:1.05,margin:"0 0 14px",color:"#fff"}}>AI & Emerging Tech<br/><span style={{color:"#FF3B30"}}>in Sports Communication</span></h1>
-        <p style={{fontSize:16,color:"#555",maxWidth:520,lineHeight:1.65,margin:"0 0 28px"}}>Your guided course companion. Each module builds on the last — from the big ideas driving disruption, to understanding AI, to seeing how it's reshaping the business of sports.</p>
+        <p style={{fontSize:16,color:"#555",maxWidth:520,lineHeight:1.65,margin:"0 0 12px"}}>Your guided course companion. Each module builds on the last — from the big ideas driving disruption, to understanding AI, to seeing how it's reshaping the business of sports.</p>
+        <div style={{background:"rgba(255,149,0,0.06)",border:"1px solid rgba(255,149,0,0.15)",borderRadius:10,padding:"12px 16px",marginBottom:28,maxWidth:520}}>
+          <div style={{fontSize:9,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:4}}>⚡ HOW THIS WORKS</div>
+          <p style={{fontSize:12,color:"#999",margin:0,lineHeight:1.6}}>Complete each module's segments, then pass the quiz with <strong style={{color:"#FF9500"}}>{MASTERY_THRESHOLD}%+</strong> to unlock the next module. Mastery unlocks access — not seat time. Students who complete modules before class earn workshop time.</p>
+        </div>
         <button onClick={()=>go("module",0)} style={bs("linear-gradient(135deg,#E8A838,#D4872E)")}>Start Module 1 →</button>
       </div>
       <div style={{background:"rgba(255,255,255,0.02)",borderRadius:14,padding:20,marginBottom:32,border:"1px solid rgba(255,255,255,0.04)"}}>
@@ -136,23 +319,31 @@ export default function App() {
       </div>
       <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"#444",marginBottom:10}}>COURSE MODULES</div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12,paddingBottom:32}}>
-        {MODULES.map((m,i)=>(
-          <div key={m.id} onClick={()=>go("module",i)} style={{background:done[i]?m.color+"0a":"rgba(255,255,255,0.015)",border:"1px solid "+(done[i]?m.color+"25":"rgba(255,255,255,0.04)"),borderRadius:14,padding:22,cursor:"pointer",transition:"all 0.2s",position:"relative"}}
-            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor=m.color+"40";}}
-            onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=done[i]?m.color+"25":"rgba(255,255,255,0.04)";}}>
-            {done[i]&&<div style={{position:"absolute",top:12,right:12,background:"#34C759",borderRadius:14,padding:"3px 9px",fontSize:9,fontWeight:700}}>✓ {scores[i]}/{m.quiz.length}</div>}
+        {MODULES.map((m,i)=>{const unlocked=isUnlocked(i); const pct=done[i]?Math.round((scores[i]/m.quiz.length)*100):0; const passed=pct>=MASTERY_THRESHOLD; return(
+          <div key={m.id} onClick={()=>{if(unlocked)go("module",i);}} style={{background:done[i]?(passed?m.color+"0a":"rgba(255,59,48,0.05)"):"rgba(255,255,255,0.015)",border:"1px solid "+(done[i]?(passed?m.color+"25":"rgba(255,59,48,0.15)"):"rgba(255,255,255,0.04)"),borderRadius:14,padding:22,cursor:unlocked?"pointer":"default",transition:"all 0.2s",position:"relative",opacity:unlocked?1:.45}}
+            onMouseEnter={e=>{if(unlocked){e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor=m.color+"40";}}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=done[i]?(passed?m.color+"25":"rgba(255,59,48,0.15)"):"rgba(255,255,255,0.04)";}}>
+            {!unlocked&&<div style={{position:"absolute",top:12,right:12,fontSize:14}}>🔒</div>}
+            {done[i]&&<div style={{position:"absolute",top:12,right:12,background:passed?"#34C759":"#FF9500",borderRadius:14,padding:"3px 9px",fontSize:9,fontWeight:700,color:"#fff"}}>{passed?"✓ ":"⟳ "}{scores[i]}/{m.quiz.length} ({pct}%)</div>}
             <div style={{fontSize:22,marginBottom:8}}>{m.icon}</div>
-            <div style={{display:"flex",gap:5,marginBottom:8}}><Tag color={m.color} bg={m.color+"15"}>Module {m.id}</Tag><Tag>{m.segments.length} segments</Tag></div>
-            <h3 style={{fontSize:16,fontWeight:700,margin:"0 0 3px",color:"#fff"}}>{m.title}</h3>
+            <div style={{display:"flex",gap:5,marginBottom:8,flexWrap:"wrap"}}>
+              <Tag color={m.color} bg={m.color+"15"}>Module {m.id}</Tag>
+              <Tag>{m.segments.length} segments</Tag>
+              {!unlocked&&<Tag color="#FF9500" bg="rgba(255,149,0,0.1)">Pass Module {i} to unlock</Tag>}
+              {done[i]&&passed&&m.goDeeper&&<Tag color="#A855F7" bg="rgba(168,85,247,0.1)">Go Deeper unlocked</Tag>}
+              {done[i]&&!passed&&<Tag color="#FF9500" bg="rgba(255,149,0,0.1)">Retake — need {MASTERY_THRESHOLD}%</Tag>}
+            </div>
+            <h3 style={{fontSize:16,fontWeight:700,margin:"0 0 3px",color:unlocked?"#fff":"#555"}}>{m.title}</h3>
             <p style={{fontSize:12,color:"#555",margin:0,lineHeight:1.5}}>{m.subtitle}</p>
           </div>
-        ))}
+        );})}
         <div style={{background:"rgba(255,255,255,0.01)",border:"1px dashed rgba(255,255,255,0.06)",borderRadius:14,padding:22,display:"flex",alignItems:"center",justifyContent:"center"}}>
           <p style={{fontSize:12,color:"#333",textAlign:"center",margin:0}}>More modules coming</p>
         </div>
       </div>
       <div style={{borderTop:"1px solid rgba(255,255,255,0.03)",padding:"24px 0 40px",textAlign:"center"}}>
         <p style={{color:"#2a2a2a",fontSize:11}}>Professor Ben Fairclough · Fall 2025 · Wed 5:20-8:05 PM</p>
+        <button onClick={()=>setView("instructor")} style={{background:"none",border:"none",color:"#222",fontSize:10,cursor:"pointer",marginTop:4,fontFamily:"inherit"}}>Instructor Dashboard</button>
       </div>
     </div></div>
   );
@@ -170,37 +361,28 @@ export default function App() {
       <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:14,padding:"clamp(16px,3vw,28px)",marginBottom:14}}>
         {seg.content === "VISUALIZE_FUNNEL" ? <>
           <p style={{fontSize:15,lineHeight:1.75,color:"#bbb",margin:"0 0 24px"}}>Every sports rights holder — from the NFL to a college conference — is trying to grow its fan base. The fan continuum is the strategic framework for how they do it: move people from never having heard of your sport, to casually engaged, to deeply invested and spending money. Social media, AI content, and owned digital platforms each play a specific role at each stage.</p>
-          {/* Inverted Triangle */}
           <div style={{maxWidth:480,margin:"0 auto 28px",position:"relative"}}>
             <svg viewBox="0 0 400 320" style={{width:"100%",height:"auto"}}>
-              {/* Top tier - New Fans (widest) */}
               <polygon points="20,10 380,10 330,105 70,105" fill="rgba(255,149,0,0.15)" stroke="#FF9500" strokeWidth="1.5"/>
               <text x="200" y="42" textAnchor="middle" fill="#FF9500" fontSize="13" fontWeight="800" fontFamily="DM Sans,sans-serif">NEW FANS</text>
               <text x="200" y="62" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">Social algorithms surface content to people</text>
               <text x="200" y="76" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">who never sought it out — viral discovery</text>
               <text x="200" y="93" textAnchor="middle" fill="#666" fontSize="8" fontFamily="DM Mono,monospace">TikTok · Instagram Reels · YouTube Shorts · X</text>
-
-              {/* Middle tier - Casual Fans */}
               <polygon points="70,115 330,115 280,210 120,210" fill="rgba(0,122,255,0.15)" stroke="#007AFF" strokeWidth="1.5"/>
               <text x="200" y="147" textAnchor="middle" fill="#007AFF" fontSize="13" fontWeight="800" fontFamily="DM Sans,sans-serif">CASUAL FANS</text>
               <text x="200" y="167" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">Follow leagues, teams, players on social —</text>
               <text x="200" y="181" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">opted in to receive content regularly</text>
               <text x="200" y="198" textAnchor="middle" fill="#666" fontSize="8" fontFamily="DM Mono,monospace">Follows · Subscribes · Engages · Shares</text>
-
-              {/* Bottom tier - Hardcore Fans (narrowest) */}
               <polygon points="120,220 280,220 220,310 180,310" fill="rgba(255,59,48,0.15)" stroke="#FF3B30" strokeWidth="1.5"/>
               <text x="200" y="252" textAnchor="middle" fill="#FF3B30" fontSize="13" fontWeight="800" fontFamily="DM Sans,sans-serif">HARDCORE FANS</text>
               <text x="200" y="270" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">Driven to owned platforms —</text>
               <text x="200" y="284" textAnchor="middle" fill="#999" fontSize="9.5" fontFamily="DM Sans,sans-serif">subscribe, buy, attend</text>
               <text x="200" y="301" textAnchor="middle" fill="#666" fontSize="8" fontFamily="DM Mono,monospace">Apps · OTT · Tickets · Merch · Subscriptions</text>
-
-              {/* Arrows between tiers */}
               <line x1="200" y1="107" x2="200" y2="113" stroke="#555" strokeWidth="1.5" markerEnd="url(#arrow)"/>
               <line x1="200" y1="212" x2="200" y2="218" stroke="#555" strokeWidth="1.5" markerEnd="url(#arrow)"/>
               <defs><marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/></marker></defs>
             </svg>
           </div>
-          {/* Detailed breakdown */}
           <div style={{background:"rgba(255,149,0,0.05)",border:"1px solid rgba(255,149,0,0.15)",borderRadius:10,padding:14,marginBottom:10}}>
             <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:1.5,textTransform:"uppercase",marginBottom:4}}>🔍 NEW FANS — DISCOVERY</div>
             <p style={{fontSize:13,lineHeight:1.65,color:"#bbb",margin:0}}>This is where social media's recommendation algorithms are transformative. A highlight clip of an incredible play doesn't just reach existing followers — platforms like TikTok, Instagram Reels, and YouTube Shorts actively surface it to people who have never followed the sport, team, or league. The content goes viral not because fans share it (though they do), but because the algorithm identifies it as engaging and pushes it to millions of non-followers. This is how a rugby clip reaches someone who's never watched rugby, or how an MLS goal reaches a soccer-curious teenager. The rights holder didn't pay for this reach — the algorithm delivered it for free based on engagement signals.</p>
@@ -236,34 +418,58 @@ export default function App() {
     <div style={S}>{font}<Bg/><div style={{...W,...F}}>
       <div style={{paddingTop:20,paddingBottom:12}}><button onClick={()=>go("module")} style={gs}>← Back</button></div>
       <h2 style={{fontSize:24,fontWeight:800,margin:"0 0 4px"}}>Knowledge Check</h2>
-      <p style={{color:"#555",fontSize:13,margin:"0 0 24px"}}>{m.title} — {m.quiz.length} questions</p>
+      <p style={{color:"#555",fontSize:13,margin:"0 0 6px"}}>{m.title} — {m.quiz.length} questions</p>
+      <p style={{color:"#FF9500",fontSize:11,fontWeight:600,margin:"0 0 24px"}}>You need {MASTERY_THRESHOLD}% to pass and unlock the next module.</p>
       {m.quiz.map((q,qi)=>(
         <div key={qi} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:18,marginBottom:12}}>
           <p style={{fontSize:13,fontWeight:700,margin:"0 0 10px"}}>{qi+1}. {q.q}</p>
           {q.o.map((opt,oi)=><button key={oi} onClick={()=>setAns(p=>({...p,[qi]:oi}))} style={{display:"block",width:"100%",textAlign:"left",background:ans[qi]===oi?m.color+"15":"rgba(255,255,255,0.02)",border:"1px solid "+(ans[qi]===oi?m.color:"rgba(255,255,255,0.06)"),color:ans[qi]===oi?"#fff":"#777",padding:"9px 13px",borderRadius:8,cursor:"pointer",fontSize:12,fontFamily:"inherit",fontWeight:ans[qi]===oi?600:400,marginBottom:5}}>{opt}</button>)}
         </div>
       ))}
-      <button onClick={()=>{let s=0;MODULES[mi].quiz.forEach((q,i)=>{if(ans[i]===q.a)s++;});setScores(p=>({...p,[mi]:s}));setDone(p=>({...p,[mi]:true}));go("results");}} disabled={!ok} style={{...bs(ok?"linear-gradient(135deg,#34C759,#30D158)":"#333"),width:"100%",marginBottom:36,cursor:ok?"pointer":"default"}}>Submit</button>
+      <button onClick={()=>{let s=0;MODULES[mi].quiz.forEach((q,i)=>{if(ans[i]===q.a)s++;});const nd={...done,[mi]:true};const ns={...scores,[mi]:s};setScores(ns);setDone(nd);syncProgress(nd,ns);go("results");}} disabled={!ok} style={{...bs(ok?"linear-gradient(135deg,#34C759,#30D158)":"#333"),width:"100%",marginBottom:36,cursor:ok?"pointer":"default"}}>Submit</button>
     </div></div>
   );}
 
-  if(view==="results"){const m=MODULES[mi],sc=scores[mi]||0,t=m.quiz.length,pct=Math.round(sc/t*100); return(
+  if(view==="results"){const m=MODULES[mi],sc=scores[mi]||0,t=m.quiz.length,pct=Math.round(sc/t*100),passed=pct>=MASTERY_THRESHOLD; return(
     <div style={S}>{font}<Bg/><div style={{...W,...F,textAlign:"center",paddingTop:48}}>
-      <Ring p={pct} size={90} sw={6} color={pct>=80?"#34C759":pct>=60?"#FF9500":"#FF3B30"}/>
+      <Ring p={pct} size={90} sw={6} color={passed?"#34C759":"#FF9500"}/>
       <h2 style={{fontSize:34,fontWeight:800,margin:"12px 0 4px"}}>{sc}/{t}</h2>
-      <p style={{color:"#555",fontSize:14,margin:"0 0 24px"}}>{pct===100?"Perfect!":pct>=75?"Strong understanding.":"Review the segments and try again."}</p>
-      <div style={{textAlign:"left",maxWidth:560,margin:"0 auto 28px"}}>
-        {m.quiz.map((q,qi)=>{const ok=ans[qi]===q.a; return(
-          <div key={qi} style={{background:ok?"rgba(52,199,89,0.05)":"rgba(255,59,48,0.05)",border:"1px solid "+(ok?"rgba(52,199,89,0.15)":"rgba(255,59,48,0.15)"),borderRadius:9,padding:13,marginBottom:7}}>
+      <p style={{color:passed?"#34C759":"#FF9500",fontSize:16,fontWeight:700,margin:"0 0 4px"}}>{pct}%</p>
+      <p style={{color:"#555",fontSize:14,margin:"0 0 8px"}}>{passed?(pct===100?"Perfect mastery.":"You've demonstrated mastery."):"You need "+MASTERY_THRESHOLD+"% to unlock the next module."}</p>
+      {passed&&<div style={{display:"inline-block",background:"rgba(52,199,89,0.1)",border:"1px solid rgba(52,199,89,0.2)",borderRadius:10,padding:"8px 16px",marginBottom:8}}>
+        <span style={{color:"#34C759",fontSize:12,fontWeight:700}}>✓ Module {mi+2<=MODULES.length?"Module "+(mi+2)+" unlocked":""}{m.goDeeper?" · Go Deeper unlocked":""}</span>
+      </div>}
+      {!passed&&<div style={{display:"inline-block",background:"rgba(255,149,0,0.1)",border:"1px solid rgba(255,149,0,0.2)",borderRadius:10,padding:"8px 16px",marginBottom:8}}>
+        <span style={{color:"#FF9500",fontSize:12,fontWeight:700}}>Review the segments below and retake the quiz</span>
+      </div>}
+      <div style={{textAlign:"left",maxWidth:560,margin:"16px auto 28px"}}>
+        {m.quiz.map((q,qi)=>{const ok2=ans[qi]===q.a; return(
+          <div key={qi} style={{background:ok2?"rgba(52,199,89,0.05)":"rgba(255,59,48,0.05)",border:"1px solid "+(ok2?"rgba(52,199,89,0.15)":"rgba(255,59,48,0.15)"),borderRadius:9,padding:13,marginBottom:7}}>
             <p style={{fontSize:11,fontWeight:700,margin:"0 0 3px"}}>{qi+1}. {q.q}</p>
-            <p style={{fontSize:11,margin:"0 0 1px",color:ok?"#34C759":"#FF3B30"}}>You: {q.o[ans[qi]]} {ok?"✓":"✗"}</p>
-            {!ok&&<p style={{fontSize:11,margin:0,color:"#34C759"}}>Correct: {q.o[q.a]}</p>}
+            <p style={{fontSize:11,margin:"0 0 1px",color:ok2?"#34C759":"#FF3B30"}}>You: {q.o[ans[qi]]} {ok2?"✓":"✗"}</p>
+            {!ok2&&<p style={{fontSize:11,margin:0,color:"#34C759"}}>Correct: {q.o[q.a]}</p>}
           </div>
         );})}
       </div>
+      {/* Go Deeper Section */}
+      {passed&&m.goDeeper&&<div style={{textAlign:"left",maxWidth:560,margin:"0 auto 28px"}}>
+        <button onClick={()=>setShowDeeper(!showDeeper)} style={{...bs("linear-gradient(135deg,#A855F7,#7C3AED)"),width:"100%",marginBottom:16}}>
+          {showDeeper?"Hide":"🚀 Go Deeper — Challenge Questions"}
+        </button>
+        {showDeeper&&<div style={{background:"rgba(168,85,247,0.05)",border:"1px solid rgba(168,85,247,0.15)",borderRadius:12,padding:20}}>
+          <p style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",margin:"0 0 6px"}}>ADVANCED APPLICATION</p>
+          <p style={{fontSize:12,color:"#777",margin:"0 0 16px"}}>These open-ended challenges test whether you can APPLY the concepts, not just recall them. Use these as class discussion prep or portfolio pieces.</p>
+          {m.goDeeper.map((gd,gi)=>(
+            <div key={gi} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:9,padding:14,marginBottom:10}}>
+              <p style={{fontSize:12,fontWeight:600,color:"#ccc",margin:0}}>{gi+1}. {gd.q}</p>
+            </div>
+          ))}
+        </div>}
+      </div>}
       <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap",paddingBottom:40}}>
         <button onClick={()=>go("home")} style={gs}>Home</button>
-        {mi<MODULES.length-1&&<button onClick={()=>go("module",mi+1)} style={bs("linear-gradient(135deg,#007AFF,#5856D6)")}>Next Module →</button>}
+        {!passed&&<button onClick={()=>{setAns({});go("module",mi);}} style={bs("linear-gradient(135deg,#FF9500,#FF6B00)")}>Review & Retake →</button>}
+        {passed&&mi<MODULES.length-1&&<button onClick={()=>go("module",mi+1)} style={bs("linear-gradient(135deg,#007AFF,#5856D6)")}>Next Module →</button>}
       </div>
     </div></div>
   );}
