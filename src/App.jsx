@@ -148,6 +148,7 @@ export default function App() {
   const [showDeeper,setShowDeeper]=useState(false);
   const [studentName,setStudentName]=useState(null);
   const [nameInput,setNameInput]=useState("");
+  const [confirmingName,setConfirmingName]=useState(null);
   const [loading,setLoading]=useState(true);
   const [dashPass,setDashPass]=useState("");
   const [dashData,setDashData]=useState([]);
@@ -189,15 +190,37 @@ export default function App() {
   };
 
   // Register student
-  // Register student — save name locally, create Firebase record
-  const registerStudent = async (name) => {
-    const trimmed = name.trim();
+  // Normalize name: trim, collapse spaces, capitalize each word
+  const normalizeName = (name) => name.trim().replace(/\s+/g," ").split(" ").map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(" ");
+
+  // Step 1: validate and show confirmation
+  const startRegistration = () => {
+    const trimmed = nameInput.trim();
     if(!trimmed) return;
+    const parts = trimmed.split(/\s+/);
+    if(parts.length < 2) { alert("Please enter your first and last name."); return; }
+    setConfirmingName(normalizeName(trimmed));
+  };
+
+  // Step 2: confirmed — save to localStorage + Firebase
+  const registerStudent = async (name) => {
     try {
-      localStorage.setItem("sptc243-student", JSON.stringify({ name: trimmed }));
-      if(db) await set(ref(db, "students/"+fbKey(trimmed)), { name: trimmed, done: {}, scores: {}, lastActive: new Date().toISOString() });
-      setStudentName(trimmed);
-    } catch(e){ console.error("Registration failed:", e); setStudentName(trimmed); }
+      localStorage.setItem("sptc243-student", JSON.stringify({ name }));
+      if(db) await set(ref(db, "students/"+fbKey(name)), { name, done: {}, scores: {}, lastActive: new Date().toISOString() });
+      setStudentName(name);
+      setConfirmingName(null);
+      setNameInput("");
+    } catch(e){ console.error("Registration failed:", e); setStudentName(name); setConfirmingName(null); }
+  };
+
+  // Logout (reset local identity)
+  const logoutStudent = () => {
+    localStorage.removeItem("sptc243-student");
+    setStudentName(null);
+    setDone({});
+    setScores({});
+    setNameInput("");
+    setConfirmingName(null);
   };
 
   // Load instructor dashboard data
@@ -329,9 +352,22 @@ export default function App() {
         <h1 style={{fontSize:28,fontWeight:800,margin:"0 0 8px",color:"#fff"}}>Welcome to SPTC 243</h1>
         <p style={{fontSize:14,color:"#555",margin:"0 0 28px",lineHeight:1.6}}>AI & Emerging Technologies in Sports Communication<br/>Professor Ben Fairclough · Montclair State University</p>
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:24,textAlign:"left"}}>
-          <label style={{fontSize:11,fontWeight:700,color:"#666",letterSpacing:2,textTransform:"uppercase",display:"block",marginBottom:8}}>Enter your full name to get started</label>
-          <input value={nameInput} onChange={e=>setNameInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&nameInput.trim())registerStudent(nameInput);}} placeholder="First Last" style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,boxSizing:"border-box"}}/>
-          <button onClick={()=>registerStudent(nameInput)} disabled={!nameInput.trim()} style={{...bs(nameInput.trim()?"linear-gradient(135deg,#34C759,#30D158)":"#333"),width:"100%",cursor:nameInput.trim()?"pointer":"default"}}>Start Learning →</button>
+          {!confirmingName?<>
+            <label style={{fontSize:11,fontWeight:700,color:"#666",letterSpacing:2,textTransform:"uppercase",display:"block",marginBottom:8}}>Enter your full name to get started</label>
+            <input value={nameInput} onChange={e=>setNameInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")startRegistration();}} placeholder="First Last" style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,boxSizing:"border-box"}}/>
+            <button onClick={startRegistration} disabled={!nameInput.trim()} style={{...bs(nameInput.trim()?"linear-gradient(135deg,#34C759,#30D158)":"#333"),width:"100%",cursor:nameInput.trim()?"pointer":"default"}}>Continue →</button>
+          </>:<>
+            <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Confirm your name</div>
+            <p style={{fontSize:13,color:"#999",margin:"0 0 6px",lineHeight:1.5}}>You'll be registered as:</p>
+            <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"14px 16px",marginBottom:16}}>
+              <p style={{fontSize:20,fontWeight:800,color:"#fff",margin:0}}>{confirmingName}</p>
+            </div>
+            <p style={{fontSize:11,color:"#666",margin:"0 0 16px",lineHeight:1.5}}>This name will be visible to your instructor and cannot be easily changed. Make sure it matches your name on the class roster.</p>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>setConfirmingName(null)} style={{...gs,flex:1,textAlign:"center"}}>← Fix it</button>
+              <button onClick={()=>registerStudent(confirmingName)} style={{...bs("linear-gradient(135deg,#34C759,#30D158)"),flex:2}}>That's correct — Start Learning →</button>
+            </div>
+          </>}
         </div>
         <button onClick={()=>setView("instructor")} style={{background:"none",border:"none",color:"#333",fontSize:11,cursor:"pointer",marginTop:16,fontFamily:"inherit"}}>Instructor Dashboard →</button>
       </div>
@@ -514,7 +550,7 @@ export default function App() {
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
           <div style={{width:10,height:10,borderRadius:"50%",background:"#FF3B30",boxShadow:"0 0 12px #FF3B3088"}}/>
           <span style={{fontSize:11,fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:"#666"}}>SPTC 243 · Montclair State</span>
-          <span style={{marginLeft:"auto",fontSize:12,color:"#555"}}>{studentName}</span>
+          <span style={{marginLeft:"auto",fontSize:12,color:"#555"}}>{studentName} <button onClick={logoutStudent} style={{background:"none",border:"none",color:"#444",fontSize:10,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Not you?</button></span>
         </div>
         <h1 style={{fontSize:"clamp(28px,5vw,52px)",fontWeight:800,lineHeight:1.05,margin:"0 0 14px",color:"#fff"}}>AI & Emerging Tech<br/><span style={{color:"#FF3B30"}}>in Sports Communication</span></h1>
         <p style={{fontSize:16,color:"#555",maxWidth:520,lineHeight:1.65,margin:"0 0 12px"}}>Your guided course companion. Each module builds on the last — from the big ideas driving disruption, to understanding AI, to seeing how it's reshaping the business of sports.</p>
