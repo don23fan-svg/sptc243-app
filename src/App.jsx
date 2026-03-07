@@ -157,6 +157,9 @@ export default function App() {
   const [dashMod,setDashMod]=useState(0);
   const [expanded,setExpanded]=useState({});
   const [dashAuthed,setDashAuthed]=useState(false);
+  const [intakeComplete,setIntakeComplete]=useState(false);
+  const [intakeAnswers,setIntakeAnswers]=useState({});
+  const [intakeStep,setIntakeStep]=useState(0);
 
   // Load student identity from localStorage, progress from Firebase
   useEffect(()=>{
@@ -173,6 +176,7 @@ export default function App() {
                 const p = snap.val();
                 if(p.done) setDone(p.done);
                 if(p.scores) setScores(p.scores);
+                if(p.intake) { setIntakeComplete(true); setIntakeAnswers(p.intake); }
               }
             } catch(e){}
           }
@@ -221,6 +225,50 @@ export default function App() {
     setScores({});
     setNameInput("");
     setConfirmingName(null);
+    setIntakeComplete(false);
+    setIntakeAnswers({});
+    setIntakeStep(0);
+  };
+
+  const INTAKE_SECTIONS = [
+    { title: "Where Are You Right Now?", subtitle: "No wrong answers — this helps calibrate the course to you.", questions: [
+      { id:"ai_understanding", q:"How would you rate your understanding of artificial intelligence?", type:"single", opts:["No idea what it really is","Heard of it, haven't used it","Used ChatGPT a few times","Use AI tools regularly","Could explain how LLMs work"] },
+      { id:"ai_tools_used", q:"Which of these AI tools have you used?", type:"multi", opts:["ChatGPT","Claude","Gemini","Grok","Perplexity","Midjourney / DALL-E","None of these"] },
+      { id:"exponential_check", q:"If a technology doubles in capability every year, how much better is it after 10 years?", type:"single", opts:["10 times better","20 times better","About 100 times better","Over 1,000 times better"] },
+      { id:"cord_cutting", q:"What does 'cord-cutting' refer to in media?", type:"single", opts:["Editing video clips shorter","Canceling cable TV for streaming services","Cutting production costs","Not sure"] },
+      { id:"espn_model", q:"ESPN's cable business was primarily built on:", type:"single", opts:["Advertising revenue only","Subscription fees paid by every cable household","Government funding for sports","Not sure"] },
+      { id:"ai_confidence", q:"How confident are you in your ability to use AI tools in a professional work setting?", type:"single", opts:["Not at all confident","Slightly confident","Moderately confident","Very confident","Extremely confident"] },
+    ]},
+    { title: "How Do You Engage?", subtitle: "Help us understand what you follow and how you consume content.", questions: [
+      { id:"sports_followed", q:"Which sports do you actively follow?", type:"multi", opts:["NFL","NBA","MLB","NHL","MLS / Soccer","College Football","College Basketball","Tennis","Golf","F1 / NASCAR","Combat Sports (UFC/Boxing)","Women's Sports (WNBA/NWSL)","Esports","Other"] },
+      { id:"content_consumption", q:"How do you primarily consume sports content?", type:"multi", opts:["TV broadcast","Streaming apps","Social media clips","Podcasts","Sports betting apps","Gaming (EA FC, 2K, etc.)","Highlights on YouTube","Reddit / forums"] },
+      { id:"social_platforms", q:"Which social platforms do you use most?", type:"multi", opts:["Instagram","TikTok","X / Twitter","YouTube","Snapchat","Reddit","LinkedIn","Threads"] },
+      { id:"sports_moment", q:"When you see an incredible sports moment, what do you do first?", type:"single", opts:["Watch the replay on TV","Search for it on social media","Text or message someone about it","Check betting implications","Post or share it online","Look for the highlight clip"] },
+      { id:"learning_style", q:"How do you prefer to learn new concepts?", type:"single", opts:["Reading / text","Video","Hands-on practice","Group discussion","A mix depending on the topic"] },
+      { id:"class_activities", q:"What kind of class activities get you most engaged?", type:"multi", opts:["Building real projects","Debating ideas","Analyzing real companies","Guest speakers from the industry","Competitive challenges","Working in small groups"] },
+      { id:"tech_comfort", q:"What's your comfort level with technology in general?", type:"single", opts:["Struggle with the basics","Can usually figure things out","Comfortable with most tools","Power user","I build things"] },
+    ]},
+    { title: "Your Ambition", subtitle: "What brought you here and where you're headed.", questions: [
+      { id:"career_path", q:"What career path interests you most right now?", type:"single", opts:["Sports journalism","Social media management","Sports marketing","Broadcasting / production","Analytics / data","Sports business / management","Content creation","Not sure yet","Other"] },
+      { id:"why_class", q:"Why did you take this class?", type:"multi", opts:["Required for my major","Interested in AI","Interested in sports media","Thought it sounded different","Want practical career skills","Professor recommendation","Other"] },
+      { id:"class_success", q:"What would make this class a success for you?", type:"text" },
+      { id:"skill_hope", q:"What's one skill you hope to have by the end of this course?", type:"text" },
+      { id:"ai_attitude", q:"How would you describe your attitude toward AI's impact on your future career?", type:"single", opts:["Worried it will replace me","Uncertain about what it means","Cautiously optimistic","Excited about the opportunity","Already using it to get ahead"] },
+    ]}
+  ];
+
+  const allIntakeQs = INTAKE_SECTIONS.flatMap(s=>s.questions);
+  const intakeReady = allIntakeQs.every(q=>q.type==="text"?(intakeAnswers[q.id]||"").trim().length>0:intakeAnswers[q.id]!==undefined&&(Array.isArray(intakeAnswers[q.id])?intakeAnswers[q.id].length>0:true));
+  const sectionReady = (secIdx) => INTAKE_SECTIONS[secIdx].questions.every(q=>q.type==="text"?(intakeAnswers[q.id]||"").trim().length>0:intakeAnswers[q.id]!==undefined&&(Array.isArray(intakeAnswers[q.id])?intakeAnswers[q.id].length>0:true));
+
+  const submitIntake = async () => {
+    if(!studentName||!db) return;
+    try {
+      const snap = await get(child(ref(db), "students/"+fbKey(studentName)));
+      const existing = snap.exists() ? snap.val() : {};
+      await set(ref(db, "students/"+fbKey(studentName)), { ...existing, intake: intakeAnswers, lastActive: new Date().toISOString() });
+      setIntakeComplete(true);
+    } catch(e){ console.error("Intake submit failed:", e); setIntakeComplete(true); }
   };
 
   // Load instructor dashboard data
@@ -374,6 +422,39 @@ export default function App() {
     </div></div>
   );
 
+  // Intake form — required before accessing modules
+  if(studentName && !intakeComplete && view!=="instructor") {
+    const sec = INTAKE_SECTIONS[intakeStep];
+    return(
+    <div style={S}>{font}<Bg/><div style={{...W,...F}}>
+      <div style={{paddingTop:40,paddingBottom:20}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+          <span style={{fontSize:11,fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:"#666"}}>Student Intake</span>
+          <span style={{fontSize:11,color:"#444",fontFamily:"'DM Mono',monospace"}}>Section {intakeStep+1} of {INTAKE_SECTIONS.length}</span>
+        </div>
+        <div style={{display:"flex",gap:4,marginBottom:24}}>{INTAKE_SECTIONS.map((_,i)=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<=intakeStep?"#FF9500":"rgba(255,255,255,0.08)",transition:"background 0.3s"}}/>)}</div>
+        <h2 style={{fontSize:24,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>{sec.title}</h2>
+        <p style={{fontSize:13,color:"#666",margin:"0 0 24px"}}>{sec.subtitle}</p>
+        {sec.questions.map((q,qi)=>(
+          <div key={q.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:18,marginBottom:12}}>
+            <p style={{fontSize:13,fontWeight:700,margin:"0 0 10px",color:"#ddd"}}>{qi+1}. {q.q}</p>
+            {q.type==="single"&&q.opts.map((opt,oi)=><button key={oi} onClick={()=>setIntakeAnswers(p=>({...p,[q.id]:opt}))} style={{display:"block",width:"100%",textAlign:"left",background:intakeAnswers[q.id]===opt?"rgba(255,149,0,0.12)":"rgba(255,255,255,0.02)",border:"1px solid "+(intakeAnswers[q.id]===opt?"#FF9500":"rgba(255,255,255,0.06)"),color:intakeAnswers[q.id]===opt?"#fff":"#777",padding:"9px 13px",borderRadius:8,cursor:"pointer",fontSize:12,fontFamily:"inherit",fontWeight:intakeAnswers[q.id]===opt?600:400,marginBottom:5}}>{opt}</button>)}
+            {q.type==="multi"&&q.opts.map((opt,oi)=>{const sel=(intakeAnswers[q.id]||[]).includes(opt); return <button key={oi} onClick={()=>setIntakeAnswers(p=>{const cur=p[q.id]||[];return{...p,[q.id]:sel?cur.filter(x=>x!==opt):[...cur,opt]};})} style={{display:"block",width:"100%",textAlign:"left",background:sel?"rgba(0,122,255,0.12)":"rgba(255,255,255,0.02)",border:"1px solid "+(sel?"#007AFF":"rgba(255,255,255,0.06)"),color:sel?"#fff":"#777",padding:"9px 13px",borderRadius:8,cursor:"pointer",fontSize:12,fontFamily:"inherit",fontWeight:sel?600:400,marginBottom:5}}>
+              <span style={{display:"inline-block",width:16,height:16,borderRadius:4,border:"2px solid "+(sel?"#007AFF":"rgba(255,255,255,0.15)"),background:sel?"#007AFF":"transparent",marginRight:8,verticalAlign:"middle",textAlign:"center",lineHeight:"14px",fontSize:10,color:"#fff"}}>{sel?"✓":""}</span>{opt}
+            </button>;})}
+            {q.type==="text"&&<textarea value={intakeAnswers[q.id]||""} onChange={e=>setIntakeAnswers(p=>({...p,[q.id]:e.target.value}))} placeholder="Type your answer..." rows={3} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 13px",color:"#fff",fontSize:13,fontFamily:"inherit",outline:"none",resize:"vertical",boxSizing:"border-box"}}/>}
+          </div>
+        ))}
+        <div style={{display:"flex",justifyContent:"space-between",paddingTop:8,paddingBottom:40,gap:8}}>
+          {intakeStep>0?<button onClick={()=>setIntakeStep(intakeStep-1)} style={gs}>← Previous</button>:<div/>}
+          {intakeStep<INTAKE_SECTIONS.length-1
+            ?<button onClick={()=>{if(sectionReady(intakeStep)){setIntakeStep(intakeStep+1);window.scrollTo({top:0});}}} disabled={!sectionReady(intakeStep)} style={{...bs(sectionReady(intakeStep)?"linear-gradient(135deg,#FF9500,#FF6B00)":"#333"),cursor:sectionReady(intakeStep)?"pointer":"default"}}>Next Section →</button>
+            :<button onClick={()=>{if(intakeReady){submitIntake();}}} disabled={!intakeReady} style={{...bs(intakeReady?"linear-gradient(135deg,#34C759,#30D158)":"#333"),cursor:intakeReady?"pointer":"default"}}>Submit & Start the Course →</button>}
+        </div>
+      </div>
+    </div></div>
+  );}
+
   // Collapsible section helper
   const Section=({id,title,icon,color,children})=>{const open=expanded[id]; return <div style={{marginBottom:10}}>
     <button onClick={()=>toggle(id)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",textAlign:"left",background:open?(color||"rgba(255,255,255,0.04)"):"rgba(255,255,255,0.02)",border:"1px solid "+(open?(color?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.08)"):"rgba(255,255,255,0.05)"),borderRadius:10,padding:"12px 16px",cursor:"pointer",fontFamily:"inherit",color:"#ddd",fontSize:13,fontWeight:700}}>
@@ -399,7 +480,7 @@ export default function App() {
       </div>:dashLoading?<p style={{textAlign:"center",color:"#555"}}>Loading student data...</p>:<div>
         {/* Tab bar */}
         <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",borderRadius:10,padding:4}}>
-          {[["progress","📊 Class Progress"],["lessons","📖 Lesson Plans"],["tips","⚙️ Guide Tips"]].map(([k,label])=>
+          {[["progress","📊 Progress"],["intake","📋 Intake"],["lessons","📖 Lessons"],["tips","⚙️ Guide Tips"]].map(([k,label])=>
             <button key={k} onClick={()=>setDashTab(k)} style={{flex:1,padding:"10px 12px",borderRadius:8,border:"none",background:dashTab===k?"rgba(255,255,255,0.08)":"transparent",color:dashTab===k?"#fff":"#555",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"}}>{label}</button>
           )}
         </div>
@@ -452,6 +533,63 @@ export default function App() {
             </table>
           </div>
           {dashData.length===0&&<p style={{textAlign:"center",color:"#555",padding:20}}>No student data yet.</p>}
+        </div>}
+
+        {/* TAB: Intake Responses */}
+        {dashTab==="intake"&&<div>
+          <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Student Intake Responses</h2>
+          <p style={{fontSize:13,color:"#555",margin:"0 0 20px"}}>{dashData.filter(s=>s.intake).length} of {dashData.length} students completed</p>
+          {dashData.length>0&&(()=>{
+            // Aggregate data for overview
+            const withIntake=dashData.filter(s=>s.intake);
+            if(withIntake.length===0) return <p style={{color:"#555",textAlign:"center",padding:20}}>No intake responses yet.</p>;
+            return <div>
+              {/* Aggregate view */}
+              <Section id="intake-agg" title={"Class Overview ("+withIntake.length+" responses)"} icon="📊">
+                {INTAKE_SECTIONS.flatMap(s=>s.questions).filter(q=>q.type!=="text").map(q=>{
+                  const counts={};
+                  withIntake.forEach(s=>{
+                    const a=s.intake[q.id];
+                    if(Array.isArray(a)){a.forEach(v=>{counts[v]=(counts[v]||0)+1;});}
+                    else if(a){counts[a]=(counts[a]||0)+1;}
+                  });
+                  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+                  return <div key={q.id} style={{marginBottom:16}}>
+                    <p style={{fontSize:11,fontWeight:700,color:"#ddd",margin:"0 0 6px"}}>{q.q}</p>
+                    {sorted.map(([val,ct])=><div key={val} style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                      <div style={{flex:1,background:"rgba(255,255,255,0.04)",borderRadius:4,height:18,overflow:"hidden"}}>
+                        <div style={{background:"rgba(255,149,0,0.3)",height:"100%",width:Math.round(ct/withIntake.length*100)+"%",borderRadius:4,transition:"width 0.3s"}}/>
+                      </div>
+                      <span style={{fontSize:10,color:"#888",minWidth:100,textAlign:"right"}}>{val}</span>
+                      <span style={{fontSize:10,color:"#FF9500",fontWeight:700,minWidth:30,textAlign:"right"}}>{ct}</span>
+                    </div>)}
+                  </div>;
+                })}
+                {/* Open-ended responses */}
+                {INTAKE_SECTIONS.flatMap(s=>s.questions).filter(q=>q.type==="text").map(q=><div key={q.id} style={{marginBottom:16}}>
+                  <p style={{fontSize:11,fontWeight:700,color:"#ddd",margin:"0 0 6px"}}>{q.q}</p>
+                  {withIntake.filter(s=>s.intake[q.id]).map((s,i)=><div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:6,padding:"8px 12px",marginBottom:4}}>
+                    <span style={{fontSize:10,color:"#FF9500",fontWeight:700}}>{s.name}: </span>
+                    <span style={{fontSize:11,color:"#aaa"}}>{s.intake[q.id]}</span>
+                  </div>)}
+                </div>)}
+              </Section>
+              {/* Individual student responses */}
+              <div style={{fontSize:10,fontWeight:700,color:"#444",letterSpacing:2,textTransform:"uppercase",marginTop:16,marginBottom:10}}>INDIVIDUAL RESPONSES</div>
+              {withIntake.map((s,si3)=><Section key={si3} id={"intake-"+si3} title={s.name} icon="👤">
+                {INTAKE_SECTIONS.map((sec,secI)=><div key={secI}>
+                  <p style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:1.5,textTransform:"uppercase",margin:"10px 0 6px"}}>{sec.title}</p>
+                  {sec.questions.map(q=>{
+                    const a=s.intake[q.id];
+                    return <div key={q.id} style={{marginBottom:8}}>
+                      <p style={{fontSize:10,color:"#666",margin:"0 0 2px"}}>{q.q}</p>
+                      <p style={{fontSize:12,color:"#ccc",margin:0,fontWeight:600}}>{Array.isArray(a)?a.join(", "):(a||"—")}</p>
+                    </div>;
+                  })}
+                </div>)}
+              </Section>)}
+            </div>;
+          })()}
         </div>}
 
         {/* TAB: Lesson Plans */}
