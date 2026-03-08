@@ -480,7 +480,7 @@ export default function App() {
       </div>:dashLoading?<p style={{textAlign:"center",color:"#555"}}>Loading student data...</p>:<div>
         {/* Tab bar */}
         <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",borderRadius:10,padding:4}}>
-          {[["progress","📊 Progress"],["intake","📋 Intake"],["lessons","📖 Lessons"],["tips","⚙️ Guide Tips"]].map(([k,label])=>
+          {[["progress","📊 Progress"],["profiles","👥 Profiles"],["intake","📋 Intake"],["lessons","📖 Lessons"],["tips","⚙️ Guide Tips"]].map(([k,label])=>
             <button key={k} onClick={()=>setDashTab(k)} style={{flex:1,padding:"10px 12px",borderRadius:8,border:"none",background:dashTab===k?"rgba(255,255,255,0.08)":"transparent",color:dashTab===k?"#fff":"#555",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"}}>{label}</button>
           )}
         </div>
@@ -533,6 +533,152 @@ export default function App() {
             </table>
           </div>
           {dashData.length===0&&<p style={{textAlign:"center",color:"#555",padding:20}}>No student data yet.</p>}
+        </div>}
+
+        {/* TAB: Student Profiles */}
+        {dashTab==="profiles"&&<div>
+          <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Student Profiles</h2>
+          <p style={{fontSize:13,color:"#555",margin:"0 0 20px"}}>Auto-categorized from intake responses. {dashData.filter(s=>s.intake).length} of {dashData.length} profiled.</p>
+          {(()=>{
+            const withIntake=dashData.filter(s=>s.intake);
+            if(withIntake.length===0) return <p style={{color:"#555",textAlign:"center",padding:20}}>No intake data yet. Students will be profiled after completing the intake form.</p>;
+
+            // Scoring functions
+            const scoreAI=(intake)=>{
+              let s=0;
+              const u=intake.ai_understanding||"";
+              if(u.includes("explain")) s+=4; else if(u.includes("regularly")) s+=3; else if(u.includes("few times")) s+=2; else if(u.includes("Heard")) s+=1;
+              const tools=(intake.ai_tools_used||[]);
+              if(tools.includes("None")) s+=0; else s+=Math.min(tools.length,3);
+              const c=intake.ai_confidence||"";
+              if(c.includes("Extremely")) s+=4; else if(c.includes("Very")) s+=3; else if(c.includes("Moderately")) s+=2; else if(c.includes("Slightly")) s+=1;
+              return s; // 0-11
+            };
+            const scoreBiz=(intake)=>{
+              let s=0;
+              const e=intake.exponential_check||"";
+              if(e.includes("1,000")) s+=3; else if(e.includes("100")) s+=2; else if(e.includes("20")) s+=1;
+              const cc=intake.cord_cutting||"";
+              if(cc.includes("Canceling")) s+=3; else if(cc.includes("Not sure")) s+=0; else s+=1;
+              const espn=intake.espn_model||"";
+              if(espn.includes("every cable")) s+=3; else if(espn.includes("Not sure")) s+=0; else s+=1;
+              return s; // 0-9
+            };
+            const tierOf=(aiScore,bizScore)=>{
+              const total=aiScore+bizScore; // 0-20
+              if(total>=14) return {tier:"Ahead",color:"#34C759",icon:"🟢",desc:"Strong foundation. Challenge them, use as peer mentors."};
+              if(total>=7) return {tier:"On Track",color:"#FF9500",icon:"🟡",desc:"Solid base to build on. Your core group."};
+              return {tier:"Needs Support",color:"#FF3B30",icon:"🔴",desc:"New to these concepts. Extra attention during app work."};
+            };
+
+            // Build profiles
+            const profiles=withIntake.map(s=>{
+              const ai=scoreAI(s.intake);
+              const biz=scoreBiz(s.intake);
+              const t=tierOf(ai,biz);
+              return {...s,aiScore:ai,bizScore:biz,...t};
+            }).sort((a,b)=>(b.aiScore+b.bizScore)-(a.aiScore+a.bizScore));
+
+            const ahead=profiles.filter(p=>p.tier==="Ahead");
+            const onTrack=profiles.filter(p=>p.tier==="On Track");
+            const needsSupport=profiles.filter(p=>p.tier==="Needs Support");
+
+            const TierCard=({label,icon,color,students,desc})=><div style={{background:color+"08",border:"1px solid "+color+"25",borderRadius:12,padding:16,marginBottom:12}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:18}}>{icon}</span>
+                  <span style={{fontSize:14,fontWeight:800,color}}>{label}</span>
+                  <span style={{fontSize:20,fontWeight:800,color:"#fff",marginLeft:4}}>{students.length}</span>
+                </div>
+              </div>
+              <p style={{fontSize:11,color:"#888",margin:"0 0 12px"}}>{desc}</p>
+              {students.length===0?<p style={{fontSize:11,color:"#444"}}>No students in this tier.</p>:
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {students.map((st,i)=><div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+                  <div>
+                    <span style={{fontSize:13,fontWeight:700,color:"#ddd"}}>{st.name}</span>
+                    <div style={{display:"flex",gap:6,marginTop:4}}>
+                      <span style={{fontSize:9,fontWeight:700,background:"rgba(0,122,255,0.12)",color:"#007AFF",padding:"2px 7px",borderRadius:8}}>AI: {st.aiScore}/11</span>
+                      <span style={{fontSize:9,fontWeight:700,background:"rgba(255,149,0,0.12)",color:"#FF9500",padding:"2px 7px",borderRadius:8}}>Biz: {st.bizScore}/9</span>
+                    </div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontSize:10,color:"#888"}}>{st.intake.career_path||"Undecided"}</div>
+                    <div style={{fontSize:10,color:"#666"}}>{st.intake.ai_attitude||""}</div>
+                  </div>
+                </div>)}
+              </div>}
+            </TierCard>;
+
+            // Class-level insights
+            const avgAI=Math.round(profiles.reduce((a,p)=>a+p.aiScore,0)/profiles.length*10)/10;
+            const avgBiz=Math.round(profiles.reduce((a,p)=>a+p.bizScore,0)/profiles.length*10)/10;
+            const topSports={};
+            withIntake.forEach(s=>(s.intake.sports_followed||[]).forEach(sp=>{topSports[sp]=(topSports[sp]||0)+1;}));
+            const topSportsSorted=Object.entries(topSports).sort((a,b)=>b[1]-a[1]).slice(0,5);
+            const topPlatforms={};
+            withIntake.forEach(s=>(s.intake.social_platforms||[]).forEach(sp=>{topPlatforms[sp]=(topPlatforms[sp]||0)+1;}));
+            const topPlatSorted=Object.entries(topPlatforms).sort((a,b)=>b[1]-a[1]).slice(0,5);
+            const topActivities={};
+            withIntake.forEach(s=>(s.intake.class_activities||[]).forEach(a=>{topActivities[a]=(topActivities[a]||0)+1;}));
+            const topActSorted=Object.entries(topActivities).sort((a,b)=>b[1]-a[1]).slice(0,4);
+            const topCareers={};
+            withIntake.forEach(s=>{if(s.intake.career_path)topCareers[s.intake.career_path]=(topCareers[s.intake.career_path]||0)+1;});
+            const topCarSorted=Object.entries(topCareers).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+            return <div>
+              {/* Class Snapshot */}
+              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,padding:18,marginBottom:16}}>
+                <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>CLASS SNAPSHOT</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:12}}>
+                  <div>
+                    <div style={{fontSize:10,color:"#666",marginBottom:4}}>Avg AI Readiness</div>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <div style={{flex:1,background:"rgba(255,255,255,0.04)",borderRadius:4,height:8}}><div style={{background:"#007AFF",height:"100%",width:Math.round(avgAI/11*100)+"%",borderRadius:4}}/></div>
+                      <span style={{fontSize:12,fontWeight:700,color:"#007AFF"}}>{avgAI}/11</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{fontSize:10,color:"#666",marginBottom:4}}>Avg Business Awareness</div>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <div style={{flex:1,background:"rgba(255,255,255,0.04)",borderRadius:4,height:8}}><div style={{background:"#FF9500",height:"100%",width:Math.round(avgBiz/9*100)+"%",borderRadius:4}}/></div>
+                      <span style={{fontSize:12,fontWeight:700,color:"#FF9500"}}>{avgBiz}/9</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{fontSize:10,color:"#666",marginBottom:4}}>Top Sports</div>
+                    <p style={{fontSize:11,color:"#bbb",margin:0}}>{topSportsSorted.map(([s,c])=>s+" ("+c+")").join(", ")}</p>
+                  </div>
+                  <div>
+                    <div style={{fontSize:10,color:"#666",marginBottom:4}}>Top Platforms</div>
+                    <p style={{fontSize:11,color:"#bbb",margin:0}}>{topPlatSorted.map(([s,c])=>s+" ("+c+")").join(", ")}</p>
+                  </div>
+                  <div>
+                    <div style={{fontSize:10,color:"#666",marginBottom:4}}>Preferred Activities</div>
+                    <p style={{fontSize:11,color:"#bbb",margin:0}}>{topActSorted.map(([s,c])=>s+" ("+c+")").join(", ")}</p>
+                  </div>
+                  <div>
+                    <div style={{fontSize:10,color:"#666",marginBottom:4}}>Career Interests</div>
+                    <p style={{fontSize:11,color:"#bbb",margin:0}}>{topCarSorted.map(([s,c])=>s+" ("+c+")").join(", ")}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pairing Suggestions */}
+              {ahead.length>0&&needsSupport.length>0&&<div style={{background:"rgba(168,85,247,0.05)",border:"1px solid rgba(168,85,247,0.15)",borderRadius:12,padding:16,marginBottom:16}}>
+                <div style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>💡 SUGGESTED PAIRINGS</div>
+                <p style={{fontSize:11,color:"#999",margin:"0 0 8px"}}>Pair Ahead students with Needs Support students during app work and group activities:</p>
+                {needsSupport.map((ns,i)=>{const mentor=ahead[i%ahead.length]; return <div key={i} style={{fontSize:12,color:"#bbb",marginBottom:3}}>
+                  <span style={{color:"#34C759",fontWeight:700}}>{mentor.name}</span> → <span style={{color:"#FF3B30",fontWeight:700}}>{ns.name}</span>
+                </div>;})}
+              </div>}
+
+              {/* Tier Cards */}
+              <TierCard label="Ahead" icon="🟢" color="#34C759" students={ahead} desc="Strong AI experience + business awareness. Challenge with Go Deeper questions. Use as peer mentors during app work."/>
+              <TierCard label="On Track" icon="🟡" color="#FF9500" students={onTrack} desc="Some exposure, solid foundation. Your core group — the module pacing is designed for them."/>
+              <TierCard label="Needs Support" icon="🔴" color="#FF3B30" students={needsSupport} desc="New to AI and/or business concepts. Check in during app work. Pair with Ahead students for discussions."/>
+            </div>;
+          })()}
         </div>}
 
         {/* TAB: Intake Responses */}
