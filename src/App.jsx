@@ -583,7 +583,7 @@ export default function App() {
             const onTrack=profiles.filter(p=>p.tier==="On Track");
             const needsSupport=profiles.filter(p=>p.tier==="Needs Support");
 
-            const TierCard=({label,icon,color,students,desc})=><div style={{background:color+"08",border:"1px solid "+color+"25",borderRadius:12,padding:16,marginBottom:12}}>
+            const tierCard=(label,icon,color,students,desc)=><div style={{background:color+"08",border:"1px solid "+color+"25",borderRadius:12,padding:16,marginBottom:12}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <span style={{fontSize:18}}>{icon}</span>
@@ -608,7 +608,7 @@ export default function App() {
                   </div>
                 </div>)}
               </div>}
-            </TierCard>;
+            </div>;
 
             // Class-level insights
             const avgAI=Math.round(profiles.reduce((a,p)=>a+p.aiScore,0)/profiles.length*10)/10;
@@ -674,9 +674,9 @@ export default function App() {
               </div>}
 
               {/* Tier Cards */}
-              <TierCard label="Ahead" icon="🟢" color="#34C759" students={ahead} desc="Strong AI experience + business awareness. Challenge with Go Deeper questions. Use as peer mentors during app work."/>
-              <TierCard label="On Track" icon="🟡" color="#FF9500" students={onTrack} desc="Some exposure, solid foundation. Your core group — the module pacing is designed for them."/>
-              <TierCard label="Needs Support" icon="🔴" color="#FF3B30" students={needsSupport} desc="New to AI and/or business concepts. Check in during app work. Pair with Ahead students for discussions."/>
+              {tierCard("Ahead","🟢","#34C759",ahead,"Strong AI experience + business awareness. Challenge with Go Deeper questions. Use as peer mentors during app work.")}
+              {tierCard("On Track","🟡","#FF9500",onTrack,"Some exposure, solid foundation. Your core group — the module pacing is designed for them.")}
+              {tierCard("Needs Support","🔴","#FF3B30",needsSupport,"New to AI and/or business concepts. Check in during app work. Pair with Ahead students for discussions.")}
             </div>;
           })()}
         </div>}
