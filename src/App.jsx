@@ -156,7 +156,7 @@ export default function App() {
   const [dashTab,setDashTab]=useState("progress");
   const [dashMod,setDashMod]=useState(0);
   const [expanded,setExpanded]=useState({});
-  const [dashAuthed,setDashAuthed]=useState(false);
+  const [dashAuthed,setDashAuthed]=useState(()=>{try{return localStorage.getItem("sptc243-instructor")==="true";}catch(e){return false;}});
   const [intakeComplete,setIntakeComplete]=useState(false);
   const [intakeAnswers,setIntakeAnswers]=useState({});
   const [intakeStep,setIntakeStep]=useState(0);
@@ -275,6 +275,7 @@ export default function App() {
   // Load instructor dashboard data from Firebase
   const loadDashboard = async () => {
     setDashAuthed(true);
+    try{localStorage.setItem("sptc243-instructor","true");}catch(e){}
     setDashLoading(true);
     try {
       if(!db){setDashData([]);setDashLoading(false);return;}
@@ -383,6 +384,9 @@ export default function App() {
   ];
 
   const go=(v,m)=>{setFade(false);setTimeout(()=>{setView(v);if(m!==undefined)setMi(m);setSi(0);setAns({});setShowDeeper(false);setFade(true);window.scrollTo({top:0});},120);};
+
+  // Auto-load dashboard data when navigating to instructor view while already authed
+  useEffect(()=>{if(view==="instructor"&&dashAuthed&&dashData.length===0&&!dashLoading){loadDashboard();}},[view,dashAuthed]);
   const isUnlocked=(i)=>i===0||(done[i-1]&&Math.round((scores[i-1]/MODULES[i-1].quiz.length)*100)>=MASTERY_THRESHOLD);
   const progress=Math.round(Object.keys(done).length/MODULES.length*100);
   const F={opacity:fade?1:0,transform:fade?"translateY(0)":"translateY(6px)",transition:"opacity .15s,transform .15s"};
@@ -467,7 +471,8 @@ export default function App() {
   if(view==="instructor") return(
     <div style={S}>{font}<Bg/><div style={{...W,...F}}>
       <div style={{paddingTop:40,paddingBottom:20}}>
-        <button onClick={()=>{setView("home");setDashPass("");setDashData([]);setExpanded({});setDashAuthed(false);}} style={gs}>← Back</button>
+        <button onClick={()=>{setView("home");setDashPass("");setDashData([]);setExpanded({});}} style={gs}>← Back</button>
+        <button onClick={()=>{setDashAuthed(false);setDashPass("");setDashData([]);setExpanded({});try{localStorage.removeItem("sptc243-instructor");}catch(e){}}} style={{...gs,marginLeft:8,color:"#FF3B30"}}>Sign Out</button>
       </div>
       {!dashAuthed?<div style={{maxWidth:420,margin:"0 auto",textAlign:"center"}}>
         <div style={{fontSize:40,marginBottom:16}}>📊</div>
