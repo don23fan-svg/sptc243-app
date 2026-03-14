@@ -176,7 +176,7 @@ export default function App() {
   const [dashMod,setDashMod]=useState(0);
   const [expanded,setExpanded]=useState({});
   const [dashAuthed,setDashAuthed]=useState(()=>{try{return localStorage.getItem("sptc243-instructor")==="true";}catch(e){return false;}});
-  const [intakeComplete,setIntakeComplete]=useState(false);
+  const [intakeComplete,setIntakeComplete]=useState(()=>{try{return localStorage.getItem("sptc243-intake-done")==="true";}catch(e){return false;}});
   const [intakeAnswers,setIntakeAnswers]=useState({});
   const [intakeStep,setIntakeStep]=useState(0);
 
@@ -203,7 +203,7 @@ export default function App() {
                 const p = snap.val();
                 if(p.done) setDone(p.done);
                 if(p.scores) setScores(p.scores);
-                if(p.intake) { setIntakeComplete(true); setIntakeAnswers(p.intake); }
+                if(p.intake) { setIntakeComplete(true); setIntakeAnswers(p.intake); try{localStorage.setItem("sptc243-intake-done","true");}catch(e2){} }
                 if(p.ddQuizHistory) setDdQuizHistory(p.ddQuizHistory);
               }
             } catch(e){}
@@ -261,6 +261,7 @@ export default function App() {
   // Logout (reset local identity)
   const logoutStudent = () => {
     localStorage.removeItem("sptc243-student");
+    localStorage.removeItem("sptc243-intake-done");
     setStudentName(null);
     setDone({});
     setScores({});
@@ -309,7 +310,8 @@ export default function App() {
       const existing = snap.exists() ? snap.val() : {};
       await set(ref(db, "students/"+fbKey(studentName)), { ...existing, intake: intakeAnswers, lastActive: new Date().toISOString() });
       setIntakeComplete(true);
-    } catch(e){ console.error("Intake submit failed:", e); setIntakeComplete(true); }
+      try{localStorage.setItem("sptc243-intake-done","true");}catch(e){}
+    } catch(e){ console.error("Intake submit failed:", e); setIntakeComplete(true); try{localStorage.setItem("sptc243-intake-done","true");}catch(e2){} }
   };
 
   // ═══════════════════════════════════════════════════
