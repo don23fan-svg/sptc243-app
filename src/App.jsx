@@ -121,19 +121,84 @@ const MODULES = [
 // INDUSTRY DEEP DIVE — The Future Is Faster Than You Think
 // ═══════════════════════════════════════════════════
 const BOOK_CHAPTERS = [
-  { id: 1, title: "Convergence", topic: "How exponential technologies crash into each other" },
-  { id: 2, title: "The Future of Shopping", topic: "Retail reinvented by AI, AR, drones, and data" },
-  { id: 3, title: "The Future of Advertising", topic: "Attention economies, personalization, and the death of mass marketing" },
-  { id: 4, title: "The Future of Entertainment", topic: "Immersive experiences, spatial computing, and the creator economy" },
-  { id: 5, title: "The Future of Education", topic: "AI tutors, personalized learning, and the end of one-size-fits-all" },
-  { id: 6, title: "The Future of Healthcare", topic: "Diagnostics, longevity, wearables, and predictive medicine" },
-  { id: 7, title: "The Future of Longevity", topic: "Extending healthspan, biotech, and the economics of aging" },
-  { id: 8, title: "The Future of Insurance", topic: "Risk, real-time data, autonomous systems, and moral hazard" },
-  { id: 9, title: "The Future of Finance", topic: "Fintech, blockchain, decentralized systems, and new money" },
-  { id: 10, title: "The Future of Real Estate", topic: "Smart cities, remote work, VR, and new living models" },
-  { id: 11, title: "The Future of Food", topic: "Lab-grown meat, vertical farms, AI agriculture, and supply chains" },
-  { id: 12, title: "Threats & Dangers", topic: "Deepfakes, job displacement, bias, surveillance, and power concentration" },
-  { id: 13, title: "Five Great Migrations", topic: "Climate, urban, virtual, space, and meta-intelligence" }
+  { id: 1, title: "Convergence", topic: "How exponential technologies crash into each other",
+    keyThemes: ["Exponential technologies don't advance in isolation", "Convergence creates multiplicative disruption", "Flying cars as a case study in convergence", "Moore's Law extending beyond chips"],
+    summary: "The book opens with its central thesis: the real disruption doesn't come from any single technology improving on its own. It comes from convergence \u2014 the moment when multiple exponential technologies collide simultaneously. Diamandis and Kotler walk through the major exponential technologies (AI, robotics, VR/AR, 3D printing, blockchain, sensors/IoT, networks, and quantum computing) and show that each is on its own accelerating curve. But individually, they're only half the story. When AI meets sensors, when 3D printing meets materials science, when networks meet robotics \u2014 capabilities emerge that none could achieve alone. The result is multiplicative, not additive. The authors use Uber's flying car initiative (Uber Elevate) as the signature example: it required simultaneous breakthroughs in machine learning, battery technology, materials science, 3D-printed engine components, sensor arrays, and air traffic management software. No single technology made it possible. Their convergence did.",
+    futureVision: "Imagine ordering a flying rideshare as easily as you call an Uber today. By the late 2020s, Diamandis and Kotler envision electric vertical takeoff and landing vehicles (eVTOLs) whisking commuters between rooftop 'mega-skyports' that handle a thousand takeoffs per hour. The convergence of lightweight materials, AI-powered navigation, advanced batteries, and 5G networks turns urban air mobility from science fiction into a commuter option \u2014 fundamentally reshaping where people live, how cities are designed, and what 'rush hour' means.",
+    sportsConnection: "Think about how many exponential technologies converge in a single modern sports broadcast: AI cameras, RFID player tracking, real-time AR graphics, automated highlights, personalized betting feeds, 5G mobile delivery. None existed together a decade ago."
+  },
+  { id: 2, title: "The Future of Shopping", topic: "Retail reinvented by AI, AR, drones, and data",
+    keyThemes: ["AI-driven personalization at scale", "The death of traditional retail and rise of the experience economy", "Cashierless stores and smart shelves", "3D printing enabling on-demand manufacturing"],
+    summary: "Diamandis and Kotler argue that shopping will split into two paths. Path A: physical retail reinvents itself as an 'experience economy' \u2014 stores become hyper-personalized destinations combining entertainment, wellness, and education. Smart mirrors show you wearing clothes you haven't tried on. Eye scanners create personalized fast lanes based on purchase history. Stores become places you go for the experience, not just the product. Path B: shopping disappears entirely into AI. Your personal AI knows your preferences, body measurements, schedule, and budget. It orders what you need before you know you need it. Drone delivery and autonomous vehicles bring it to your door. The authors describe Westfield's 'Destination 2028' concept \u2014 a hyper-connected micro-city with sensory gardens, smart bathrooms offering nutrition tips, and magic mirrors. They also discuss how 3D printing enables zero-waste, on-demand manufacturing: a body scan at a store produces a perfectly fitted garment printed on the spot.",
+    futureVision: "It's 2028 in Chicago. You forgot your coat on a rainy day. During your autonomous Uber ride, your AI finds a nearby shop selling lab-grown vegan leather jackets. You walk in, a full-body scan takes your measurements in seconds, and the jacket is 3D-printed to your exact fit while you grab a coffee next door. You walk out wearing it \u2014 no inventory, no waste, no wrong sizes. The store didn't stock the jacket. It manufactured it for you in minutes.",
+    sportsConnection: "Sports merchandising is already moving this direction. AI personalization recommends gear based on your team, player preferences, and viewing habits. On-demand manufacturing could mean customized jerseys printed in-arena."
+  },
+  { id: 3, title: "The Future of Advertising", topic: "Attention economies, personalization, and the death of mass marketing",
+    keyThemes: ["The attention economy and its limits", "AI enabling hyper-personalized ad targeting", "AR overlays replacing physical billboards", "The end of mass marketing"],
+    summary: "The advertising industry is being completely restructured by AI and AR. Diamandis and Kotler describe a world where mass-market advertising \u2014 the same commercial shown to millions \u2014 becomes obsolete. AI enables ads tailored not just to demographics but to individual behavior, mood, location, and real-time context. Augmented reality takes this further: physical billboards become dynamic digital overlays that show different ads to different people looking at the same space. The authors explore how attention itself becomes the scarce resource. As AI gets better at predicting what you want, advertising evolves from interruption to anticipation \u2014 showing you things you didn't know you wanted at the exact moment you're most receptive. The chapter also covers the ethical tensions: hyper-personalization creates extraordinary value for consumers and brands, but it requires unprecedented access to personal data.",
+    futureVision: "You're walking down the street wearing AR glasses. The billboard on the corner shows you an ad for running shoes in your size and preferred color \u2014 because your AI knows you ran a 10K last weekend and your current shoes have 400 miles on them. The person next to you sees an ad for a restaurant their spouse would love, because their anniversary is this week. Same billboard, completely different ads, both eerily relevant.",
+    sportsConnection: "Sports broadcasting already leads in targeted advertising. Dynamic ad insertion means the same game shows different commercials to different streaming viewers. AR-powered virtual signage means courtside ads can change by market in real time."
+  },
+  { id: 4, title: "The Future of Entertainment", topic: "Immersive experiences, spatial computing, and the creator economy",
+    keyThemes: ["VR and AR creating the 'experiential age'", "The holodeck as an achievable near-term goal", "AI-generated content and interactive storytelling", "Flow states and addictive immersion"],
+    summary: "Entertainment is converging toward full immersion. Diamandis and Kotler trace a path from passive consumption (watching a screen) to active participation (living inside the story). VR headsets are getting lighter, cheaper, and more realistic every year. Haptic suits add touch. AI generates responsive narratives that adapt to your choices in real time. The authors argue we're heading toward a real-life 'holodeck' \u2014 Star Trek's immersive entertainment room \u2014 within a generation. They also explore the neuroscience: VR is uniquely powerful at triggering flow states (deep, focused immersion), making it potentially more engaging \u2014 and more addictive \u2014 than any previous medium. The chapter addresses the democratization of entertainment creation too. AI tools mean a single creator can produce content that once required a full studio, fundamentally reshaping who can tell stories and how they're distributed.",
+    futureVision: "You put on a lightweight headset and step into a fully realized world \u2014 not watching a movie, but living inside one. The AI-driven narrative adapts to your decisions. Haptic feedback lets you feel rain and wind. You're not an audience member; you're the protagonist. When you remove the headset an hour later, the 'real' world feels flat by comparison. The authors warn this immersive pull will be one of the great challenges of the coming decades.",
+    sportsConnection: "Imagine attending an NBA game courtside from your living room in full VR \u2014 looking around the arena, hearing the crowd, choosing your own camera angles. Sports is the killer app for immersive tech because it's live, emotional, and inherently visual."
+  },
+  { id: 5, title: "The Future of Education", topic: "AI tutors, personalized learning, and the end of one-size-fits-all",
+    keyThemes: ["AI tutors adapting to individual learning styles", "VR enabling experiential learning", "The end of one-size-fits-all classrooms", "Gamification and flow-state learning"],
+    summary: "The authors argue that the current education model \u2014 one teacher lecturing 30 students at the same pace \u2014 is a relic of the industrial age and is about to be disrupted as fundamentally as retail or media. AI enables personalized tutoring at scale: every student gets an AI tutor that adapts to their learning pace, style, and interests in real time. If a student learns math better through sports examples, the AI teaches math through sports. VR adds experiential learning: instead of reading about ancient Rome, you walk through it. Instead of memorizing the water cycle, you fly through a rainstorm as a water molecule. Gamification layers add engagement mechanics that trigger flow states. The result is education that's more engaging, more effective, and radically more accessible \u2014 a child in rural Kenya gets the same quality AI tutor as a student at an elite prep school.",
+    futureVision: "A student struggles with photosynthesis. Their AI tutor notices they learn best through visual-spatial interaction and love soccer. The next lesson shrinks the student down to molecular size inside a VR leaf, where they play a game: as a water molecule, they navigate the plant's vascular system, collect sunlight energy, and 'score goals' by completing the chemical reactions of photosynthesis. They master in 20 minutes what a textbook couldn't teach in a week.",
+    sportsConnection: "Sports analytics training is already moving this direction. VR quarterback training lets players read defenses from inside the play. AI coaching tools adapt practice drills to individual player weaknesses."
+  },
+  { id: 6, title: "The Future of Healthcare", topic: "Diagnostics, longevity, wearables, and predictive medicine",
+    keyThemes: ["AI outperforming human doctors in diagnostics", "Continuous monitoring via wearable sensors", "The shift from reactive to predictive medicine", "Genome sequencing at near-zero cost"],
+    summary: "Healthcare is shifting from reactive ('you feel sick, you see a doctor') to proactive and predictive ('your devices detect illness before you have symptoms'). Diamandis and Kotler describe a convergence of AI diagnostics, wearable biosensors, genome sequencing, and robotic surgery that will fundamentally transform medicine. AI already matches or exceeds human doctors in reading radiology scans, pathology slides, and retinal images. Wearable sensors continuously monitor blood chemistry, heart rhythm, sleep quality, and stress hormones. Genome sequencing \u2014 which cost $2.7 billion for the first human genome \u2014 now costs under $200, enabling personalized medicine tailored to your DNA. The authors describe a near-future where your bathroom mirror, toilet, and wearables form a continuous health monitoring system that detects cancer, heart disease, or infection weeks or months before symptoms appear.",
+    futureVision: "You step onto your bathroom scale in the morning. It doesn't just weigh you \u2014 it analyzes your gait for neurological changes, checks your body composition, and sends data to your AI health system. Your smart mirror scans your face for micro-expressions indicating pain or fatigue. Your toilet analyzes biomarkers in your urine. Before you finish brushing your teeth, your AI alerts you: 'Your inflammatory markers have trended up for three days. Based on your genome and these patterns, there's a 40% probability of a respiratory infection developing. I've scheduled a telemedicine consult and prepped a preventive protocol.'",
+    sportsConnection: "Sports medicine is the testing ground for predictive health tech. Wearable sensors already track player load, sleep, and biometrics. AI predicts injury risk before it happens. The same technology is coming to the general population."
+  },
+  { id: 7, title: "The Future of Longevity", topic: "Extending healthspan, biotech, and the economics of aging",
+    keyThemes: ["Extending healthspan, not just lifespan", "Stem cell therapies and organ regeneration", "Senolytics and aging as a treatable condition", "The 'longevity escape velocity' concept"],
+    summary: "This chapter argues that aging itself will increasingly be treated as a disease rather than an inevitability. Diamandis and Kotler explore breakthroughs in stem cell therapy, gene editing (CRISPR), senolytics (drugs that clear damaged 'senescent' cells), and organ regeneration through 3D bioprinting. The concept of 'longevity escape velocity' is central: the point at which science extends your life by more than one year for every year you're alive. The authors believe we're approaching this threshold. They discuss Ray Kurzweil's prediction that by the mid-2030s, nanobots in our bloodstream will continuously repair damage at the cellular level. The economic implications are staggering: if people routinely live to 120 or beyond, every institution \u2014 retirement, pensions, career planning, marriage \u2014 must be reinvented.",
+    futureVision: "You're 70 years old but biologically 50. A quarterly visit to a longevity clinic includes a full-body MRI read by AI, a blood draw analyzed for thousands of biomarkers, a stem cell infusion to regenerate worn joints, and a senolytic treatment to clear aging cells. Your 3D-bioprinted replacement kidney, grown from your own cells, has been functioning perfectly for five years. Your doctor \u2014 an AI \u2014 tells you that at current rates of medical advancement, your expected remaining healthspan is another 50 years.",
+    sportsConnection: "Professional athletes are the earliest adopters of longevity science. Tom Brady's TB12 method, LeBron James spending $1.5M/year on body maintenance, PRP therapy, cryotherapy \u2014 these are primitive versions of what's coming for everyone."
+  },
+  { id: 8, title: "The Future of Insurance", topic: "Risk, real-time data, autonomous systems, and moral hazard",
+    keyThemes: ["Real-time risk assessment replacing actuarial tables", "Autonomous vehicles eliminating most car accidents", "Continuous health monitoring changing life insurance", "The moral hazard of perfect information"],
+    summary: "Insurance is fundamentally a bet on uncertainty. Diamandis and Kotler argue that converging technologies are destroying uncertainty itself, which means the entire insurance model must transform. Autonomous vehicles could eliminate 90%+ of car accidents (since 94% are caused by human error), devastating the $260 billion auto insurance industry. Continuous health monitoring via wearables means life and health insurers will know your real-time risk profile, not a statistical approximation. Smart home sensors detect water leaks, fires, and break-ins before they cause damage. The chapter explores the moral hazard question: when insurers have perfect real-time data about your behavior, health, and risks, what happens to privacy? Do premiums become a behavior tax? And what happens to the concept of pooled risk when individual risk is perfectly knowable?",
+    futureVision: "Your home insurance premium adjusts monthly based on real-time sensor data: your smart water system detected no leak risk, your electrical monitoring found no fire hazards, and your security system logged zero incidents. Your auto insurance costs almost nothing because your car drives itself and hasn't had an accident in three years. But your health insurer pings you: 'Your wearable data shows increased alcohol consumption and reduced sleep over the past two weeks. Your premium will increase 3% next month unless these patterns reverse.' Welcome to the surveillance economy of insurance.",
+    sportsConnection: "Sports insurance is already transforming: player injury insurance uses wearable data and AI models to price policies. The same real-time risk assessment is coming to every insurance product."
+  },
+  { id: 9, title: "The Future of Finance", topic: "Fintech, blockchain, decentralized systems, and new money",
+    keyThemes: ["AI eliminating human financial advisors", "Blockchain enabling trustless transactions", "Mobile banking reaching the unbanked billions", "Decentralized autonomous organizations (DAOs)"],
+    summary: "The authors describe a financial system being rebuilt from the ground up. AI-powered robo-advisors already manage billions in assets and will increasingly outperform human advisors for routine financial planning. Blockchain technology enables trustless, transparent transactions without intermediaries \u2014 potentially eliminating the need for banks, escrow services, and clearinghouses. Mobile banking is reaching billions of previously unbanked people in developing nations, creating a massive new economic force. Smart contracts execute automatically when conditions are met, no lawyers required. The authors also explore cryptocurrency, decentralized finance (DeFi), and decentralized autonomous organizations (DAOs) where code replaces corporate governance. Crowdfunding platforms democratize capital access, meaning a startup in Lagos has the same access to global investors as one in Silicon Valley.",
+    futureVision: "Your AI financial advisor manages your entire financial life. It automatically invests your savings based on your goals and risk tolerance, negotiates your mortgage rate by shopping across 200 lenders in milliseconds, files your taxes, and spots fraudulent charges on your accounts before you notice them. When you buy a house, a blockchain smart contract handles the entire closing: title verification, escrow, transfer of funds, and deed recording \u2014 all in minutes, not weeks, at a fraction of the cost.",
+    sportsConnection: "Sports finance is already being disrupted: blockchain-based fan tokens, NFT collectibles, fractional team ownership, and athlete NIL marketplaces are all built on the technologies this chapter describes."
+  },
+  { id: 10, title: "The Future of Real Estate", topic: "Smart cities, remote work, VR, and new living models",
+    keyThemes: ["Remote work decoupling jobs from geography", "Smart cities optimized by AI and sensors", "VR enabling virtual office presence from anywhere", "3D-printed houses cutting construction costs"],
+    summary: "Where you live has always been determined by where you work. Diamandis and Kotler argue that convergence is severing this connection permanently. High-bandwidth networks and VR enable full-presence remote work from anywhere. If your virtual office feels identical to being there in person, why commute? Why live in an expensive city? This triggers a massive reshuffling of real estate value. Meanwhile, 3D-printed houses (built in 24 hours for under $10,000) could solve housing affordability crises. Smart cities use AI, sensors, and IoT to optimize energy, traffic, waste, and services in real time. The authors also explore how autonomous vehicles reshape urban planning: when parking lots are unnecessary (because cars drop you off and drive themselves elsewhere), that land gets repurposed for housing, parks, and commerce.",
+    futureVision: "You live on a 10-acre property in rural Vermont that cost less than a Manhattan studio apartment. Every morning you put on lightweight AR glasses and 'walk into' your company's virtual office in San Francisco, where your avatar sits at your desk, makes eye contact with colleagues, and collaborates on a shared digital whiteboard. Your house was 3D-printed in 48 hours. Your town of 5,000 people has faster internet than most of Manhattan, and a fleet of autonomous vehicles handles everything from grocery delivery to your kids' school commute.",
+    sportsConnection: "The future of sports venues is being reimagined too. Smart stadiums with IoT sensors optimize crowd flow, concessions, and energy use. VR could make 'home field advantage' accessible to fans anywhere in the world."
+  },
+  { id: 11, title: "The Future of Food", topic: "Lab-grown meat, vertical farms, AI agriculture, and supply chains",
+    keyThemes: ["Cultured meat grown from stem cells", "Vertical farms using 95% less water", "AI-optimized agriculture and precision farming", "CRISPR gene editing for crop resilience"],
+    summary: "The food system is one of the most resource-intensive industries on Earth, and Diamandis and Kotler argue it's about to be transformed by convergence. Lab-grown (cultured) meat, produced from animal stem cells without slaughtering animals, could be cost-competitive with conventional meat by the late 2020s. Vertical farms \u2014 indoor facilities stacking crops in layers under LED lights \u2014 use 95% less water, zero pesticides, and can operate year-round in any climate, including food deserts and urban centers. AI-optimized precision agriculture uses drones, sensors, and machine learning to monitor individual plants, applying exactly the right amount of water and nutrients at exactly the right time. CRISPR gene editing creates crops resistant to drought, disease, and pests without traditional GMO techniques. The result: more food, less land, less water, fewer chemicals, lower costs.",
+    futureVision: "A robotic kitchen in your home stores ingredients from a vertical farm three blocks away, delivered by autonomous vehicle that morning. You tell your AI assistant what you feel like eating. It considers your nutritional needs (from your wearable data), what's fresh, your dietary preferences, and what your family enjoyed last week. It suggests three options. You pick one. A robotic arm system \u2014 essentially a pair of chef-quality mechanical hands \u2014 prepares the meal from scratch while you relax. The 'steak' is cultured meat, indistinguishable from conventional beef, produced without a single cow. Total cost: about $3.",
+    sportsConnection: "Athlete nutrition is already being transformed by precision food science. AI-driven meal plans optimized for performance, recovery, and body composition are primitive versions of what's coming for everyone."
+  },
+  { id: 12, title: "Threats & Dangers", topic: "Deepfakes, job displacement, bias, surveillance, and power concentration",
+    keyThemes: ["Technological unemployment and the 'great displacement'", "Deepfakes eroding trust in information", "Algorithmic bias and systemic inequity", "Surveillance capitalism and power concentration"],
+    summary: "After twelve optimistic chapters, Diamandis and Kotler confront what can go wrong. The same exponential technologies enabling extraordinary progress also enable extraordinary harm. AI-powered automation could displace millions of jobs faster than new ones are created, with truck driving, retail, food service, and office administration most at risk. Deepfakes \u2014 AI-generated fake video and audio \u2014 erode trust in media and could destabilize elections, markets, and public discourse. Algorithmic bias means AI systems trained on historical data can perpetuate and amplify racial, gender, and socioeconomic discrimination at scale. Surveillance technology gives governments and corporations unprecedented ability to monitor individuals. And perhaps most concerning: the benefits of exponential technology tend to concentrate among those who control the platforms, potentially creating a new class of technology oligarchs with more power than nation-states.",
+    futureVision: null,
+    sportsConnection: "These threats are already manifesting in sports: deepfake athlete videos manipulating betting markets, biometric surveillance controversies in stadiums, AI-generated coverage that systematically under-represents women's sports, and algorithmic bias in scouting tools."
+  },
+  { id: 13, title: "Five Great Migrations", topic: "Climate, urban, virtual, space, and meta-intelligence",
+    keyThemes: ["Climate migration reshaping populations", "Urban migration into smart mega-cities", "Virtual migration into digital worlds", "Space migration beyond Earth", "Meta-intelligence: humans merging with AI"],
+    summary: "The book closes with five massive 'migrations' that will reshape civilization over the coming century. Climate migration: rising seas, extreme weather, and agricultural disruption will force hundreds of millions to relocate, creating political and humanitarian crises. Urban migration: smart cities will attract populations with AI-optimized services, creating mega-cities of 50+ million people. Virtual migration: as VR and AR become indistinguishable from reality, humanity will spend increasing time in digital worlds \u2014 working, socializing, and playing in virtual spaces. Space migration: SpaceX and Blue Origin are making space access cheaper by orders of magnitude, with Moon bases and Mars colonization becoming tangible goals. Meta-intelligence migration: the most profound \u2014 humans augmenting their cognitive capabilities through brain-computer interfaces, effectively merging with AI. Elon Musk's Neuralink and similar efforts aim to create a direct neural connection between human brains and the cloud.",
+    futureVision: "Combining brain-computer interfaces with cloud-connected AI, Diamandis and Kotler envision a future where human intelligence is no longer bounded by biology. You don't search for information; you simply know it, because your neural interface accesses the entire knowledge base of humanity in real time. A group of linked minds collaborates on a problem simultaneously, each contributing a piece of the cognitive work. The boundary between 'you' and 'the network' blurs. The authors call this 'meta-intelligence' \u2014 a collective consciousness that may be the only way humans remain relevant in a world of superintelligent AI.",
+    sportsConnection: "For sports, virtual migration is the most immediate: Gen Alpha experiences sports primarily through gaming and social media, not broadcast TV. The virtual and meta-intelligence migrations will reshape how sports are experienced, produced, and consumed."
+  }
 ];
 
 function Bg() {
@@ -171,6 +236,7 @@ export default function App() {
     }
     if(parts[0]==="deepdive") {
       if(parts[1]==="results") return { view:"ddresults" };
+      if(parts[1]==="chapter" && parts[2]) { const chNum=parseInt(parts[2]); if(chNum>=1&&chNum<=BOOK_CHAPTERS.length) return { view:"chapter", chapterId:chNum }; }
       return { view:"deepdive" };
     }
     if(parts[0]==="instructor") return { view:"instructor" };
@@ -180,6 +246,7 @@ export default function App() {
   const initial = parseHash();
   const [view,setView]=useState(initial.view);
   const [mi,setMi]=useState(initial.mi||0);
+  const [chapterId,setChapterId]=useState(initial.chapterId||null);
   const [si,setSi]=useState(0);
   const [ans,setAns]=useState({});
   const [done,setDone]=useState({});
@@ -552,12 +619,13 @@ export default function App() {
     if(v==="quiz") return "#/module/"+(m!==undefined?m+1:mi+1)+"/quiz";
     if(v==="results") return "#/module/"+(m!==undefined?m+1:mi+1)+"/results";
     if(v==="deepdive") return "#/deepdive";
+    if(v==="chapter" && m!==undefined) return "#/deepdive/chapter/"+m;
     if(v==="ddresults") return "#/deepdive/results";
     if(v==="instructor") return "#/instructor";
     return "#/";
   };
 
-  const go=(v,m)=>{setFade(false);setTimeout(()=>{setView(v);if(m!==undefined)setMi(m);setSi(0);setAns({});setShowDeeper(false);setFade(true);window.scrollTo({top:0});const hash=buildHash(v,m);if(window.location.hash!==hash)window.history.pushState(null,"",hash);},120);};
+  const go=(v,m)=>{setFade(false);setTimeout(()=>{setView(v);if(m!==undefined){if(v==="chapter")setChapterId(m);else setMi(m);}setSi(0);setAns({});setShowDeeper(false);setFade(true);window.scrollTo({top:0});const hash=buildHash(v,m);if(window.location.hash!==hash)window.history.pushState(null,"",hash);},120);};
 
   // Listen for browser back/forward
   useEffect(()=>{
@@ -565,6 +633,7 @@ export default function App() {
       const parsed=parseHash();
       setView(parsed.view);
       if(parsed.mi!==undefined) setMi(parsed.mi);
+      if(parsed.chapterId!==undefined) setChapterId(parsed.chapterId);
       setSi(0);setAns({});setShowDeeper(false);
       window.scrollTo({top:0});
     };
@@ -1339,7 +1408,9 @@ export default function App() {
         {BOOK_CHAPTERS.map(ch=>{
           const assignment = ddChapterAssignments[ch.id];
           const isMyChapter = myChapters.some(mc=>mc.chapterId===ch.id);
-          return <div key={ch.id} style={{background:isMyChapter?"rgba(168,85,247,0.06)":"rgba(255,255,255,0.015)",border:"1px solid "+(isMyChapter?"rgba(168,85,247,0.2)":"rgba(255,255,255,0.04)"),borderRadius:10,padding:14}}>
+          return <div key={ch.id} onClick={()=>go("chapter",ch.id)} style={{background:isMyChapter?"rgba(168,85,247,0.06)":"rgba(255,255,255,0.015)",border:"1px solid "+(isMyChapter?"rgba(168,85,247,0.2)":"rgba(255,255,255,0.04)"),borderRadius:10,padding:14,cursor:"pointer",transition:"all 0.15s"}}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.borderColor=isMyChapter?"rgba(168,85,247,0.4)":"rgba(255,255,255,0.12)";}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=isMyChapter?"rgba(168,85,247,0.2)":"rgba(255,255,255,0.04)";}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
               <span style={{fontSize:10,fontWeight:700,color:isMyChapter?"#A855F7":"#555"}}>Ch. {ch.id}</span>
               {assignment&&assignment.presentDate&&<span style={{fontSize:9,color:"#888"}}>{assignment.presentDate}</span>}
@@ -1370,6 +1441,85 @@ export default function App() {
       <div style={{display:"flex",gap:8,justifyContent:"center",paddingBottom:40}}>
         <button onClick={()=>go("deepdive")} style={gs}>← Deep Dive</button>
         <button onClick={()=>go("home")} style={gs}>Home</button>
+      </div>
+    </div></div>
+  );}
+
+  // ═══════════════════════════════════════════════════
+  // CHAPTER DETAIL VIEW
+  // ═══════════════════════════════════════════════════
+  if(view==="chapter" && chapterId) {
+    const ch = BOOK_CHAPTERS.find(c=>c.id===chapterId);
+    if(!ch) { go("deepdive"); return null; }
+    const assignment = ddChapterAssignments[ch.id] || {};
+    const isMyChapter = myChapters.some(mc=>mc.chapterId===ch.id);
+    const prevCh = ch.id > 1 ? ch.id - 1 : null;
+    const nextCh = ch.id < BOOK_CHAPTERS.length ? ch.id + 1 : null;
+    return (
+    <div style={S}>{font}<Bg/><div style={{...W,...F}}>
+      <div style={{paddingTop:20,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",paddingBottom:12}}>
+        <button onClick={()=>go("deepdive")} style={gs}>← Deep Dive</button>
+        <Tag color="#A855F7" bg="rgba(168,85,247,0.15)">Chapter {ch.id} of {BOOK_CHAPTERS.length}</Tag>
+        {isMyChapter&&<Tag color="#34C759" bg="rgba(52,199,89,0.1)">Your Chapter</Tag>}
+      </div>
+
+      <h2 style={{fontSize:"clamp(24px,4vw,40px)",fontWeight:800,margin:"0 0 4px",color:"#fff"}}>{ch.title}</h2>
+      <p style={{fontSize:14,color:"#A855F7",margin:"0 0 6px",fontWeight:600}}>The Future Is Faster Than You Think</p>
+      <p style={{fontSize:13,color:"#666",margin:"0 0 24px"}}>{ch.topic}</p>
+
+      {assignment.students&&assignment.students.length>0&&<div style={{background:"rgba(168,85,247,0.05)",border:"1px solid rgba(168,85,247,0.15)",borderRadius:10,padding:14,marginBottom:20}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
+          <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+            <span style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:1}}>PRESENTING:</span>
+            {assignment.students.map((s,i)=><span key={i} style={{fontSize:12,fontWeight:600,color:s===studentName?"#A855F7":"#bbb"}}>{s}{i<assignment.students.length-1?",":""}</span>)}
+          </div>
+          {assignment.presentDate&&<span style={{fontSize:11,color:"#FF9500",fontWeight:600}}>{assignment.presentDate}</span>}
+        </div>
+      </div>}
+
+      {/* Chapter Summary */}
+      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"clamp(18px,3vw,28px)",marginBottom:16}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>CHAPTER SUMMARY</div>
+        {ch.summary.split("\u2014").length > 3
+          ? ch.summary.split(". ").reduce((acc, sentence, i, arr) => {
+              const midpoint = Math.floor(arr.length / 2);
+              if(i === 0) acc.push(sentence);
+              else if(i === midpoint) { acc[acc.length-1] += "."; acc.push(sentence); }
+              else acc[acc.length-1] += ". " + sentence;
+              return acc;
+            }, []).map((para, pi) => <p key={pi} style={{fontSize:15,lineHeight:1.75,color:"#bbb",margin:pi===0?"0 0 16px":"16px 0 0"}}>{para}{!para.endsWith(".")?"":""}</p>)
+          : <p style={{fontSize:15,lineHeight:1.75,color:"#bbb",margin:0}}>{ch.summary}</p>
+        }
+      </div>
+
+      {/* Key Themes */}
+      <div style={{background:"rgba(168,85,247,0.04)",border:"1px solid rgba(168,85,247,0.15)",borderRadius:12,padding:18,marginBottom:16}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>KEY THEMES</div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {ch.keyThemes.map((t,i)=><div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+            <span style={{color:"#A855F7",fontWeight:800,fontSize:14,lineHeight:"20px",flexShrink:0}}>{i+1}</span>
+            <p style={{fontSize:13,color:"#ccc",margin:0,lineHeight:1.55}}>{t}</p>
+          </div>)}
+        </div>
+      </div>
+
+      {/* Future Vision */}
+      {ch.futureVision&&<div style={{background:"linear-gradient(135deg,rgba(0,122,255,0.06),rgba(88,86,214,0.04))",border:"1px solid rgba(0,122,255,0.2)",borderRadius:14,padding:"clamp(18px,3vw,28px)",marginBottom:16}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#007AFF",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>🔮 FUTURE VISION</div>
+        <p style={{fontSize:14,lineHeight:1.75,color:"#bbb",margin:0,fontStyle:"italic"}}>{ch.futureVision}</p>
+      </div>}
+
+      {/* Sports Connection */}
+      {ch.sportsConnection&&<div style={{background:"rgba(255,59,48,0.04)",border:"1px solid rgba(255,59,48,0.15)",borderRadius:12,padding:18,marginBottom:24}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#FF3B30",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>🏟️ SPORTS CONNECTION</div>
+        <p style={{fontSize:13,lineHeight:1.65,color:"#aaa",margin:0}}>{ch.sportsConnection}</p>
+      </div>}
+
+      {/* Chapter Navigation */}
+      <div style={{display:"flex",justifyContent:"space-between",paddingBottom:40,gap:8,flexWrap:"wrap"}}>
+        {prevCh?<button onClick={()=>go("chapter",prevCh)} style={gs}>← Ch. {prevCh}</button>:<div/>}
+        {nextCh?<button onClick={()=>go("chapter",nextCh)} style={bs("linear-gradient(135deg,#A855F7,#7C3AED)")}>Ch. {nextCh}: {BOOK_CHAPTERS.find(c=>c.id===nextCh).title} →</button>
+        :<button onClick={()=>go("deepdive")} style={bs("linear-gradient(135deg,#A855F7,#7C3AED)")}>← Back to Deep Dive</button>}
       </div>
     </div></div>
   );}
