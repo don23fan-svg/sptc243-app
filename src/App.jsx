@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, get, child, push, remove, update } from "firebase/database";
 
@@ -210,7 +210,7 @@ const BOOK_CHAPTERS = [
   }
 ];
 
-function Bg() {
+const Bg = memo(function Bg() {
   const ref = useRef(null);
   useEffect(() => {
     const c = ref.current, ctx = c.getContext("2d"); let frame, ps = [];
@@ -219,14 +219,28 @@ function Bg() {
     const d = () => { ctx.clearRect(0,0,c.width,c.height); ps.forEach((p,i) => { p.x+=p.vx;p.y+=p.vy; if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;if(p.y<0)p.y=c.height;if(p.y>c.height)p.y=0; ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${p.o})`;ctx.fill(); for(let j=i+1;j<ps.length;j++){const dd=Math.hypot(p.x-ps[j].x,p.y-ps[j].y);if(dd<100){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(ps[j].x,ps[j].y);ctx.strokeStyle=`rgba(255,255,255,${.025*(1-dd/100)})`;ctx.stroke();}}}); frame=requestAnimationFrame(d); }; d();
     return () => { cancelAnimationFrame(frame); window.removeEventListener("resize", rs); };
   }, []); return <canvas ref={ref} style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0}} />;
-}
+});
 
-function Ring({p,size=48,sw=4,color="#fff"}) { const r=(size-sw)/2,c=2*Math.PI*r; return <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}><circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={sw}/><circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={sw} strokeDasharray={c} strokeDashoffset={c-(p/100)*c} strokeLinecap="round" style={{transition:"stroke-dashoffset 0.5s"}}/></svg>; }
-function Tag({children,color:cl="#666",bg="rgba(255,255,255,0.05)"}) { return <span style={{display:"inline-block",background:bg,color:cl,padding:"3px 10px",borderRadius:16,fontSize:10,fontWeight:700,letterSpacing:.3}}>{children}</span>; }
-function SegProg({cur,total,color}) { return <div style={{display:"flex",gap:4,marginBottom:20}}>{Array.from({length:total}).map((_,i)=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<=cur?color:"rgba(255,255,255,0.08)",transition:"background 0.3s"}}/>)}</div>; }
+const Ring = memo(function Ring({p,size=48,sw=4,color="#fff"}) { const r=(size-sw)/2,c=2*Math.PI*r; return <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}><circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={sw}/><circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={sw} strokeDasharray={c} strokeDashoffset={c-(p/100)*c} strokeLinecap="round" style={{transition:"stroke-dashoffset 0.5s"}}/></svg>; });
+const Tag = memo(function Tag({children,color:cl="#666",bg="rgba(255,255,255,0.05)"}) { return <span style={{display:"inline-block",background:bg,color:cl,padding:"3px 10px",borderRadius:16,fontSize:10,fontWeight:700,letterSpacing:.3}}>{children}</span>; });
+const SegProg = memo(function SegProg({cur,total,color}) { return <div style={{display:"flex",gap:4,marginBottom:20}}>{Array.from({length:total}).map((_,i)=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<=cur?color:"rgba(255,255,255,0.08)",transition:"background 0.3s"}}/>)}</div>; });
 
 const gs={background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",color:"#888",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit"};
 const bs=(bg)=>({background:bg,border:"none",color:"#fff",padding:"12px 24px",borderRadius:9,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"});
+
+// Shared style constants to reduce inline object creation
+const STY = {
+  card: {background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"clamp(16px,3vw,28px)"},
+  cardSm: {background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:18},
+  cardXs: {background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:10,padding:14},
+  sectionLabel: {fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginBottom:10},
+  subLabel: {fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginBottom:5},
+  bodyText: {fontSize:15,lineHeight:1.75,color:"#bbb",margin:0},
+  dimText: {fontSize:12,color:"#666",margin:0,lineHeight:1.5},
+  thinBorder: "1px solid rgba(255,255,255,0.04)",
+  font: <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>,
+  S: {fontFamily:"'DM Sans',sans-serif",background:"#06060a",color:"#ddd",minHeight:"100vh"},
+};
 
 const INSTRUCTOR_PASSCODE = "MSU12345!";
 const INSTRUCTOR_NAME = "Ben Fairclough";
@@ -304,53 +318,52 @@ export default function App() {
           const parsed = JSON.parse(saved);
           setStudentName(parsed.name);
           if(db){
-            try {
-              const snap = await get(child(ref(db), "students/"+fbKey(parsed.name)));
-              if(snap.exists()){
-                const p = snap.val();
-                if(p.done) setDone(p.done);
-                if(p.scores) setScores(p.scores);
-                if(p.intake) { setIntakeComplete(true); setIntakeAnswers(p.intake); try{localStorage.setItem("sptc243-intake-done","true");}catch(e2){} }
-                if(p.ddQuizHistory) setDdQuizHistory(p.ddQuizHistory);
-                if(p.chapterPrefs) setDdChapterPrefs(p.chapterPrefs);
-              }
-            } catch(e){}
-            // Load deep dive chapter assignments
-            try {
-              const ddSnap = await get(child(ref(db), "deepdive/chapters"));
-              if(ddSnap.exists()) setDdChapterAssignments(ddSnap.val());
-            } catch(e){}
-            // Load deep dive quiz questions
-            try {
-              const qqSnap = await get(child(ref(db), "deepdive/quizQuestions"));
-              if(qqSnap.exists()) {
-                const qs = qqSnap.val();
-                setDdQuizQuestions(Object.keys(qs).map(k=>({id:k,...qs[k]})));
-              }
-            } catch(e){}
+            // Parallel fetch: student data + deep dive + roster
+            const [studentSnap, ddChapSnap, ddQSnap, rosterSnap] = await Promise.all([
+              get(child(ref(db), "students/"+fbKey(parsed.name))).catch(()=>null),
+              get(child(ref(db), "deepdive/chapters")).catch(()=>null),
+              get(child(ref(db), "deepdive/quizQuestions")).catch(()=>null),
+              get(child(ref(db), "roster")).catch(()=>null),
+            ]);
+            if(studentSnap&&studentSnap.exists()){
+              const p = studentSnap.val();
+              if(p.done) setDone(p.done);
+              if(p.scores) setScores(p.scores);
+              if(p.intake) { setIntakeComplete(true); setIntakeAnswers(p.intake); try{localStorage.setItem("sptc243-intake-done","true");}catch(e2){} }
+              if(p.ddQuizHistory) setDdQuizHistory(p.ddQuizHistory);
+              if(p.chapterPrefs) setDdChapterPrefs(p.chapterPrefs);
+            }
+            if(ddChapSnap&&ddChapSnap.exists()) setDdChapterAssignments(ddChapSnap.val());
+            if(ddQSnap&&ddQSnap.exists()) {
+              const qs = ddQSnap.val();
+              setDdQuizQuestions(Object.keys(qs).map(k=>({id:k,...qs[k]})));
+            }
+            if(rosterSnap&&rosterSnap.exists()) {
+              const r = rosterSnap.val();
+              setRoster(Array.isArray(r) ? r : Object.values(r));
+            }
           }
+        } else if(db) {
+          // Not logged in — still load roster for dropdown
+          try {
+            const rosterSnap = await get(child(ref(db), "roster"));
+            if(rosterSnap.exists()) {
+              const r = rosterSnap.val();
+              setRoster(Array.isArray(r) ? r : Object.values(r));
+            }
+          } catch(e){}
         }
       } catch(e){}
-      // Always load roster for the dropdown (even before login)
-      if(db){
-        try {
-          const rosterSnap = await get(child(ref(db), "roster"));
-          if(rosterSnap.exists()) {
-            const r = rosterSnap.val();
-            setRoster(Array.isArray(r) ? r : Object.values(r));
-          }
-        } catch(e){}
-      }
       setLoading(false);
     })();
   },[]);
 
   // Sync progress to Firebase
-  const syncProgress = async (newDone, newScores) => {
+  const syncProgress = useCallback(async (newDone, newScores) => {
     if(!studentName||!db) return;
     const data = { name: studentName, done: newDone, scores: newScores, lastActive: new Date().toISOString() };
     try { await set(ref(db, "students/"+fbKey(studentName)), data); } catch(e){ console.error("Sync failed:", e); }
-  };
+  },[studentName]);
 
   // Register student
   // Normalize name: trim, collapse spaces, capitalize each word
@@ -419,9 +432,9 @@ export default function App() {
     ]}
   ];
 
-  const allIntakeQs = INTAKE_SECTIONS.flatMap(s=>s.questions);
-  const intakeReady = allIntakeQs.every(q=>q.type==="text"?(intakeAnswers[q.id]||"").trim().length>0:intakeAnswers[q.id]!==undefined&&(Array.isArray(intakeAnswers[q.id])?intakeAnswers[q.id].length>0:true));
-  const sectionReady = (secIdx) => INTAKE_SECTIONS[secIdx].questions.every(q=>q.type==="text"?(intakeAnswers[q.id]||"").trim().length>0:intakeAnswers[q.id]!==undefined&&(Array.isArray(intakeAnswers[q.id])?intakeAnswers[q.id].length>0:true));
+  const allIntakeQs = useMemo(()=>INTAKE_SECTIONS.flatMap(s=>s.questions),[]);
+  const intakeReady = useMemo(()=>allIntakeQs.every(q=>q.type==="text"?(intakeAnswers[q.id]||"").trim().length>0:intakeAnswers[q.id]!==undefined&&(Array.isArray(intakeAnswers[q.id])?intakeAnswers[q.id].length>0:true)),[intakeAnswers,allIntakeQs]);
+  const sectionReady = useCallback((secIdx) => INTAKE_SECTIONS[secIdx].questions.every(q=>q.type==="text"?(intakeAnswers[q.id]||"").trim().length>0:intakeAnswers[q.id]!==undefined&&(Array.isArray(intakeAnswers[q.id])?intakeAnswers[q.id].length>0:true)),[intakeAnswers]);
 
   const submitIntake = async () => {
     if(!studentName||!db) return;
@@ -439,7 +452,7 @@ export default function App() {
   // ═══════════════════════════════════════════════════
 
   // Get this student's assigned chapter(s)
-  const myChapters = Object.entries(ddChapterAssignments).filter(([,v])=>(v.students||[]).includes(studentName)).map(([k,v])=>({chapterId:parseInt(k),...v}));
+  const myChapters = useMemo(()=>Object.entries(ddChapterAssignments).filter(([,v])=>(v.students||[]).includes(studentName)).map(([k,v])=>({chapterId:parseInt(k),...v})),[ddChapterAssignments,studentName]);
   // Auto-set chapter for quiz submission when single assignment
   useEffect(()=>{if(myChapters.length===1&&!ddSubmitQ.chapterId)setDdSubmitQ(p=>({...p,chapterId:myChapters[0].chapterId}));},[JSON.stringify(myChapters)]);
 
@@ -580,7 +593,6 @@ export default function App() {
     go("ddresults");
   };
 
-  // Load instructor dashboard data
   // Load instructor dashboard data from Firebase
   const loadDashboard = async () => {
     setDashAuthed(true);
@@ -588,47 +600,43 @@ export default function App() {
     setDashLoading(true);
     try {
       if(!db){setDashData([]);setDashLoading(false);return;}
-      const snap = await get(ref(db, "students"));
+      // Parallel fetch all dashboard data
+      const [studentsSnap, rosterSnap, ddChSnap, ddQSnap, archSnap] = await Promise.all([
+        get(ref(db, "students")).catch(()=>null),
+        get(ref(db, "roster")).catch(()=>null),
+        get(ref(db, "deepdive/chapters")).catch(()=>null),
+        get(ref(db, "deepdive/quizQuestions")).catch(()=>null),
+        get(ref(db, "archives")).catch(()=>null),
+      ]);
+      // Process students
       const students = [];
-      if(snap.exists()){
-        const data = snap.val();
+      if(studentsSnap&&studentsSnap.exists()){
+        const data = studentsSnap.val();
         Object.keys(data).forEach(k=>{ if(data[k].name && data[k].name !== INSTRUCTOR_NAME) students.push(data[k]); });
       }
       students.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
       setDashData(students);
-      // Load roster
-      try {
-        const rosterSnap = await get(ref(db, "roster"));
-        if(rosterSnap.exists()) {
-          const r = rosterSnap.val();
-          setRoster(Array.isArray(r) ? r : Object.values(r));
-        }
-      } catch(e){}
-      // Load chapter preferences from all students
+      // Process roster
+      if(rosterSnap&&rosterSnap.exists()) {
+        const r = rosterSnap.val();
+        setRoster(Array.isArray(r) ? r : Object.values(r));
+      }
+      // Process chapter preferences
       const allPrefs = {};
       students.forEach(s => { if(s.chapterPrefs) allPrefs[fbKey(s.name)] = { name: s.name, ...s.chapterPrefs }; });
       setDdAllPrefs(allPrefs);
-      // Load deep dive data for dashboard
-      try {
-        const ddChSnap = await get(ref(db, "deepdive/chapters"));
-        if(ddChSnap.exists()) setDdChapterAssignments(ddChSnap.val());
-      } catch(e){}
-      try {
-        const ddQSnap = await get(ref(db, "deepdive/quizQuestions"));
-        if(ddQSnap.exists()) {
-          const qs = ddQSnap.val();
-          setDdQuizQuestions(Object.keys(qs).map(k=>({id:k,...qs[k]})));
-        }
-      } catch(e){}
-    } catch(e){ console.error("Dashboard load failed:", e); setDashData([]); }
-    // Load archive list
-    try {
-      const archSnap = await get(ref(db, "archives"));
-      if(archSnap.exists()) {
+      // Process deep dive data
+      if(ddChSnap&&ddChSnap.exists()) setDdChapterAssignments(ddChSnap.val());
+      if(ddQSnap&&ddQSnap.exists()) {
+        const qs = ddQSnap.val();
+        setDdQuizQuestions(Object.keys(qs).map(k=>({id:k,...qs[k]})));
+      }
+      // Process archives
+      if(archSnap&&archSnap.exists()) {
         const archData = archSnap.val();
         setArchives(Object.keys(archData).map(k=>({key:k,...archData[k].meta})).sort((a,b)=>(b.date||"").localeCompare(a.date||"")));
       } else { setArchives([]); }
-    } catch(e){}
+    } catch(e){ console.error("Dashboard load failed:", e); setDashData([]); }
     setDashLoading(false);
   };
 
@@ -636,11 +644,15 @@ export default function App() {
   const semesterRollover = async (label) => {
     if(!db) return;
     const archKey = label.toLowerCase().replace(/\s+/g,"-");
-    // Gather current data
-    let studentsData = null, rosterData = null, deepdiveData = null;
-    try { const s = await get(ref(db, "students")); if(s.exists()) studentsData = s.val(); } catch(e){}
-    try { const r = await get(ref(db, "roster")); if(r.exists()) rosterData = r.val(); } catch(e){}
-    try { const d = await get(ref(db, "deepdive")); if(d.exists()) deepdiveData = d.val(); } catch(e){}
+    // Gather current data in parallel
+    const [sSnap, rSnap, dSnap] = await Promise.all([
+      get(ref(db, "students")).catch(()=>null),
+      get(ref(db, "roster")).catch(()=>null),
+      get(ref(db, "deepdive")).catch(()=>null),
+    ]);
+    let studentsData = sSnap&&sSnap.exists() ? sSnap.val() : null;
+    let rosterData = rSnap&&rSnap.exists() ? rSnap.val() : null;
+    let deepdiveData = dSnap&&dSnap.exists() ? dSnap.val() : null;
     // Filter out instructor from archive
     if(studentsData && studentsData[fbKey(INSTRUCTOR_NAME)]) {
       delete studentsData[fbKey(INSTRUCTOR_NAME)];
@@ -814,12 +826,12 @@ export default function App() {
 
   // Auto-load dashboard data when navigating to instructor view while already authed
   useEffect(()=>{if(view==="instructor"&&dashAuthed&&dashData.length===0&&!dashLoading){loadDashboard();}},[view,dashAuthed]);
-  const isUnlocked=(i)=>i===0||(done[i-1]&&Math.round((scores[i-1]/MODULES[i-1].quiz.length)*100)>=MASTERY_THRESHOLD);
-  const progress=Math.round(Object.keys(done).length/MODULES.length*100);
-  const F={opacity:fade?1:0,transform:fade?"translateY(0)":"translateY(6px)",transition:"opacity .15s,transform .15s"};
+  const isUnlocked=useCallback((i)=>i===0||(done[i-1]&&Math.round((scores[i-1]/MODULES[i-1].quiz.length)*100)>=MASTERY_THRESHOLD),[done,scores]);
+  const progress=useMemo(()=>Math.round(Object.keys(done).length/MODULES.length*100),[done]);
+  const F=useMemo(()=>({opacity:fade?1:0,transform:fade?"translateY(0)":"translateY(6px)",transition:"opacity .15s,transform .15s"}),[fade]);
   const W={maxWidth:880,margin:"0 auto",padding:"0 20px",position:"relative",zIndex:2};
-  const S={fontFamily:"'DM Sans',sans-serif",background:"#06060a",color:"#ddd",minHeight:"100vh"};
-  const font=<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>;
+  const S=STY.S;
+  const font=STY.font;
 
   if(loading) return <div style={S}>{font}<Bg/><div style={{...W,display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh"}}><p style={{color:"#444",fontSize:14}}>Loading...</p></div></div>;
 
