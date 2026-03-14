@@ -290,6 +290,8 @@ export default function App() {
   const [roster,setRoster]=useState([]); // ["First Last", ...]
   const [showNameEntry,setShowNameEntry]=useState(false); // for "I don't see my name"
   const [rosterNewName,setRosterNewName]=useState(""); // instructor adding to roster
+  const [archives,setArchives]=useState([]); // [{label, date, studentCount}]
+  const [semesterLabel,setSemesterLabel]=useState(()=>{const m=new Date().getMonth();const y=new Date().getFullYear();return (m>=6?"Fall":"Spring")+" "+y;});
 
   // Load student identity from localStorage, progress from Firebase
   useEffect(()=>{
@@ -601,7 +603,72 @@ export default function App() {
         }
       } catch(e){}
     } catch(e){ console.error("Dashboard load failed:", e); setDashData([]); }
+    // Load archive list
+    try {
+      const archSnap = await get(ref(db, "archives"));
+      if(archSnap.exists()) {
+        const archData = archSnap.val();
+        setArchives(Object.keys(archData).map(k=>({key:k,...archData[k].meta})).sort((a,b)=>(b.date||"").localeCompare(a.date||"")));
+      } else { setArchives([]); }
+    } catch(e){}
     setDashLoading(false);
+  };
+
+  // Semester rollover: archive everything, then wipe
+  const semesterRollover = async (label) => {
+    if(!db) return;
+    const archKey = label.toLowerCase().replace(/\s+/g,"-");
+    // Gather current data
+    let studentsData = null, rosterData = null, deepdiveData = null;
+    try { const s = await get(ref(db, "students")); if(s.exists()) studentsData = s.val(); } catch(e){}
+    try { const r = await get(ref(db, "roster")); if(r.exists()) rosterData = r.val(); } catch(e){}
+    try { const d = await get(ref(db, "deepdive")); if(d.exists()) deepdiveData = d.val(); } catch(e){}
+    // Filter out instructor from archive
+    if(studentsData && studentsData[fbKey(INSTRUCTOR_NAME)]) {
+      delete studentsData[fbKey(INSTRUCTOR_NAME)];
+    }
+    // Count students for meta
+    const studentCount = studentsData ? Object.keys(studentsData).length : 0;
+    const rosterCount = rosterData ? (Array.isArray(rosterData) ? rosterData.length : Object.keys(rosterData).length) : 0;
+    // Write archive
+    const archivePayload = {
+      meta: { label, date: new Date().toISOString(), studentCount, rosterCount },
+      students: studentsData,
+      roster: rosterData,
+      deepdive: deepdiveData
+    };
+    try {
+      await set(ref(db, "archives/"+archKey), archivePayload);
+    } catch(e){ console.error("Archive write failed:", e); alert("Archive failed. Data NOT cleared."); return; }
+    // Wipe current data (but preserve instructor data and archives)
+    try { await remove(ref(db, "students")); } catch(e){}
+    try { await remove(ref(db, "roster")); } catch(e){}
+    try { await remove(ref(db, "deepdive")); } catch(e){}
+    // Clear local state
+    setDashData([]);
+    setRoster([]);
+    setDdChapterAssignments({});
+    setDdQuizQuestions([]);
+    // Clear instructor's own student-side session so it doesn't persist stale data
+    try { localStorage.removeItem("sptc243-student"); localStorage.removeItem("sptc243-intake-done"); } catch(e){}
+    setStudentName(null);
+    setDone({});
+    setScores({});
+    setIntakeComplete(false);
+    setIntakeAnswers({});
+    setDdQuizHistory([]);
+    // Auto-suggest next semester label
+    const m=new Date().getMonth(); const y=new Date().getFullYear();
+    setSemesterLabel((m>=6?"Spring":"Fall")+" "+(m>=6?y+1:y));
+    // Reload archives
+    try {
+      const archSnap = await get(ref(db, "archives"));
+      if(archSnap.exists()) {
+        const archData = archSnap.val();
+        setArchives(Object.keys(archData).map(k=>({key:k,...archData[k].meta})).sort((a,b)=>(b.date||"").localeCompare(a.date||"")));
+      }
+    } catch(e){}
+    alert("Semester '"+label+"' archived successfully. The app is now a clean slate for your next class.");
   };
 
   const toggle=(key)=>setExpanded(p=>({...p,[key]:!p[key]}));
@@ -1362,6 +1429,46 @@ export default function App() {
           {LESSON_PLANS.map((lp,i)=><Section key={i} id={"modtip-"+i} title={"Module "+(i+1)+": "+lp.title} icon={MODULES[i].icon} color={MODULES[i].color+"08"}>
             {lp.guideTips.map((tip,ti)=><p key={ti} style={{fontSize:12,color:"#aaa",margin:ti<lp.guideTips.length-1?"0 0 10px":"0",lineHeight:1.6,paddingLeft:12,borderLeft:"2px solid "+MODULES[i].color+"30"}}>{tip}</p>)}
           </Section>)}
+
+          {/* Semester Rollover */}
+          <div style={{marginTop:32,borderTop:"1px solid rgba(255,59,48,0.1)",paddingTop:24}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#FF3B30",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>🗂 SEMESTER ROLLOVER</div>
+            <p style={{fontSize:13,color:"#bbb",margin:"0 0 16px",lineHeight:1.7}}>At the end of each semester, archive all student data and reset the app for your next class. The archive preserves everything — roster, progress, intake, Deep Dive data — in Firebase so you can reference it later if needed.</p>
+
+            {/* Archive controls */}
+            <div style={{background:"rgba(255,59,48,0.04)",border:"1px solid rgba(255,59,48,0.15)",borderRadius:12,padding:20,marginBottom:16}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#fff",marginBottom:12}}>Archive Current Semester & Reset</div>
+              <div style={{display:"flex",gap:8,marginBottom:12,alignItems:"center",flexWrap:"wrap"}}>
+                <label style={{fontSize:11,color:"#888"}}>Semester label:</label>
+                <input value={semesterLabel} onChange={e=>setSemesterLabel(e.target.value)} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"8px 12px",color:"#fff",fontSize:13,fontFamily:"inherit",outline:"none",width:160}}/>
+              </div>
+              <div style={{fontSize:11,color:"#888",marginBottom:12,lineHeight:1.5}}>
+                This will archive: <strong style={{color:"#ddd"}}>{dashData.length} student{dashData.length!==1?"s":""}</strong>, <strong style={{color:"#ddd"}}>{roster.length} roster entries</strong>, <strong style={{color:"#ddd"}}>{ddQuizQuestions.length} quiz question{ddQuizQuestions.length!==1?"s":""}</strong>, and all Deep Dive data.
+                Then it clears everything for a fresh start.
+              </div>
+              <button onClick={()=>{
+                if(!semesterLabel.trim()) { alert("Enter a semester label."); return; }
+                if(!confirm("Archive '"+semesterLabel+"' and clear ALL current data?\n\nThis will:\n• Save all student progress, roster, intake, and Deep Dive data to the archive\n• Wipe the app clean for a new class\n\nThis cannot be undone. Continue?")) return;
+                semesterRollover(semesterLabel.trim());
+              }} style={{background:"linear-gradient(135deg,#FF3B30,#FF6B6B)",border:"none",color:"#fff",padding:"12px 24px",borderRadius:9,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Archive & Reset →</button>
+            </div>
+
+            {/* Past archives */}
+            {archives.length>0&&<div>
+              <div style={{fontSize:10,fontWeight:700,color:"#666",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>PAST ARCHIVES</div>
+              {archives.map((a,i)=><div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:10,padding:14,marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
+                <div>
+                  <span style={{fontSize:14,fontWeight:700,color:"#ddd"}}>{a.label}</span>
+                  <span style={{fontSize:10,color:"#666",marginLeft:10}}>Archived {a.date?new Date(a.date).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):""}</span>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <span style={{fontSize:10,color:"#888"}}>{a.studentCount||0} students</span>
+                  <span style={{fontSize:10,color:"#888"}}>{a.rosterCount||0} on roster</span>
+                </div>
+              </div>)}
+            </div>}
+            {archives.length===0&&<p style={{fontSize:11,color:"#444"}}>No archives yet. Your first rollover will appear here.</p>}
+          </div>
         </div>}
       </div>}
     </div></div>
