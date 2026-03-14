@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set, get, child } from "firebase/database";
+import { getDatabase, ref, set, get, child, push, remove, update } from "firebase/database";
 
 // FIREBASE CONFIG
 const firebaseConfig = {
@@ -117,6 +117,25 @@ const MODULES = [
   }
 ];
 
+// ═══════════════════════════════════════════════════
+// INDUSTRY DEEP DIVE — The Future Is Faster Than You Think
+// ═══════════════════════════════════════════════════
+const BOOK_CHAPTERS = [
+  { id: 1, title: "Convergence", topic: "How exponential technologies crash into each other" },
+  { id: 2, title: "The Future of Shopping", topic: "Retail reinvented by AI, AR, drones, and data" },
+  { id: 3, title: "The Future of Advertising", topic: "Attention economies, personalization, and the death of mass marketing" },
+  { id: 4, title: "The Future of Entertainment", topic: "Immersive experiences, spatial computing, and the creator economy" },
+  { id: 5, title: "The Future of Education", topic: "AI tutors, personalized learning, and the end of one-size-fits-all" },
+  { id: 6, title: "The Future of Healthcare", topic: "Diagnostics, longevity, wearables, and predictive medicine" },
+  { id: 7, title: "The Future of Longevity", topic: "Extending healthspan, biotech, and the economics of aging" },
+  { id: 8, title: "The Future of Insurance", topic: "Risk, real-time data, autonomous systems, and moral hazard" },
+  { id: 9, title: "The Future of Finance", topic: "Fintech, blockchain, decentralized systems, and new money" },
+  { id: 10, title: "The Future of Real Estate", topic: "Smart cities, remote work, VR, and new living models" },
+  { id: 11, title: "The Future of Food", topic: "Lab-grown meat, vertical farms, AI agriculture, and supply chains" },
+  { id: 12, title: "Threats & Dangers", topic: "Deepfakes, job displacement, bias, surveillance, and power concentration" },
+  { id: 13, title: "Five Great Migrations", topic: "Climate, urban, virtual, space, and meta-intelligence" }
+];
+
 function Bg() {
   const ref = useRef(null);
   useEffect(() => {
@@ -157,9 +176,17 @@ export default function App() {
   const [dashMod,setDashMod]=useState(0);
   const [expanded,setExpanded]=useState({});
   const [dashAuthed,setDashAuthed]=useState(()=>{try{return localStorage.getItem("sptc243-instructor")==="true";}catch(e){return false;}});
-  const [intakeComplete,setIntakeComplete]=useState(false);
+  const [intakeComplete,setIntakeComplete]=useState(()=>{try{return localStorage.getItem("sptc243-intake-done")==="true";}catch(e){return false;}});
   const [intakeAnswers,setIntakeAnswers]=useState({});
   const [intakeStep,setIntakeStep]=useState(0);
+
+  // Deep Dive state
+  const [ddChapterAssignments,setDdChapterAssignments]=useState({}); // {chapterId: {students:["name",...], presentDate:""}}
+  const [ddQuizQuestions,setDdQuizQuestions]=useState([]); // [{id,chapterId,studentName,type,question,options,answer,status:"pending"|"approved"|"rejected"}]
+  const [ddRollingQuiz,setDdRollingQuiz]=useState(null); // current quiz session
+  const [ddQuizHistory,setDdQuizHistory]=useState([]); // past quiz results for this student
+  const [ddSubmitQ,setDdSubmitQ]=useState({type:"mc",question:"",options:["","","",""],answer:"",chapterId:null});
+  const [ddQuizAns,setDdQuizAns]=useState({});
 
   // Load student identity from localStorage, progress from Firebase
   useEffect(()=>{
@@ -176,7 +203,21 @@ export default function App() {
                 const p = snap.val();
                 if(p.done) setDone(p.done);
                 if(p.scores) setScores(p.scores);
-                if(p.intake) { setIntakeComplete(true); setIntakeAnswers(p.intake); }
+                if(p.intake) { setIntakeComplete(true); setIntakeAnswers(p.intake); try{localStorage.setItem("sptc243-intake-done","true");}catch(e2){} }
+                if(p.ddQuizHistory) setDdQuizHistory(p.ddQuizHistory);
+              }
+            } catch(e){}
+            // Load deep dive chapter assignments
+            try {
+              const ddSnap = await get(child(ref(db), "deepdive/chapters"));
+              if(ddSnap.exists()) setDdChapterAssignments(ddSnap.val());
+            } catch(e){}
+            // Load deep dive quiz questions
+            try {
+              const qqSnap = await get(child(ref(db), "deepdive/quizQuestions"));
+              if(qqSnap.exists()) {
+                const qs = qqSnap.val();
+                setDdQuizQuestions(Object.keys(qs).map(k=>({id:k,...qs[k]})));
               }
             } catch(e){}
           }
@@ -220,6 +261,7 @@ export default function App() {
   // Logout (reset local identity)
   const logoutStudent = () => {
     localStorage.removeItem("sptc243-student");
+    localStorage.removeItem("sptc243-intake-done");
     setStudentName(null);
     setDone({});
     setScores({});
@@ -268,7 +310,95 @@ export default function App() {
       const existing = snap.exists() ? snap.val() : {};
       await set(ref(db, "students/"+fbKey(studentName)), { ...existing, intake: intakeAnswers, lastActive: new Date().toISOString() });
       setIntakeComplete(true);
-    } catch(e){ console.error("Intake submit failed:", e); setIntakeComplete(true); }
+      try{localStorage.setItem("sptc243-intake-done","true");}catch(e){}
+    } catch(e){ console.error("Intake submit failed:", e); setIntakeComplete(true); try{localStorage.setItem("sptc243-intake-done","true");}catch(e2){} }
+  };
+
+  // ═══════════════════════════════════════════════════
+  // DEEP DIVE FUNCTIONS
+  // ═══════════════════════════════════════════════════
+
+  // Get this student's assigned chapter(s)
+  const myChapters = Object.entries(ddChapterAssignments).filter(([,v])=>(v.students||[]).includes(studentName)).map(([k,v])=>({chapterId:parseInt(k),...v}));
+  // Auto-set chapter for quiz submission when single assignment
+  useEffect(()=>{if(myChapters.length===1&&!ddSubmitQ.chapterId)setDdSubmitQ(p=>({...p,chapterId:myChapters[0].chapterId}));},[JSON.stringify(myChapters)]);
+
+  // Submit a quiz question
+  const submitQuizQuestion = async () => {
+    if(!studentName||!db) return;
+    const q = ddSubmitQ;
+    if(!q.question.trim()) return;
+    if(!q.chapterId) { alert("Select which chapter this question is from."); return; }
+    const data = { chapterId: q.chapterId, studentName, type: q.type, question: q.question.trim(), status: "pending", submittedAt: new Date().toISOString() };
+    if(q.type==="mc") {
+      const validOpts = q.options.filter(o=>o.trim());
+      if(validOpts.length<2) { alert("Multiple choice needs at least 2 options."); return; }
+      if(!q.answer.trim()) { alert("Indicate the correct answer."); return; }
+      data.options = validOpts;
+      data.answer = q.answer.trim();
+    } else if(q.type==="short") {
+      if(!q.answer.trim()) { alert("Provide the expected answer."); return; }
+      data.answer = q.answer.trim();
+    } else {
+      data.answer = q.answer.trim() || "(Open-ended)";
+    }
+    try {
+      const newRef = push(ref(db, "deepdive/quizQuestions"));
+      await set(newRef, data);
+      setDdQuizQuestions(prev=>[...prev,{id:newRef.key,...data}]);
+      setDdSubmitQ({type:"mc",question:"",options:["","","",""],answer:"",chapterId:myChapters.length===1?myChapters[0].chapterId:null});
+      alert("Question submitted for review!");
+    } catch(e){ console.error("Submit Q failed:", e); }
+  };
+
+  // Instructor: approve/reject question
+  const reviewQuestion = async (qId, newStatus) => {
+    if(!db) return;
+    try {
+      await update(ref(db, "deepdive/quizQuestions/"+qId), { status: newStatus });
+      setDdQuizQuestions(prev=>prev.map(q=>q.id===qId?{...q,status:newStatus}:q));
+    } catch(e){ console.error("Review failed:", e); }
+  };
+
+  // Instructor: assign chapter to students
+  const assignChapter = async (chapterId, studentNames, presentDate) => {
+    if(!db) return;
+    const data = { students: studentNames, presentDate: presentDate || "" };
+    try {
+      await set(ref(db, "deepdive/chapters/"+chapterId), data);
+      setDdChapterAssignments(prev=>({...prev,[chapterId]:data}));
+    } catch(e){ console.error("Assign failed:", e); }
+  };
+
+  // Start a rolling quiz (grab approved questions)
+  const startRollingQuiz = () => {
+    const approved = ddQuizQuestions.filter(q=>q.status==="approved" && (q.type==="mc" || q.type==="short"));
+    if(approved.length < 3) { alert("Not enough approved questions yet. Need at least 3."); return; }
+    // Pick up to 5 random questions
+    const shuffled = [...approved].sort(()=>Math.random()-0.5).slice(0,5);
+    setDdRollingQuiz(shuffled);
+    setDdQuizAns({});
+  };
+
+  // Submit rolling quiz
+  const submitRollingQuiz = async () => {
+    if(!ddRollingQuiz||!studentName||!db) return;
+    let correct = 0;
+    ddRollingQuiz.forEach((q,i)=>{
+      if(q.type==="mc") { if(ddQuizAns[i]===q.answer) correct++; }
+      else if(q.type==="short") { if((ddQuizAns[i]||"").trim().toLowerCase()===q.answer.trim().toLowerCase()) correct++; }
+    });
+    const result = { date: new Date().toISOString(), score: correct, total: ddRollingQuiz.length, questions: ddRollingQuiz.map(q=>q.question) };
+    const newHistory = [...ddQuizHistory, result];
+    setDdQuizHistory(newHistory);
+    try {
+      const snap = await get(child(ref(db), "students/"+fbKey(studentName)));
+      const existing = snap.exists() ? snap.val() : {};
+      await set(ref(db, "students/"+fbKey(studentName)), { ...existing, ddQuizHistory: newHistory, lastActive: new Date().toISOString() });
+    } catch(e){}
+    setDdRollingQuiz(null);
+    setDdQuizAns({});
+    go("ddresults");
   };
 
   // Load instructor dashboard data
@@ -287,6 +417,18 @@ export default function App() {
       }
       students.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
       setDashData(students);
+      // Load deep dive data for dashboard
+      try {
+        const ddChSnap = await get(ref(db, "deepdive/chapters"));
+        if(ddChSnap.exists()) setDdChapterAssignments(ddChSnap.val());
+      } catch(e){}
+      try {
+        const ddQSnap = await get(ref(db, "deepdive/quizQuestions"));
+        if(ddQSnap.exists()) {
+          const qs = ddQSnap.val();
+          setDdQuizQuestions(Object.keys(qs).map(k=>({id:k,...qs[k]})));
+        }
+      } catch(e){}
     } catch(e){ console.error("Dashboard load failed:", e); setDashData([]); }
     setDashLoading(false);
   };
@@ -449,11 +591,14 @@ export default function App() {
             {q.type==="text"&&<textarea value={intakeAnswers[q.id]||""} onChange={e=>setIntakeAnswers(p=>({...p,[q.id]:e.target.value}))} placeholder="Type your answer..." rows={3} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 13px",color:"#fff",fontSize:13,fontFamily:"inherit",outline:"none",resize:"vertical",boxSizing:"border-box"}}/>}
           </div>
         ))}
-        <div style={{display:"flex",justifyContent:"space-between",paddingTop:8,paddingBottom:40,gap:8}}>
+        <div style={{display:"flex",justifyContent:"space-between",paddingTop:8,paddingBottom:16,gap:8}}>
           {intakeStep>0?<button onClick={()=>setIntakeStep(intakeStep-1)} style={gs}>← Previous</button>:<div/>}
           {intakeStep<INTAKE_SECTIONS.length-1
             ?<button onClick={()=>{if(sectionReady(intakeStep)){setIntakeStep(intakeStep+1);window.scrollTo({top:0});}}} disabled={!sectionReady(intakeStep)} style={{...bs(sectionReady(intakeStep)?"linear-gradient(135deg,#FF9500,#FF6B00)":"#333"),cursor:sectionReady(intakeStep)?"pointer":"default"}}>Next Section →</button>
             :<button onClick={()=>{if(intakeReady){submitIntake();}}} disabled={!intakeReady} style={{...bs(intakeReady?"linear-gradient(135deg,#34C759,#30D158)":"#333"),cursor:intakeReady?"pointer":"default"}}>Submit & Start the Course →</button>}
+        </div>
+        <div style={{textAlign:"center",paddingBottom:40}}>
+          <button onClick={()=>{setIntakeComplete(true);try{localStorage.setItem("sptc243-intake-done","true");}catch(e){}}} style={{background:"none",border:"none",color:"#333",fontSize:11,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Skip for now →</button>
         </div>
       </div>
     </div></div>
@@ -485,7 +630,7 @@ export default function App() {
       </div>:dashLoading?<p style={{textAlign:"center",color:"#555"}}>Loading student data...</p>:<div>
         {/* Tab bar */}
         <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",borderRadius:10,padding:4}}>
-          {[["progress","📊 Progress"],["profiles","👥 Profiles"],["intake","📋 Intake"],["lessons","📖 Lessons"],["tips","⚙️ Guide Tips"]].map(([k,label])=>
+          {[["progress","📊 Progress"],["profiles","👥 Profiles"],["intake","📋 Intake"],["lessons","📖 Lessons"],["deepdive","🔬 Deep Dive"],["tips","⚙️ Guide Tips"]].map(([k,label])=>
             <button key={k} onClick={()=>setDashTab(k)} style={{flex:1,padding:"10px 12px",borderRadius:8,border:"none",background:dashTab===k?"rgba(255,255,255,0.08)":"transparent",color:dashTab===k?"#fff":"#555",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"}}>{label}</button>
           )}
         </div>
@@ -783,6 +928,114 @@ export default function App() {
           </div>;})()}
         </div>}
 
+        {/* TAB: Deep Dive — Chapter Assignment & Quiz Management */}
+        {dashTab==="deepdive"&&<div>
+          <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Industry Deep Dive</h2>
+          <p style={{fontSize:13,color:"#555",margin:"0 0 20px"}}>The Future Is Faster Than You Think — Chapter assignments, presentations & rolling quiz management</p>
+
+          {/* Chapter Assignment Manager */}
+          <div style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>CHAPTER ASSIGNMENTS</div>
+          <p style={{fontSize:12,color:"#666",margin:"0 0 14px"}}>Assign pairs/small groups to each chapter. Students will see their assignment and can submit quiz questions.</p>
+          {BOOK_CHAPTERS.map(ch=>{
+            const assignment = ddChapterAssignments[ch.id] || { students: [], presentDate: "" };
+            const isAssigned = assignment.students && assignment.students.length > 0;
+            const questionsForChapter = ddQuizQuestions.filter(q=>q.chapterId===ch.id);
+            return <div key={ch.id} style={{background:isAssigned?"rgba(168,85,247,0.05)":"rgba(255,255,255,0.02)",border:"1px solid "+(isAssigned?"rgba(168,85,247,0.2)":"rgba(255,255,255,0.05)"),borderRadius:12,padding:16,marginBottom:10}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}>
+                <div style={{flex:1,minWidth:200}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                    <span style={{fontSize:10,fontWeight:700,color:"#A855F7",background:"rgba(168,85,247,0.15)",padding:"2px 8px",borderRadius:8}}>Ch. {ch.id}</span>
+                    <span style={{fontSize:14,fontWeight:700,color:"#fff"}}>{ch.title}</span>
+                  </div>
+                  <p style={{fontSize:11,color:"#666",margin:"0 0 8px"}}>{ch.topic}</p>
+                  {isAssigned && <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:4}}>
+                    {assignment.students.map((s,si2)=><span key={si2} style={{fontSize:10,fontWeight:600,color:"#A855F7",background:"rgba(168,85,247,0.1)",padding:"3px 8px",borderRadius:10}}>{s}</span>)}
+                  </div>}
+                  {assignment.presentDate && <span style={{fontSize:10,color:"#888"}}>Presenting: {assignment.presentDate}</span>}
+                  {questionsForChapter.length>0 && <span style={{fontSize:10,color:"#34C759",marginLeft:8}}>{questionsForChapter.filter(q=>q.status==="approved").length}/{questionsForChapter.length} Qs approved</span>}
+                </div>
+                <button onClick={()=>{
+                  const names = prompt("Enter student names (comma separated):", (assignment.students||[]).join(", "));
+                  if(names===null) return;
+                  const date = prompt("Presentation date (e.g., 'Oct 15' or leave blank):", assignment.presentDate||"");
+                  const studentList = names.split(",").map(n=>n.trim()).filter(n=>n);
+                  assignChapter(ch.id, studentList, date||"");
+                }} style={{...gs,fontSize:10,padding:"6px 12px"}}>{isAssigned?"Edit":"Assign"}</button>
+              </div>
+            </div>;
+          })}
+
+          {/* Quiz Question Review */}
+          <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",margin:"28px 0 10px"}}>QUIZ QUESTION REVIEW</div>
+          {(()=>{
+            const pending = ddQuizQuestions.filter(q=>q.status==="pending");
+            const approved = ddQuizQuestions.filter(q=>q.status==="approved");
+            const rejected = ddQuizQuestions.filter(q=>q.status==="rejected");
+            const renderQ = (q) => <div key={q.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14,marginBottom:8}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}>
+                <div style={{flex:1,minWidth:200}}>
+                  <div style={{display:"flex",gap:6,marginBottom:4,flexWrap:"wrap"}}>
+                    <span style={{fontSize:9,fontWeight:700,color:"#A855F7",background:"rgba(168,85,247,0.15)",padding:"2px 6px",borderRadius:6}}>Ch. {q.chapterId}</span>
+                    <span style={{fontSize:9,fontWeight:700,color:"#007AFF",background:"rgba(0,122,255,0.12)",padding:"2px 6px",borderRadius:6}}>{q.type==="mc"?"Multiple Choice":q.type==="short"?"Short Answer":"Open-Ended"}</span>
+                    <span style={{fontSize:9,color:"#666"}}>by {q.studentName}</span>
+                  </div>
+                  <p style={{fontSize:13,fontWeight:600,color:"#ddd",margin:"0 0 4px"}}>{q.question}</p>
+                  {q.type==="mc" && q.options && <div style={{marginBottom:4}}>
+                    {q.options.map((o,oi)=><p key={oi} style={{fontSize:11,color:o===q.answer?"#34C759":"#888",margin:"1px 0",fontWeight:o===q.answer?700:400}}>{o===q.answer?"✓ ":"  "}{o}</p>)}
+                  </div>}
+                  {q.type==="short" && <p style={{fontSize:11,color:"#34C759",margin:"0 0 4px"}}>Answer: {q.answer}</p>}
+                </div>
+                {q.status==="pending"&&<div style={{display:"flex",gap:4}}>
+                  <button onClick={()=>reviewQuestion(q.id,"approved")} style={{background:"rgba(52,199,89,0.15)",border:"1px solid rgba(52,199,89,0.3)",color:"#34C759",padding:"6px 12px",borderRadius:8,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>✓ Approve</button>
+                  <button onClick={()=>reviewQuestion(q.id,"rejected")} style={{background:"rgba(255,59,48,0.1)",border:"1px solid rgba(255,59,48,0.2)",color:"#FF3B30",padding:"6px 12px",borderRadius:8,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>✗ Reject</button>
+                </div>}
+                {q.status==="approved"&&<span style={{fontSize:10,fontWeight:700,color:"#34C759",background:"rgba(52,199,89,0.1)",padding:"4px 10px",borderRadius:8}}>✓ Approved</span>}
+                {q.status==="rejected"&&<span style={{fontSize:10,fontWeight:700,color:"#FF3B30",background:"rgba(255,59,48,0.1)",padding:"4px 10px",borderRadius:8}}>✗ Rejected</span>}
+              </div>
+            </div>;
+            return <div>
+              {pending.length>0&&<div style={{marginBottom:16}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#FF9500",marginBottom:6}}>Pending Review ({pending.length})</div>
+                {pending.map(renderQ)}
+              </div>}
+              {pending.length===0&&<p style={{color:"#444",fontSize:12,marginBottom:16}}>No questions pending review.</p>}
+              {approved.length>0&&<Section id="dd-approved" title={"Approved Questions ("+approved.length+")"} icon="✓">
+                {approved.map(renderQ)}
+              </Section>}
+              {rejected.length>0&&<Section id="dd-rejected" title={"Rejected Questions ("+rejected.length+")"} icon="✗">
+                {rejected.map(renderQ)}
+              </Section>}
+            </div>;
+          })()}
+
+          {/* Rolling Quiz Results */}
+          <div style={{fontSize:10,fontWeight:700,color:"#34C759",letterSpacing:2,textTransform:"uppercase",margin:"28px 0 10px"}}>ROLLING QUIZ RESULTS</div>
+          {(()=>{
+            const studentsWithHistory = dashData.filter(s=>s.ddQuizHistory&&s.ddQuizHistory.length>0);
+            if(studentsWithHistory.length===0) return <p style={{color:"#444",fontSize:12}}>No quiz attempts yet.</p>;
+            return <div style={{overflowX:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                <thead><tr style={{borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+                  <th style={{textAlign:"left",padding:"10px 12px",color:"#666",fontWeight:700,fontSize:10,letterSpacing:1.5,textTransform:"uppercase"}}>Student</th>
+                  <th style={{textAlign:"center",padding:"10px 8px",color:"#666",fontWeight:700,fontSize:10}}>Quizzes</th>
+                  <th style={{textAlign:"center",padding:"10px 8px",color:"#666",fontWeight:700,fontSize:10}}>Avg Score</th>
+                  <th style={{textAlign:"right",padding:"10px 12px",color:"#666",fontWeight:700,fontSize:10}}>Last Attempt</th>
+                </tr></thead>
+                <tbody>{studentsWithHistory.map((s,i)=>{
+                  const h = s.ddQuizHistory;
+                  const avg = Math.round(h.reduce((a,r)=>a+(r.score/r.total*100),0)/h.length);
+                  return <tr key={i} style={{borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                    <td style={{padding:"10px 12px",color:"#ddd",fontWeight:600}}>{s.name}</td>
+                    <td style={{textAlign:"center",padding:"10px 8px",color:"#bbb"}}>{h.length}</td>
+                    <td style={{textAlign:"center",padding:"10px 8px"}}><span style={{color:avg>=70?"#34C759":"#FF9500",fontWeight:700}}>{avg}%</span></td>
+                    <td style={{textAlign:"right",padding:"10px 12px",color:"#555",fontSize:11}}>{new Date(h[h.length-1].date).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</td>
+                  </tr>;
+                })}</tbody>
+              </table>
+            </div>;
+          })()}
+        </div>}
+
         {/* TAB: Guide Tips */}
         {dashTab==="tips"&&<div>
           <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 16px",color:"#fff"}}>Guide Mode: Your Playbook</h2>
@@ -876,16 +1129,202 @@ export default function App() {
             <p style={{fontSize:12,color:"#555",margin:0,lineHeight:1.5}}>{m.subtitle}</p>
           </div>
         );})}
-        <div style={{background:"rgba(255,255,255,0.01)",border:"1px dashed rgba(255,255,255,0.06)",borderRadius:14,padding:22,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <p style={{fontSize:12,color:"#333",textAlign:"center",margin:0}}>More modules coming</p>
-        </div>
       </div>
+
+      {/* INDUSTRY DEEP DIVE — standalone section */}
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"#A855F7",marginBottom:10}}>📚 COURSE-WIDE</div>
+      <div onClick={()=>go("deepdive")} style={{background:"linear-gradient(135deg,rgba(168,85,247,0.08),rgba(120,60,200,0.04))",border:"1px solid rgba(168,85,247,0.25)",borderRadius:14,padding:24,cursor:"pointer",transition:"all 0.2s",marginBottom:32,display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}
+        onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor="rgba(168,85,247,0.5)";e.currentTarget.style.boxShadow="0 8px 32px rgba(168,85,247,0.1)";}}
+        onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor="rgba(168,85,247,0.25)";e.currentTarget.style.boxShadow="none";}}>
+        <div style={{fontSize:36}}>🔬</div>
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{display:"flex",gap:5,marginBottom:6,flexWrap:"wrap"}}>
+            <Tag color="#A855F7" bg="rgba(168,85,247,0.15)">Ongoing</Tag>
+            <Tag>{BOOK_CHAPTERS.length} chapters</Tag>
+            {myChapters.length>0&&<Tag color="#34C759" bg="rgba(52,199,89,0.1)">You: Ch. {myChapters.map(c=>c.chapterId).join(", ")}</Tag>}
+            {ddQuizQuestions.filter(q=>q.status==="approved").length>0&&<Tag color="#FF9500" bg="rgba(255,149,0,0.1)">{ddQuizQuestions.filter(q=>q.status==="approved").length} quiz Qs live</Tag>}
+          </div>
+          <h3 style={{fontSize:18,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Industry Deep Dive</h3>
+          <p style={{fontSize:13,color:"#888",margin:0,lineHeight:1.5}}>The Future Is Faster Than You Think — Chapter presentations, student-created quiz questions & rolling quizzes</p>
+        </div>
+        <div style={{fontSize:13,fontWeight:700,color:"#A855F7",whiteSpace:"nowrap"}}>Open →</div>
+      </div>
+
       <div style={{borderTop:"1px solid rgba(255,255,255,0.03)",padding:"24px 0 40px",textAlign:"center"}}>
         <p style={{color:"#2a2a2a",fontSize:11}}>Professor Ben Fairclough · Fall 2025 · Wed 5:20-8:05 PM</p>
         <button onClick={()=>setView("instructor")} style={{background:"none",border:"none",color:"#222",fontSize:10,cursor:"pointer",marginTop:4,fontFamily:"inherit"}}>Instructor Dashboard</button>
       </div>
     </div></div>
   );
+
+  // ═══════════════════════════════════════════════════
+  // DEEP DIVE — Student View
+  // ═══════════════════════════════════════════════════
+  if(view==="deepdive") {
+    const approvedQs = ddQuizQuestions.filter(q=>q.status==="approved"&&(q.type==="mc"||q.type==="short"));
+    return (
+    <div style={S}>{font}<Bg/><div style={{...W,...F}}>
+      <div style={{paddingTop:20,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",paddingBottom:12}}>
+        <button onClick={()=>go("home")} style={gs}>← Home</button>
+        <Tag color="#A855F7" bg="rgba(168,85,247,0.15)">Industry Deep Dive</Tag>
+      </div>
+
+      <h2 style={{fontSize:"clamp(22px,4vw,36px)",fontWeight:800,margin:"0 0 4px",color:"#fff"}}>The Future Is Faster<br/><span style={{color:"#A855F7"}}>Than You Think</span></h2>
+      <p style={{fontSize:13,color:"#555",margin:"0 0 6px"}}>Diamandis & Kotler — Industry Deep Dive</p>
+      <p style={{fontSize:12,color:"#666",margin:"0 0 24px",lineHeight:1.6}}>Your group presents a chapter to the class. Everyone submits quiz questions from their chapter. Rolling quizzes draw from the class's approved question pool.</p>
+
+      {/* Your Assignment */}
+      <div style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>YOUR ASSIGNMENT</div>
+      {myChapters.length===0
+        ?<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:20,marginBottom:24,textAlign:"center"}}>
+          <p style={{fontSize:13,color:"#555",margin:0}}>No chapter assigned yet. Your professor will assign your group a chapter.</p>
+        </div>
+        :myChapters.map(mc=>{
+          const ch = BOOK_CHAPTERS.find(c=>c.id===mc.chapterId);
+          if(!ch) return null;
+          const assignment = ddChapterAssignments[mc.chapterId] || {};
+          return <div key={mc.chapterId} style={{background:"rgba(168,85,247,0.06)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:14,padding:20,marginBottom:16}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+              <span style={{fontSize:10,fontWeight:700,color:"#A855F7",background:"rgba(168,85,247,0.2)",padding:"3px 10px",borderRadius:8}}>Chapter {ch.id}</span>
+              {assignment.presentDate&&<span style={{fontSize:10,color:"#FF9500",fontWeight:600}}>Present: {assignment.presentDate}</span>}
+            </div>
+            <h3 style={{fontSize:20,fontWeight:800,color:"#fff",margin:"0 0 4px"}}>{ch.title}</h3>
+            <p style={{fontSize:12,color:"#888",margin:"0 0 8px"}}>{ch.topic}</p>
+            {assignment.students&&assignment.students.length>1&&<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+              <span style={{fontSize:10,color:"#666"}}>Your group:</span>
+              {assignment.students.map((s,si2)=><span key={si2} style={{fontSize:10,fontWeight:600,color:s===studentName?"#A855F7":"#888",background:s===studentName?"rgba(168,85,247,0.12)":"rgba(255,255,255,0.04)",padding:"2px 8px",borderRadius:8}}>{s}</span>)}
+            </div>}
+          </div>;
+        })
+      }
+
+      {/* Submit Quiz Question */}
+      {myChapters.length>0&&<>
+        <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",margin:"8px 0 10px"}}>SUBMIT A QUIZ QUESTION</div>
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:20,marginBottom:24}}>
+          <p style={{fontSize:11,color:"#666",margin:"0 0 14px"}}>Create questions from your assigned chapter for the rolling quiz pool. Professor Fairclough reviews before they go live.</p>
+
+          {myChapters.length>1&&<div style={{marginBottom:12}}>
+            <label style={{fontSize:10,fontWeight:700,color:"#666",letterSpacing:1,display:"block",marginBottom:4}}>CHAPTER</label>
+            <div style={{display:"flex",gap:4}}>{myChapters.map(mc=><button key={mc.chapterId} onClick={()=>setDdSubmitQ(p=>({...p,chapterId:mc.chapterId}))} style={{padding:"6px 12px",borderRadius:8,border:"1px solid "+(ddSubmitQ.chapterId===mc.chapterId?"#A855F7":"rgba(255,255,255,0.08)"),background:ddSubmitQ.chapterId===mc.chapterId?"rgba(168,85,247,0.12)":"transparent",color:ddSubmitQ.chapterId===mc.chapterId?"#A855F7":"#666",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Ch. {mc.chapterId}</button>)}</div>
+          </div>}
+
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:10,fontWeight:700,color:"#666",letterSpacing:1,display:"block",marginBottom:4}}>QUESTION TYPE</label>
+            <div style={{display:"flex",gap:4}}>
+              {[["mc","Multiple Choice"],["short","Short Answer"],["open","Open-Ended"]].map(([t,l])=><button key={t} onClick={()=>setDdSubmitQ(p=>({...p,type:t}))} style={{padding:"6px 12px",borderRadius:8,border:"1px solid "+(ddSubmitQ.type===t?"#FF9500":"rgba(255,255,255,0.08)"),background:ddSubmitQ.type===t?"rgba(255,149,0,0.12)":"transparent",color:ddSubmitQ.type===t?"#FF9500":"#666",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>)}
+            </div>
+          </div>
+
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:10,fontWeight:700,color:"#666",letterSpacing:1,display:"block",marginBottom:4}}>YOUR QUESTION</label>
+            <textarea value={ddSubmitQ.question} onChange={e=>setDdSubmitQ(p=>({...p,question:e.target.value}))} placeholder="Write your question..." rows={2} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 13px",color:"#fff",fontSize:13,fontFamily:"inherit",outline:"none",resize:"vertical",boxSizing:"border-box"}}/>
+          </div>
+
+          {ddSubmitQ.type==="mc"&&<div style={{marginBottom:12}}>
+            <label style={{fontSize:10,fontWeight:700,color:"#666",letterSpacing:1,display:"block",marginBottom:4}}>ANSWER CHOICES (mark the correct one)</label>
+            {ddSubmitQ.options.map((o,oi)=><div key={oi} style={{display:"flex",gap:6,marginBottom:4,alignItems:"center"}}>
+              <button onClick={()=>setDdSubmitQ(p=>({...p,answer:p.options[oi]}))} style={{width:22,height:22,borderRadius:"50%",border:"2px solid "+(ddSubmitQ.answer===o&&o?"#34C759":"rgba(255,255,255,0.15)"),background:ddSubmitQ.answer===o&&o?"#34C759":"transparent",cursor:"pointer",fontSize:10,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{ddSubmitQ.answer===o&&o?"✓":""}</button>
+              <input value={o} onChange={e=>{const newOpts=[...ddSubmitQ.options];newOpts[oi]=e.target.value;setDdSubmitQ(p=>({...p,options:newOpts}));}} placeholder={"Option "+(oi+1)} style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:12,fontFamily:"inherit",outline:"none"}}/>
+            </div>)}
+          </div>}
+
+          {ddSubmitQ.type==="short"&&<div style={{marginBottom:12}}>
+            <label style={{fontSize:10,fontWeight:700,color:"#666",letterSpacing:1,display:"block",marginBottom:4}}>EXPECTED ANSWER</label>
+            <input value={ddSubmitQ.answer} onChange={e=>setDdSubmitQ(p=>({...p,answer:e.target.value}))} placeholder="The correct answer..." style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 13px",color:"#fff",fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}}/>
+          </div>}
+
+          <button onClick={submitQuizQuestion} style={bs(ddSubmitQ.question.trim()?"linear-gradient(135deg,#A855F7,#7C3AED)":"#333")}>Submit Question for Review</button>
+
+          {/* My submitted questions */}
+          {(()=>{
+            const mine = ddQuizQuestions.filter(q=>q.studentName===studentName);
+            if(mine.length===0) return null;
+            return <div style={{marginTop:16,borderTop:"1px solid rgba(255,255,255,0.05)",paddingTop:14}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#666",marginBottom:8}}>YOUR SUBMISSIONS ({mine.length})</div>
+              {mine.map((q,qi)=><div key={qi} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:qi<mine.length-1?"1px solid rgba(255,255,255,0.03)":"none"}}>
+                <span style={{fontSize:12,color:"#aaa",flex:1}}>{q.question.slice(0,60)}{q.question.length>60?"...":""}</span>
+                <span style={{fontSize:10,fontWeight:700,color:q.status==="approved"?"#34C759":q.status==="rejected"?"#FF3B30":"#FF9500",background:q.status==="approved"?"rgba(52,199,89,0.1)":q.status==="rejected"?"rgba(255,59,48,0.1)":"rgba(255,149,0,0.1)",padding:"3px 8px",borderRadius:8}}>{q.status==="approved"?"✓ Approved":q.status==="rejected"?"✗ Rejected":"⏳ Pending"}</span>
+              </div>)}
+            </div>;
+          })()}
+        </div>
+      </>}
+
+      {/* Rolling Quiz */}
+      <div style={{fontSize:10,fontWeight:700,color:"#34C759",letterSpacing:2,textTransform:"uppercase",margin:"8px 0 10px"}}>ROLLING QUIZ</div>
+      {!ddRollingQuiz
+        ?<div style={{background:"rgba(52,199,89,0.04)",border:"1px solid rgba(52,199,89,0.15)",borderRadius:14,padding:20,marginBottom:24}}>
+          <p style={{fontSize:13,color:"#bbb",margin:"0 0 8px"}}>Test yourself on questions created by your classmates. Each quiz pulls from the approved pool — different every time.</p>
+          <p style={{fontSize:11,color:"#666",margin:"0 0 14px"}}>{approvedQs.length} approved question{approvedQs.length!==1?"s":""} in the pool{approvedQs.length<3?" (need at least 3 to start)":""}</p>
+          <button onClick={startRollingQuiz} disabled={approvedQs.length<3} style={bs(approvedQs.length>=3?"linear-gradient(135deg,#34C759,#30D158)":"#333")}>Start Quiz →</button>
+          {ddQuizHistory.length>0&&<div style={{marginTop:14,borderTop:"1px solid rgba(255,255,255,0.05)",paddingTop:12}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#666",marginBottom:6}}>YOUR HISTORY</div>
+            {ddQuizHistory.map((h,hi)=><div key={hi} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",fontSize:11}}>
+              <span style={{color:"#888"}}>{new Date(h.date).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
+              <span style={{color:Math.round(h.score/h.total*100)>=70?"#34C759":"#FF9500",fontWeight:700}}>{h.score}/{h.total} ({Math.round(h.score/h.total*100)}%)</span>
+            </div>)}
+          </div>}
+        </div>
+        :<div style={{marginBottom:24}}>
+          {ddRollingQuiz.map((q,qi)=>(
+            <div key={qi} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:18,marginBottom:12}}>
+              <div style={{display:"flex",gap:6,marginBottom:6}}>
+                <span style={{fontSize:9,fontWeight:700,color:"#A855F7",background:"rgba(168,85,247,0.12)",padding:"2px 6px",borderRadius:6}}>Ch. {q.chapterId}</span>
+                <span style={{fontSize:9,color:"#666"}}>by {q.studentName}</span>
+              </div>
+              <p style={{fontSize:13,fontWeight:700,margin:"0 0 10px"}}>{qi+1}. {q.question}</p>
+              {q.type==="mc"&&q.options.map((opt,oi)=><button key={oi} onClick={()=>setDdQuizAns(p=>({...p,[qi]:opt}))} style={{display:"block",width:"100%",textAlign:"left",background:ddQuizAns[qi]===opt?"rgba(168,85,247,0.12)":"rgba(255,255,255,0.02)",border:"1px solid "+(ddQuizAns[qi]===opt?"#A855F7":"rgba(255,255,255,0.06)"),color:ddQuizAns[qi]===opt?"#fff":"#777",padding:"9px 13px",borderRadius:8,cursor:"pointer",fontSize:12,fontFamily:"inherit",fontWeight:ddQuizAns[qi]===opt?600:400,marginBottom:5}}>{opt}</button>)}
+              {q.type==="short"&&<input value={ddQuizAns[qi]||""} onChange={e=>setDdQuizAns(p=>({...p,[qi]:e.target.value}))} placeholder="Your answer..." style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 13px",color:"#fff",fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}}/>}
+            </div>
+          ))}
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>{setDdRollingQuiz(null);setDdQuizAns({});}} style={gs}>Cancel</button>
+            <button onClick={submitRollingQuiz} disabled={Object.keys(ddQuizAns).length<ddRollingQuiz.length} style={{...bs(Object.keys(ddQuizAns).length>=ddRollingQuiz.length?"linear-gradient(135deg,#34C759,#30D158)":"#333"),flex:1}}>Submit Quiz</button>
+          </div>
+        </div>
+      }
+
+      {/* All Chapters Overview */}
+      <div style={{fontSize:10,fontWeight:700,color:"#666",letterSpacing:2,textTransform:"uppercase",margin:"8px 0 10px"}}>ALL CHAPTERS</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:8,paddingBottom:40}}>
+        {BOOK_CHAPTERS.map(ch=>{
+          const assignment = ddChapterAssignments[ch.id];
+          const isMyChapter = myChapters.some(mc=>mc.chapterId===ch.id);
+          return <div key={ch.id} style={{background:isMyChapter?"rgba(168,85,247,0.06)":"rgba(255,255,255,0.015)",border:"1px solid "+(isMyChapter?"rgba(168,85,247,0.2)":"rgba(255,255,255,0.04)"),borderRadius:10,padding:14}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <span style={{fontSize:10,fontWeight:700,color:isMyChapter?"#A855F7":"#555"}}>Ch. {ch.id}</span>
+              {assignment&&assignment.presentDate&&<span style={{fontSize:9,color:"#888"}}>{assignment.presentDate}</span>}
+            </div>
+            <p style={{fontSize:12,fontWeight:600,color:isMyChapter?"#fff":"#999",margin:"0 0 2px"}}>{ch.title}</p>
+            <p style={{fontSize:10,color:"#555",margin:0}}>{ch.topic}</p>
+            {assignment&&assignment.students&&assignment.students.length>0&&<div style={{marginTop:6,display:"flex",gap:3,flexWrap:"wrap"}}>
+              {assignment.students.map((s,si2)=><span key={si2} style={{fontSize:9,color:s===studentName?"#A855F7":"#666",fontWeight:s===studentName?700:400}}>{s}</span>)}
+            </div>}
+          </div>;
+        })}
+      </div>
+    </div></div>
+  );}
+
+  // Deep Dive Quiz Results
+  if(view==="ddresults") {
+    const lastResult = ddQuizHistory.length>0 ? ddQuizHistory[ddQuizHistory.length-1] : null;
+    if(!lastResult) { go("deepdive"); return null; }
+    const pct = Math.round(lastResult.score/lastResult.total*100);
+    return (
+    <div style={S}>{font}<Bg/><div style={{...W,...F,textAlign:"center",paddingTop:48}}>
+      <Ring p={pct} size={90} sw={6} color={pct>=70?"#34C759":"#FF9500"}/>
+      <h2 style={{fontSize:34,fontWeight:800,margin:"12px 0 4px"}}>{lastResult.score}/{lastResult.total}</h2>
+      <p style={{color:pct>=70?"#34C759":"#FF9500",fontSize:16,fontWeight:700,margin:"0 0 4px"}}>{pct}%</p>
+      <p style={{color:"#555",fontSize:14,margin:"0 0 16px"}}>{pct>=70?"Great work on the rolling quiz!":"Keep studying — try again anytime."}</p>
+      <p style={{fontSize:11,color:"#666",margin:"0 0 24px"}}>Quiz #{ddQuizHistory.length} · {new Date(lastResult.date).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</p>
+      <div style={{display:"flex",gap:8,justifyContent:"center",paddingBottom:40}}>
+        <button onClick={()=>go("deepdive")} style={gs}>← Deep Dive</button>
+        <button onClick={()=>go("home")} style={gs}>Home</button>
+      </div>
+    </div></div>
+  );}
 
   if(view==="module"){const m=MODULES[mi],seg=m.segments[si]; return(
     <div style={S}>{font}<Bg/><div style={{...W,...F}}>
