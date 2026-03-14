@@ -299,7 +299,8 @@ export default function App() {
   const [ddQuizHistory,setDdQuizHistory]=useState([]); // past quiz results for this student
   const [ddSubmitQ,setDdSubmitQ]=useState({type:"mc",question:"",options:["","","",""],answer:"",chapterId:null});
   const [ddQuizAns,setDdQuizAns]=useState({});
-  const [ddChapterPrefs,setDdChapterPrefs]=useState(null); // this student's prefs: {first:id, second:id, third:id}
+  const [ddChapterPrefs,setDdChapterPrefs]=useState(null); // saved prefs from Firebase: {first:id, second:id, third:id}
+  const [ddPickingPrefs,setDdPickingPrefs]=useState({}); // in-progress picks before submit
   const [ddAllPrefs,setDdAllPrefs]=useState({}); // all students' prefs: {studentKey: {name, first, second, third}}
 
   // Roster state
@@ -1695,20 +1696,19 @@ export default function App() {
                 </div>
               </div>;
             })}
-            <button onClick={()=>setDdChapterPrefs(null)} style={{...gs,marginTop:12,fontSize:10}}>Change my picks</button>
+            <button onClick={()=>{setDdChapterPrefs(null);setDdPickingPrefs({});}} style={{...gs,marginTop:12,fontSize:10}}>Change my picks</button>
           </div>
           :<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:20,marginBottom:24}}>
             <p style={{fontSize:13,color:"#bbb",margin:"0 0 4px"}}>Pick your top 3 chapter preferences. Professor Fairclough will use these to form groups and assign chapters.</p>
             <p style={{fontSize:11,color:"#666",margin:"0 0 16px"}}>Click chapters below in order: 1st choice, 2nd choice, 3rd choice.</p>
             {(()=>{
-              const tempPrefs = ddChapterPrefs || {};
-              const selected = [tempPrefs.first, tempPrefs.second, tempPrefs.third].filter(Boolean);
+              const selected = [ddPickingPrefs.first, ddPickingPrefs.second, ddPickingPrefs.third].filter(Boolean);
               const pickCount = selected.length;
               const rankLabels = ["1st Choice","2nd Choice","3rd Choice"];
               return <>
                 {pickCount>0&&<div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
                   {selected.map((id,i)=>{const ch=BOOK_CHAPTERS.find(c=>c.id===id); return ch?<span key={i} style={{fontSize:11,fontWeight:700,color:i===0?"#34C759":i===1?"#007AFF":"#FF9500",background:i===0?"rgba(52,199,89,0.1)":i===1?"rgba(0,122,255,0.1)":"rgba(255,149,0,0.1)",padding:"4px 10px",borderRadius:8}}>{rankLabels[i]}: Ch. {ch.id}</span>:null;})}
-                  <button onClick={()=>setDdChapterPrefs(null)} style={{background:"none",border:"none",color:"#555",fontSize:10,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Reset</button>
+                  <button onClick={()=>setDdPickingPrefs({})} style={{background:"none",border:"none",color:"#555",fontSize:10,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Reset</button>
                 </div>}
                 {pickCount<3&&<p style={{fontSize:10,color:"#FF9500",margin:"0 0 10px"}}>Select your {rankLabels[pickCount].toLowerCase()}:</p>}
                 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:6,marginBottom:14}}>
@@ -1719,7 +1719,7 @@ export default function App() {
                       if(isSelected) return;
                       if(pickCount>=3) return;
                       const ranks=["first","second","third"];
-                      setDdChapterPrefs(prev=>({...prev,[ranks[pickCount]]:ch.id}));
+                      setDdPickingPrefs(prev=>({...prev,[ranks[pickCount]]:ch.id}));
                     }} style={{background:isSelected?(selIndex===0?"rgba(52,199,89,0.08)":selIndex===1?"rgba(0,122,255,0.08)":"rgba(255,149,0,0.08)"):"rgba(255,255,255,0.015)",border:"1px solid "+(isSelected?(selIndex===0?"rgba(52,199,89,0.25)":selIndex===1?"rgba(0,122,255,0.25)":"rgba(255,149,0,0.25)"):"rgba(255,255,255,0.05)"),borderRadius:8,padding:10,cursor:isSelected||pickCount>=3?"default":"pointer",opacity:!isSelected&&pickCount>=3?0.4:1,transition:"all 0.15s"}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                         <span style={{fontSize:10,fontWeight:700,color:isSelected?(selIndex===0?"#34C759":selIndex===1?"#007AFF":"#FF9500"):"#555"}}>Ch. {ch.id}</span>
@@ -1729,7 +1729,7 @@ export default function App() {
                     </div>;
                   })}
                 </div>
-                {pickCount===3&&<button onClick={()=>{submitChapterPrefs(ddChapterPrefs);}} style={bs("linear-gradient(135deg,#34C759,#30D158)")}>Submit My Top 3 →</button>}
+                {pickCount===3&&<button onClick={()=>{submitChapterPrefs(ddPickingPrefs);}} style={bs("linear-gradient(135deg,#34C759,#30D158)")}>Submit My Top 3 →</button>}
               </>;
             })()}
           </div>
