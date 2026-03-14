@@ -285,6 +285,8 @@ export default function App() {
   const [ddQuizHistory,setDdQuizHistory]=useState([]); // past quiz results for this student
   const [ddSubmitQ,setDdSubmitQ]=useState({type:"mc",question:"",options:["","","",""],answer:"",chapterId:null});
   const [ddQuizAns,setDdQuizAns]=useState({});
+  const [ddChapterPrefs,setDdChapterPrefs]=useState(null); // this student's prefs: {first:id, second:id, third:id}
+  const [ddAllPrefs,setDdAllPrefs]=useState({}); // all students' prefs: {studentKey: {name, first, second, third}}
 
   // Roster state
   const [roster,setRoster]=useState([]); // ["First Last", ...]
@@ -310,6 +312,7 @@ export default function App() {
                 if(p.scores) setScores(p.scores);
                 if(p.intake) { setIntakeComplete(true); setIntakeAnswers(p.intake); try{localStorage.setItem("sptc243-intake-done","true");}catch(e2){} }
                 if(p.ddQuizHistory) setDdQuizHistory(p.ddQuizHistory);
+                if(p.chapterPrefs) setDdChapterPrefs(p.chapterPrefs);
               }
             } catch(e){}
             // Load deep dive chapter assignments
@@ -439,6 +442,17 @@ export default function App() {
   const myChapters = Object.entries(ddChapterAssignments).filter(([,v])=>(v.students||[]).includes(studentName)).map(([k,v])=>({chapterId:parseInt(k),...v}));
   // Auto-set chapter for quiz submission when single assignment
   useEffect(()=>{if(myChapters.length===1&&!ddSubmitQ.chapterId)setDdSubmitQ(p=>({...p,chapterId:myChapters[0].chapterId}));},[JSON.stringify(myChapters)]);
+
+  // Submit chapter preferences
+  const submitChapterPrefs = async (prefs) => {
+    if(!studentName||!db) return;
+    try {
+      const snap = await get(child(ref(db), "students/"+fbKey(studentName)));
+      const existing = snap.exists() ? snap.val() : {};
+      await set(ref(db, "students/"+fbKey(studentName)), { ...existing, chapterPrefs: prefs, lastActive: new Date().toISOString() });
+      setDdChapterPrefs(prefs);
+    } catch(e){ console.error("Prefs submit failed:", e); }
+  };
 
   // Submit a quiz question
   const submitQuizQuestion = async () => {
@@ -590,6 +604,10 @@ export default function App() {
           setRoster(Array.isArray(r) ? r : Object.values(r));
         }
       } catch(e){}
+      // Load chapter preferences from all students
+      const allPrefs = {};
+      students.forEach(s => { if(s.chapterPrefs) allPrefs[fbKey(s.name)] = { name: s.name, ...s.chapterPrefs }; });
+      setDdAllPrefs(allPrefs);
       // Load deep dive data for dashboard
       try {
         const ddChSnap = await get(ref(db, "deepdive/chapters"));
@@ -1281,6 +1299,66 @@ export default function App() {
           <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Industry Deep Dive</h2>
           <p style={{fontSize:13,color:"#555",margin:"0 0 20px"}}>The Future Is Faster Than You Think — Chapter assignments, presentations & rolling quiz management</p>
 
+          {/* Student Chapter Preferences */}
+          {(()=>{
+            const prefEntries = Object.values(ddAllPrefs);
+            if(prefEntries.length===0) return <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:16,marginBottom:20}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>STUDENT PREFERENCES</div>
+              <p style={{color:"#555",fontSize:12,margin:0}}>No students have submitted chapter preferences yet.</p>
+            </div>;
+            // Build chapter demand map
+            const chapterDemand = {};
+            BOOK_CHAPTERS.forEach(ch=>{chapterDemand[ch.id]={first:[],second:[],third:[]};});
+            prefEntries.forEach(p=>{
+              if(p.first&&chapterDemand[p.first]) chapterDemand[p.first].first.push(p.name);
+              if(p.second&&chapterDemand[p.second]) chapterDemand[p.second].second.push(p.name);
+              if(p.third&&chapterDemand[p.third]) chapterDemand[p.third].third.push(p.name);
+            });
+            return <div style={{marginBottom:20}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>STUDENT PREFERENCES ({prefEntries.length} submitted)</div>
+
+              {/* By-student view */}
+              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,overflow:"hidden",marginBottom:12}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                  <thead><tr style={{borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+                    <th style={{textAlign:"left",padding:"10px 12px",color:"#666",fontWeight:700,fontSize:10,letterSpacing:1.5,textTransform:"uppercase"}}>Student</th>
+                    <th style={{textAlign:"center",padding:"10px 8px",color:"#34C759",fontWeight:700,fontSize:10}}>1st</th>
+                    <th style={{textAlign:"center",padding:"10px 8px",color:"#007AFF",fontWeight:700,fontSize:10}}>2nd</th>
+                    <th style={{textAlign:"center",padding:"10px 8px",color:"#FF9500",fontWeight:700,fontSize:10}}>3rd</th>
+                  </tr></thead>
+                  <tbody>{prefEntries.sort((a,b)=>a.name.localeCompare(b.name)).map((p,i)=><tr key={i} style={{borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                    <td style={{padding:"8px 12px",color:"#ddd",fontWeight:600}}>{p.name}</td>
+                    {["first","second","third"].map((rank,ri)=>{
+                      const ch=BOOK_CHAPTERS.find(c=>c.id===p[rank]);
+                      return <td key={rank} style={{textAlign:"center",padding:"8px",color:ri===0?"#34C759":ri===1?"#007AFF":"#FF9500",fontSize:11}}>
+                        {ch?"Ch. "+ch.id:"—"}
+                      </td>;
+                    })}
+                  </tr>)}</tbody>
+                </table>
+              </div>
+
+              {/* By-chapter demand view */}
+              <div style={{fontSize:10,fontWeight:700,color:"#666",letterSpacing:1,marginBottom:6}}>DEMAND BY CHAPTER</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:6,marginBottom:16}}>
+                {BOOK_CHAPTERS.map(ch=>{
+                  const d=chapterDemand[ch.id];
+                  const total=d.first.length+d.second.length+d.third.length;
+                  if(total===0) return null;
+                  return <div key={ch.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:10}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                      <span style={{fontSize:10,fontWeight:700,color:"#A855F7"}}>Ch. {ch.id}: {ch.title}</span>
+                      <span style={{fontSize:10,fontWeight:700,color:"#fff"}}>{total}</span>
+                    </div>
+                    {d.first.length>0&&<div style={{fontSize:10,color:"#34C759",marginBottom:2}}>1st: {d.first.join(", ")}</div>}
+                    {d.second.length>0&&<div style={{fontSize:10,color:"#007AFF",marginBottom:2}}>2nd: {d.second.join(", ")}</div>}
+                    {d.third.length>0&&<div style={{fontSize:10,color:"#FF9500"}}>3rd: {d.third.join(", ")}</div>}
+                  </div>;
+                })}
+              </div>
+            </div>;
+          })()}
+
           {/* Chapter Assignment Manager */}
           <div style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>CHAPTER ASSIGNMENTS</div>
           <p style={{fontSize:12,color:"#666",margin:"0 0 14px"}}>Assign pairs/small groups to each chapter. Students will see their assignment and can submit quiz questions.</p>
@@ -1569,13 +1647,10 @@ export default function App() {
       <p style={{fontSize:13,color:"#555",margin:"0 0 6px"}}>Diamandis & Kotler — Industry Deep Dive</p>
       <p style={{fontSize:12,color:"#666",margin:"0 0 24px",lineHeight:1.6}}>Your group presents a chapter to the class. Everyone submits quiz questions from their chapter. Rolling quizzes draw from the class's approved question pool.</p>
 
-      {/* Your Assignment */}
-      <div style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>YOUR ASSIGNMENT</div>
-      {myChapters.length===0
-        ?<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:20,marginBottom:24,textAlign:"center"}}>
-          <p style={{fontSize:13,color:"#555",margin:0}}>No chapter assigned yet. Your professor will assign your group a chapter.</p>
-        </div>
-        :myChapters.map(mc=>{
+      {/* Chapter Preferences / Assignment */}
+      {myChapters.length>0?<>
+        <div style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>YOUR ASSIGNMENT</div>
+        {myChapters.map(mc=>{
           const ch = BOOK_CHAPTERS.find(c=>c.id===mc.chapterId);
           if(!ch) return null;
           const assignment = ddChapterAssignments[mc.chapterId] || {};
@@ -1591,8 +1666,63 @@ export default function App() {
               {assignment.students.map((s,si2)=><span key={si2} style={{fontSize:10,fontWeight:600,color:s===studentName?"#A855F7":"#888",background:s===studentName?"rgba(168,85,247,0.12)":"rgba(255,255,255,0.04)",padding:"2px 8px",borderRadius:8}}>{s}</span>)}
             </div>}
           </div>;
-        })
-      }
+        })}
+      </>:<>
+        <div style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>CHAPTER PREFERENCES</div>
+        {ddChapterPrefs
+          ?<div style={{background:"rgba(52,199,89,0.05)",border:"1px solid rgba(52,199,89,0.15)",borderRadius:14,padding:20,marginBottom:24}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#34C759",letterSpacing:1,marginBottom:10}}>✓ YOUR TOP 3 SUBMITTED</div>
+            {["first","second","third"].map((rank,ri)=>{
+              const ch = BOOK_CHAPTERS.find(c=>c.id===ddChapterPrefs[rank]);
+              if(!ch) return null;
+              return <div key={rank} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ri<2?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                <span style={{fontSize:16,fontWeight:800,color:ri===0?"#34C759":ri===1?"#007AFF":"#FF9500",width:24,textAlign:"center"}}>{ri+1}</span>
+                <div>
+                  <span style={{fontSize:13,fontWeight:600,color:"#ddd"}}>Ch. {ch.id}: {ch.title}</span>
+                  <p style={{fontSize:10,color:"#666",margin:0}}>{ch.topic}</p>
+                </div>
+              </div>;
+            })}
+            <button onClick={()=>setDdChapterPrefs(null)} style={{...gs,marginTop:12,fontSize:10}}>Change my picks</button>
+          </div>
+          :<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:20,marginBottom:24}}>
+            <p style={{fontSize:13,color:"#bbb",margin:"0 0 4px"}}>Pick your top 3 chapter preferences. Professor Fairclough will use these to form groups and assign chapters.</p>
+            <p style={{fontSize:11,color:"#666",margin:"0 0 16px"}}>Click chapters below in order: 1st choice, 2nd choice, 3rd choice.</p>
+            {(()=>{
+              const tempPrefs = ddChapterPrefs || {};
+              const selected = [tempPrefs.first, tempPrefs.second, tempPrefs.third].filter(Boolean);
+              const pickCount = selected.length;
+              const rankLabels = ["1st Choice","2nd Choice","3rd Choice"];
+              return <>
+                {pickCount>0&&<div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+                  {selected.map((id,i)=>{const ch=BOOK_CHAPTERS.find(c=>c.id===id); return ch?<span key={i} style={{fontSize:11,fontWeight:700,color:i===0?"#34C759":i===1?"#007AFF":"#FF9500",background:i===0?"rgba(52,199,89,0.1)":i===1?"rgba(0,122,255,0.1)":"rgba(255,149,0,0.1)",padding:"4px 10px",borderRadius:8}}>{rankLabels[i]}: Ch. {ch.id}</span>:null;})}
+                  <button onClick={()=>setDdChapterPrefs(null)} style={{background:"none",border:"none",color:"#555",fontSize:10,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Reset</button>
+                </div>}
+                {pickCount<3&&<p style={{fontSize:10,color:"#FF9500",margin:"0 0 10px"}}>Select your {rankLabels[pickCount].toLowerCase()}:</p>}
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:6,marginBottom:14}}>
+                  {BOOK_CHAPTERS.map(ch=>{
+                    const isSelected = selected.includes(ch.id);
+                    const selIndex = selected.indexOf(ch.id);
+                    return <div key={ch.id} onClick={()=>{
+                      if(isSelected) return;
+                      if(pickCount>=3) return;
+                      const ranks=["first","second","third"];
+                      setDdChapterPrefs(prev=>({...prev,[ranks[pickCount]]:ch.id}));
+                    }} style={{background:isSelected?(selIndex===0?"rgba(52,199,89,0.08)":selIndex===1?"rgba(0,122,255,0.08)":"rgba(255,149,0,0.08)"):"rgba(255,255,255,0.015)",border:"1px solid "+(isSelected?(selIndex===0?"rgba(52,199,89,0.25)":selIndex===1?"rgba(0,122,255,0.25)":"rgba(255,149,0,0.25)"):"rgba(255,255,255,0.05)"),borderRadius:8,padding:10,cursor:isSelected||pickCount>=3?"default":"pointer",opacity:!isSelected&&pickCount>=3?0.4:1,transition:"all 0.15s"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <span style={{fontSize:10,fontWeight:700,color:isSelected?(selIndex===0?"#34C759":selIndex===1?"#007AFF":"#FF9500"):"#555"}}>Ch. {ch.id}</span>
+                        {isSelected&&<span style={{fontSize:9,fontWeight:700,color:selIndex===0?"#34C759":selIndex===1?"#007AFF":"#FF9500"}}>{rankLabels[selIndex]}</span>}
+                      </div>
+                      <p style={{fontSize:11,fontWeight:600,color:isSelected?"#fff":"#888",margin:"2px 0 0"}}>{ch.title}</p>
+                    </div>;
+                  })}
+                </div>
+                {pickCount===3&&<button onClick={()=>{submitChapterPrefs(ddChapterPrefs);}} style={bs("linear-gradient(135deg,#34C759,#30D158)")}>Submit My Top 3 →</button>}
+              </>;
+            })()}
+          </div>
+        }
+      </>}
 
       {/* Submit Quiz Question */}
       {myChapters.length>0&&<>
