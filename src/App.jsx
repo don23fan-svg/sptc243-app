@@ -285,6 +285,11 @@ export default function App() {
   const [ddSubmitQ,setDdSubmitQ]=useState({type:"mc",question:"",options:["","","",""],answer:"",chapterId:null});
   const [ddQuizAns,setDdQuizAns]=useState({});
 
+  // Roster state
+  const [roster,setRoster]=useState([]); // ["First Last", ...]
+  const [showNameEntry,setShowNameEntry]=useState(false); // for "I don't see my name"
+  const [rosterNewName,setRosterNewName]=useState(""); // instructor adding to roster
+
   // Load student identity from localStorage, progress from Firebase
   useEffect(()=>{
     (async()=>{
@@ -320,6 +325,16 @@ export default function App() {
           }
         }
       } catch(e){}
+      // Always load roster for the dropdown (even before login)
+      if(db){
+        try {
+          const rosterSnap = await get(child(ref(db), "roster"));
+          if(rosterSnap.exists()) {
+            const r = rosterSnap.val();
+            setRoster(Array.isArray(r) ? r : Object.values(r));
+          }
+        } catch(e){}
+      }
       setLoading(false);
     })();
   },[]);
@@ -346,12 +361,14 @@ export default function App() {
 
   // Step 2: confirmed — save to localStorage + Firebase
   const registerStudent = async (name) => {
+    const onRoster = roster.includes(name);
     try {
       localStorage.setItem("sptc243-student", JSON.stringify({ name }));
-      if(db) await set(ref(db, "students/"+fbKey(name)), { name, done: {}, scores: {}, lastActive: new Date().toISOString() });
+      if(db) await set(ref(db, "students/"+fbKey(name)), { name, onRoster, done: {}, scores: {}, lastActive: new Date().toISOString() });
       setStudentName(name);
       setConfirmingName(null);
       setNameInput("");
+      setShowNameEntry(false);
     } catch(e){ console.error("Registration failed:", e); setStudentName(name); setConfirmingName(null); }
   };
 
@@ -467,6 +484,23 @@ export default function App() {
     } catch(e){ console.error("Assign failed:", e); }
   };
 
+  // Roster management
+  const addToRoster = async (name) => {
+    const normalized = normalizeName(name);
+    if(!normalized || roster.includes(normalized)) return;
+    const newRoster = [...roster, normalized].sort((a,b)=>a.localeCompare(b));
+    setRoster(newRoster);
+    if(db) { try { await set(ref(db, "roster"), newRoster); } catch(e){ console.error("Roster save failed:", e); } }
+  };
+
+  const removeFromRoster = async (name) => {
+    const newRoster = roster.filter(n=>n!==name);
+    setRoster(newRoster);
+    if(db) { try { await set(ref(db, "roster"), newRoster); } catch(e){ console.error("Roster save failed:", e); } }
+  };
+
+  const isOnRoster = (name) => roster.includes(name);
+
   // Start a rolling quiz (grab approved questions)
   const startRollingQuiz = () => {
     const approved = ddQuizQuestions.filter(q=>q.status==="approved" && (q.type==="mc" || q.type==="short"));
@@ -514,6 +548,14 @@ export default function App() {
       }
       students.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
       setDashData(students);
+      // Load roster
+      try {
+        const rosterSnap = await get(ref(db, "roster"));
+        if(rosterSnap.exists()) {
+          const r = rosterSnap.val();
+          setRoster(Array.isArray(r) ? r : Object.values(r));
+        }
+      } catch(e){}
       // Load deep dive data for dashboard
       try {
         const ddChSnap = await get(ref(db, "deepdive/chapters"));
@@ -673,19 +715,39 @@ export default function App() {
         <p style={{fontSize:14,color:"#555",margin:"0 0 28px",lineHeight:1.6}}>AI & Emerging Technologies in Sports Communication<br/>Professor Ben Fairclough · Montclair State University</p>
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:24,textAlign:"left"}}>
           {!confirmingName?<>
-            <label style={{fontSize:11,fontWeight:700,color:"#666",letterSpacing:2,textTransform:"uppercase",display:"block",marginBottom:8}}>Enter your full name to get started</label>
-            <input value={nameInput} onChange={e=>setNameInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")startRegistration();}} placeholder="First Last" style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,boxSizing:"border-box"}}/>
-            <button onClick={startRegistration} disabled={!nameInput.trim()} style={{...bs(nameInput.trim()?"linear-gradient(135deg,#34C759,#30D158)":"#333"),width:"100%",cursor:nameInput.trim()?"pointer":"default"}}>Continue →</button>
+            {!showNameEntry?<>
+              <label style={{fontSize:11,fontWeight:700,color:"#666",letterSpacing:2,textTransform:"uppercase",display:"block",marginBottom:8}}>Select your name</label>
+              {roster.length>0?<>
+                <select value="" onChange={e=>{if(e.target.value)setConfirmingName(e.target.value);}} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,boxSizing:"border-box",appearance:"none",cursor:"pointer"}}>
+                  <option value="" style={{background:"#111",color:"#666"}}>Choose your name...</option>
+                  {roster.map(name=><option key={name} value={name} style={{background:"#111",color:"#fff"}}>{name}</option>)}
+                </select>
+                <button onClick={()=>setShowNameEntry(true)} style={{background:"none",border:"none",color:"#555",fontSize:11,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline",display:"block",margin:"0 auto"}}>I don't see my name</button>
+              </>:<>
+                <p style={{fontSize:13,color:"#666",margin:"0 0 14px",lineHeight:1.5}}>No class roster has been loaded yet. Enter your full name to get started.</p>
+                <input value={nameInput} onChange={e=>setNameInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")startRegistration();}} placeholder="First Last" style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,boxSizing:"border-box"}}/>
+                <button onClick={startRegistration} disabled={!nameInput.trim()} style={{...bs(nameInput.trim()?"linear-gradient(135deg,#34C759,#30D158)":"#333"),width:"100%",cursor:nameInput.trim()?"pointer":"default"}}>Continue →</button>
+              </>}
+            </>:<>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                <label style={{fontSize:11,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase"}}>Enter your name</label>
+                <button onClick={()=>{setShowNameEntry(false);setNameInput("");}} style={{background:"none",border:"none",color:"#555",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>← Back to list</button>
+              </div>
+              <p style={{fontSize:11,color:"#666",margin:"0 0 10px",lineHeight:1.5}}>If you're not on the class roster, enter your full name below. Your professor will see a flag to add you.</p>
+              <input value={nameInput} onChange={e=>setNameInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")startRegistration();}} placeholder="First Last" style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,boxSizing:"border-box"}}/>
+              <button onClick={startRegistration} disabled={!nameInput.trim()} style={{...bs(nameInput.trim()?"linear-gradient(135deg,#FF9500,#FF6B00)":"#333"),width:"100%",cursor:nameInput.trim()?"pointer":"default"}}>Continue →</button>
+            </>}
           </>:<>
-            <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Confirm your name</div>
+            <div style={{fontSize:10,fontWeight:700,color:roster.includes(confirmingName)?"#34C759":"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>{roster.includes(confirmingName)?"Confirm your name":"Not on roster — Continue anyway?"}</div>
             <p style={{fontSize:13,color:"#999",margin:"0 0 6px",lineHeight:1.5}}>You'll be registered as:</p>
-            <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"14px 16px",marginBottom:16}}>
+            <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"14px 16px",marginBottom:8}}>
               <p style={{fontSize:20,fontWeight:800,color:"#fff",margin:0}}>{confirmingName}</p>
             </div>
-            <p style={{fontSize:11,color:"#666",margin:"0 0 16px",lineHeight:1.5}}>This name will be visible to your instructor and cannot be easily changed. Make sure it matches your name on the class roster.</p>
+            {!roster.includes(confirmingName)&&<p style={{fontSize:11,color:"#FF9500",margin:"0 0 12px",lineHeight:1.5}}>⚠ This name is not on the class roster. You can still proceed, and your professor will see a flag to add you.</p>}
+            <p style={{fontSize:11,color:"#666",margin:"0 0 16px",lineHeight:1.5}}>This name will be visible to your instructor. Make sure it matches your name on the class roster.</p>
             <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>setConfirmingName(null)} style={{...gs,flex:1,textAlign:"center"}}>← Fix it</button>
-              <button onClick={()=>registerStudent(confirmingName)} style={{...bs("linear-gradient(135deg,#34C759,#30D158)"),flex:2}}>That's correct — Start Learning →</button>
+              <button onClick={()=>{setConfirmingName(null);setShowNameEntry(false);}} style={{...gs,flex:1,textAlign:"center"}}>← Back</button>
+              <button onClick={()=>registerStudent(confirmingName)} style={{...bs(roster.includes(confirmingName)?"linear-gradient(135deg,#34C759,#30D158)":"linear-gradient(135deg,#FF9500,#FF6B00)"),flex:2}}>{roster.includes(confirmingName)?"That's me — Start Learning →":"Continue without roster →"}</button>
             </div>
           </>}
         </div>
@@ -756,7 +818,7 @@ export default function App() {
       </div>:dashLoading?<p style={{textAlign:"center",color:"#555"}}>Loading student data...</p>:<div>
         {/* Tab bar */}
         <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",borderRadius:10,padding:4}}>
-          {[["progress","📊 Progress"],["profiles","👥 Profiles"],["intake","📋 Intake"],["lessons","📖 Lessons"],["deepdive","🔬 Deep Dive"],["tips","⚙️ Guide Tips"]].map(([k,label])=>
+          {[["progress","📊 Progress"],["roster","📋 Roster"],["profiles","👥 Profiles"],["intake","📋 Intake"],["lessons","📖 Lessons"],["deepdive","🔬 Deep Dive"],["tips","⚙️ Guide Tips"]].map(([k,label])=>
             <button key={k} onClick={()=>setDashTab(k)} style={{flex:1,padding:"10px 12px",borderRadius:8,border:"none",background:dashTab===k?"rgba(255,255,255,0.08)":"transparent",color:dashTab===k?"#fff":"#555",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"}}>{label}</button>
           )}
         </div>
@@ -809,6 +871,67 @@ export default function App() {
             </table>
           </div>
           {dashData.length===0&&<p style={{textAlign:"center",color:"#555",padding:20}}>No student data yet.</p>}
+        </div>}
+
+        {/* TAB: Roster Management */}
+        {dashTab==="roster"&&<div>
+          <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Class Roster</h2>
+          <p style={{fontSize:13,color:"#555",margin:"0 0 20px"}}>{roster.length} student{roster.length!==1?"s":""} on roster. This is the single source of truth for your class.</p>
+
+          {/* Add student */}
+          <div style={{display:"flex",gap:8,marginBottom:20}}>
+            <input value={rosterNewName} onChange={e=>setRosterNewName(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&rosterNewName.trim()){addToRoster(rosterNewName);setRosterNewName("");}}} placeholder="First Last" style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 14px",color:"#fff",fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}}/>
+            <button onClick={()=>{if(rosterNewName.trim()){addToRoster(rosterNewName);setRosterNewName("");}}} disabled={!rosterNewName.trim()} style={{...bs(rosterNewName.trim()?"linear-gradient(135deg,#34C759,#30D158)":"#333"),padding:"10px 20px",fontSize:12}}>+ Add</button>
+          </div>
+
+          {/* Unrostered students alert */}
+          {(()=>{
+            const unrostered = dashData.filter(s=>s.name && !roster.includes(s.name));
+            if(unrostered.length===0) return null;
+            return <div style={{background:"rgba(255,149,0,0.06)",border:"1px solid rgba(255,149,0,0.2)",borderRadius:12,padding:16,marginBottom:20}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>⚠ UNROSTERED STUDENTS ({unrostered.length})</div>
+              <p style={{fontSize:11,color:"#888",margin:"0 0 10px"}}>These students registered but are not on your roster. Add them or investigate.</p>
+              {unrostered.map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:i<unrostered.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                <div>
+                  <span style={{fontSize:13,fontWeight:600,color:"#FF9500"}}>{s.name}</span>
+                  <span style={{fontSize:10,color:"#666",marginLeft:8}}>Joined {s.lastActive?new Date(s.lastActive).toLocaleDateString("en-US",{month:"short",day:"numeric"}):""}</span>
+                </div>
+                <button onClick={()=>addToRoster(s.name)} style={{background:"rgba(52,199,89,0.12)",border:"1px solid rgba(52,199,89,0.3)",color:"#34C759",padding:"4px 12px",borderRadius:8,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>+ Add to Roster</button>
+              </div>)}
+            </div>;
+          })()}
+
+          {/* Roster list */}
+          {roster.length===0
+            ?<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:28,textAlign:"center"}}>
+              <p style={{fontSize:14,color:"#555",margin:"0 0 8px"}}>No students on the roster yet.</p>
+              <p style={{fontSize:12,color:"#444",margin:0}}>Add students one at a time using the field above. Students will select their name from a dropdown when they open the app.</p>
+            </div>
+            :<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,overflow:"hidden"}}>
+              {roster.map((name,i)=>{
+                const studentData = dashData.find(s=>s.name===name);
+                const hasLoggedIn = !!studentData;
+                const hasIntake = studentData && studentData.intake;
+                const modulesCompleted = studentData && studentData.done ? Object.keys(studentData.done).length : 0;
+                return <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",borderBottom:i<roster.length-1?"1px solid rgba(255,255,255,0.04)":"none",flexWrap:"wrap",gap:6}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{width:8,height:8,borderRadius:"50%",background:hasLoggedIn?"#34C759":"#333",flexShrink:0}}/>
+                    <span style={{fontSize:13,fontWeight:600,color:"#ddd"}}>{name}</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    {hasLoggedIn
+                      ?<>
+                        <span style={{fontSize:10,color:"#34C759",fontWeight:600}}>{modulesCompleted}/{MODULES.length} modules</span>
+                        {hasIntake&&<span style={{fontSize:9,color:"#007AFF",background:"rgba(0,122,255,0.1)",padding:"2px 6px",borderRadius:6}}>Intake done</span>}
+                      </>
+                      :<span style={{fontSize:10,color:"#555"}}>Not started</span>
+                    }
+                    <button onClick={()=>{if(confirm("Remove "+name+" from the roster?"))removeFromRoster(name);}} style={{background:"none",border:"none",color:"#333",fontSize:10,cursor:"pointer",fontFamily:"inherit",padding:"4px"}}>✕</button>
+                  </div>
+                </div>;
+              })}
+            </div>
+          }
         </div>}
 
         {/* TAB: Student Profiles */}
