@@ -229,6 +229,7 @@ const gs={background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255
 const bs=(bg)=>({background:bg,border:"none",color:"#fff",padding:"12px 24px",borderRadius:9,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"});
 
 const INSTRUCTOR_PASSCODE = "MSU12345!";
+const INSTRUCTOR_NAME = "Ben Fairclough";
 
 export default function App() {
   // ── Hash-based URL routing ──
@@ -487,7 +488,7 @@ export default function App() {
   // Roster management
   const addToRoster = async (name) => {
     const normalized = normalizeName(name);
-    if(!normalized || roster.includes(normalized)) return;
+    if(!normalized || roster.includes(normalized) || normalized === INSTRUCTOR_NAME) return;
     const newRoster = [...roster, normalized].sort((a,b)=>a.localeCompare(b));
     setRoster(newRoster);
     if(db) { try { await set(ref(db, "roster"), newRoster); } catch(e){ console.error("Roster save failed:", e); } }
@@ -500,6 +501,37 @@ export default function App() {
   };
 
   const isOnRoster = (name) => roster.includes(name);
+  const isInstructor = studentName === INSTRUCTOR_NAME;
+
+  // Instructor: clear all test data and restart fresh
+  const resetTestData = async () => {
+    if(!confirm("This will erase ALL your progress, intake answers, quiz history, and Deep Dive submissions. You'll be logged out and can re-register. Continue?")) return;
+    if(db && studentName) {
+      try { await remove(ref(db, "students/"+fbKey(studentName))); } catch(e){}
+      // Remove any quiz questions submitted by instructor
+      try {
+        const qqSnap = await get(ref(db, "deepdive/quizQuestions"));
+        if(qqSnap.exists()) {
+          const qs = qqSnap.val();
+          for(const k of Object.keys(qs)) { if(qs[k].studentName===studentName) { try { await remove(ref(db, "deepdive/quizQuestions/"+k)); } catch(e){} } }
+        }
+      } catch(e){}
+    }
+    localStorage.removeItem("sptc243-student");
+    localStorage.removeItem("sptc243-intake-done");
+    setStudentName(null);
+    setDone({});
+    setScores({});
+    setNameInput("");
+    setConfirmingName(null);
+    setIntakeComplete(false);
+    setIntakeAnswers({});
+    setIntakeStep(0);
+    setDdQuizHistory([]);
+    setDdSubmitQ({type:"mc",question:"",options:["","","",""],answer:"",chapterId:null});
+    setShowNameEntry(false);
+    window.location.hash = "#/";
+  };
 
   // Start a rolling quiz (grab approved questions)
   const startRollingQuiz = () => {
@@ -544,7 +576,7 @@ export default function App() {
       const students = [];
       if(snap.exists()){
         const data = snap.val();
-        Object.keys(data).forEach(k=>{ if(data[k].name) students.push(data[k]); });
+        Object.keys(data).forEach(k=>{ if(data[k].name && data[k].name !== INSTRUCTOR_NAME) students.push(data[k]); });
       }
       students.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
       setDashData(students);
@@ -886,7 +918,7 @@ export default function App() {
 
           {/* Unrostered students alert */}
           {(()=>{
-            const unrostered = dashData.filter(s=>s.name && !roster.includes(s.name));
+            const unrostered = dashData.filter(s=>s.name && s.name !== INSTRUCTOR_NAME && !roster.includes(s.name));
             if(unrostered.length===0) return null;
             return <div style={{background:"rgba(255,149,0,0.06)",border:"1px solid rgba(255,149,0,0.2)",borderRadius:12,padding:16,marginBottom:20}}>
               <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>⚠ UNROSTERED STUDENTS ({unrostered.length})</div>
@@ -1341,7 +1373,10 @@ export default function App() {
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
           <div style={{width:10,height:10,borderRadius:"50%",background:"#FF3B30",boxShadow:"0 0 12px #FF3B3088"}}/>
           <span style={{fontSize:11,fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:"#666"}}>SPTC 243 · Montclair State</span>
-          <span style={{marginLeft:"auto",fontSize:12,color:"#555"}}>{studentName} <button onClick={logoutStudent} style={{background:"none",border:"none",color:"#444",fontSize:10,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Not you?</button></span>
+          <span style={{marginLeft:"auto",fontSize:12,color:"#555",display:"flex",alignItems:"center",gap:6}}>
+            {isInstructor&&<span style={{fontSize:9,fontWeight:700,color:"#A855F7",background:"rgba(168,85,247,0.12)",padding:"2px 8px",borderRadius:8}}>INSTRUCTOR</span>}
+            {studentName} <button onClick={logoutStudent} style={{background:"none",border:"none",color:"#444",fontSize:10,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Not you?</button>
+          </span>
         </div>
         <h1 style={{fontSize:"clamp(28px,5vw,52px)",fontWeight:800,lineHeight:1.05,margin:"0 0 14px",color:"#fff"}}>AI & Emerging Tech<br/><span style={{color:"#FF3B30"}}>in Sports Communication</span></h1>
         <p style={{fontSize:16,color:"#555",maxWidth:520,lineHeight:1.65,margin:"0 0 12px"}}>Your guided course companion. Each module builds on the last — from the big ideas driving disruption, to understanding AI, to seeing how it's reshaping the business of sports.</p>
@@ -1402,6 +1437,11 @@ export default function App() {
       <div style={{borderTop:"1px solid rgba(255,255,255,0.03)",padding:"24px 0 40px",textAlign:"center"}}>
         <p style={{color:"#2a2a2a",fontSize:11}}>Professor Ben Fairclough · Fall 2025 · Wed 5:20-8:05 PM</p>
         <button onClick={()=>go("instructor")} style={{background:"none",border:"none",color:"#222",fontSize:10,cursor:"pointer",marginTop:4,fontFamily:"inherit"}}>Instructor Dashboard</button>
+        {isInstructor&&<div style={{marginTop:16,paddingTop:16,borderTop:"1px solid rgba(168,85,247,0.1)"}}>
+          <div style={{fontSize:9,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>INSTRUCTOR TOOLS</div>
+          <button onClick={resetTestData} style={{background:"rgba(255,59,48,0.08)",border:"1px solid rgba(255,59,48,0.2)",color:"#FF3B30",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>🗑 Reset All My Test Data</button>
+          <p style={{fontSize:10,color:"#444",margin:"6px 0 0"}}>Erases your progress, intake, quiz history & submissions. You'll re-register fresh.</p>
+        </div>}
       </div>
     </div></div>
   );
