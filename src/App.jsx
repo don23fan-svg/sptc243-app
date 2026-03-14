@@ -157,8 +157,29 @@ const bs=(bg)=>({background:bg,border:"none",color:"#fff",padding:"12px 24px",bo
 const INSTRUCTOR_PASSCODE = "MSU12345!";
 
 export default function App() {
-  const [view,setView]=useState("home");
-  const [mi,setMi]=useState(0);
+  // ── Hash-based URL routing ──
+  const parseHash = () => {
+    const hash = window.location.hash.replace(/^#\/?/, "");
+    const parts = hash.split("/").filter(Boolean);
+    if(parts[0]==="module" && parts[1]) {
+      const modNum = parseInt(parts[1]);
+      if(modNum>=1 && modNum<=MODULES.length) {
+        if(parts[2]==="quiz") return { view:"quiz", mi:modNum-1 };
+        if(parts[2]==="results") return { view:"results", mi:modNum-1 };
+        return { view:"module", mi:modNum-1 };
+      }
+    }
+    if(parts[0]==="deepdive") {
+      if(parts[1]==="results") return { view:"ddresults" };
+      return { view:"deepdive" };
+    }
+    if(parts[0]==="instructor") return { view:"instructor" };
+    return { view:"home" };
+  };
+
+  const initial = parseHash();
+  const [view,setView]=useState(initial.view);
+  const [mi,setMi]=useState(initial.mi||0);
   const [si,setSi]=useState(0);
   const [ans,setAns]=useState({});
   const [done,setDone]=useState({});
@@ -525,7 +546,34 @@ export default function App() {
     }
   ];
 
-  const go=(v,m)=>{setFade(false);setTimeout(()=>{setView(v);if(m!==undefined)setMi(m);setSi(0);setAns({});setShowDeeper(false);setFade(true);window.scrollTo({top:0});},120);};
+  // Build hash from view state
+  const buildHash = (v, m) => {
+    if(v==="module" && m!==undefined) return "#/module/"+(m+1);
+    if(v==="quiz") return "#/module/"+(m!==undefined?m+1:mi+1)+"/quiz";
+    if(v==="results") return "#/module/"+(m!==undefined?m+1:mi+1)+"/results";
+    if(v==="deepdive") return "#/deepdive";
+    if(v==="ddresults") return "#/deepdive/results";
+    if(v==="instructor") return "#/instructor";
+    return "#/";
+  };
+
+  const go=(v,m)=>{setFade(false);setTimeout(()=>{setView(v);if(m!==undefined)setMi(m);setSi(0);setAns({});setShowDeeper(false);setFade(true);window.scrollTo({top:0});const hash=buildHash(v,m);if(window.location.hash!==hash)window.history.pushState(null,"",hash);},120);};
+
+  // Listen for browser back/forward
+  useEffect(()=>{
+    const onHashChange=()=>{
+      const parsed=parseHash();
+      setView(parsed.view);
+      if(parsed.mi!==undefined) setMi(parsed.mi);
+      setSi(0);setAns({});setShowDeeper(false);
+      window.scrollTo({top:0});
+    };
+    window.addEventListener("hashchange",onHashChange);
+    return ()=>window.removeEventListener("hashchange",onHashChange);
+  },[]);
+
+  // Set initial hash if none present
+  useEffect(()=>{if(!window.location.hash)window.history.replaceState(null,"","#/");},[]);
 
   // Auto-load dashboard data when navigating to instructor view while already authed
   useEffect(()=>{if(view==="instructor"&&dashAuthed&&dashData.length===0&&!dashLoading){loadDashboard();}},[view,dashAuthed]);
@@ -563,7 +611,7 @@ export default function App() {
             </div>
           </>}
         </div>
-        <button onClick={()=>setView("instructor")} style={{background:"none",border:"none",color:"#333",fontSize:11,cursor:"pointer",marginTop:16,fontFamily:"inherit"}}>Instructor Dashboard →</button>
+        <button onClick={()=>go("instructor")} style={{background:"none",border:"none",color:"#333",fontSize:11,cursor:"pointer",marginTop:16,fontFamily:"inherit"}}>Instructor Dashboard →</button>
       </div>
     </div></div>
   );
@@ -616,7 +664,7 @@ export default function App() {
   if(view==="instructor") return(
     <div style={S}>{font}<Bg/><div style={{...W,...F}}>
       <div style={{paddingTop:40,paddingBottom:20}}>
-        <button onClick={()=>{setView("home");setDashPass("");setDashData([]);setExpanded({});}} style={gs}>← Back</button>
+        <button onClick={()=>{go("home");setDashPass("");setDashData([]);setExpanded({});}} style={gs}>← Back</button>
         <button onClick={()=>{setDashAuthed(false);setDashPass("");setDashData([]);setExpanded({});try{localStorage.removeItem("sptc243-instructor");}catch(e){}}} style={{...gs,marginLeft:8,color:"#FF3B30"}}>Sign Out</button>
       </div>
       {!dashAuthed?<div style={{maxWidth:420,margin:"0 auto",textAlign:"center"}}>
@@ -1152,7 +1200,7 @@ export default function App() {
 
       <div style={{borderTop:"1px solid rgba(255,255,255,0.03)",padding:"24px 0 40px",textAlign:"center"}}>
         <p style={{color:"#2a2a2a",fontSize:11}}>Professor Ben Fairclough · Fall 2025 · Wed 5:20-8:05 PM</p>
-        <button onClick={()=>setView("instructor")} style={{background:"none",border:"none",color:"#222",fontSize:10,cursor:"pointer",marginTop:4,fontFamily:"inherit"}}>Instructor Dashboard</button>
+        <button onClick={()=>go("instructor")} style={{background:"none",border:"none",color:"#222",fontSize:10,cursor:"pointer",marginTop:4,fontFamily:"inherit"}}>Instructor Dashboard</button>
       </div>
     </div></div>
   );
