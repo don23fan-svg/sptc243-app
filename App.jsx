@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, get, child, push, remove, update } from "firebase/database";
 
@@ -118,25 +118,113 @@ const MODULES = [
 ];
 
 // ═══════════════════════════════════════════════════
-// INDUSTRY DEEP DIVE — The Future Is Faster Than You Think
+// FAST FUTURE SERIES — The Future Is Faster Than You Think
 // ═══════════════════════════════════════════════════
 const BOOK_CHAPTERS = [
-  { id: 1, title: "Convergence", topic: "How exponential technologies crash into each other" },
-  { id: 2, title: "The Future of Shopping", topic: "Retail reinvented by AI, AR, drones, and data" },
-  { id: 3, title: "The Future of Advertising", topic: "Attention economies, personalization, and the death of mass marketing" },
-  { id: 4, title: "The Future of Entertainment", topic: "Immersive experiences, spatial computing, and the creator economy" },
-  { id: 5, title: "The Future of Education", topic: "AI tutors, personalized learning, and the end of one-size-fits-all" },
-  { id: 6, title: "The Future of Healthcare", topic: "Diagnostics, longevity, wearables, and predictive medicine" },
-  { id: 7, title: "The Future of Longevity", topic: "Extending healthspan, biotech, and the economics of aging" },
-  { id: 8, title: "The Future of Insurance", topic: "Risk, real-time data, autonomous systems, and moral hazard" },
-  { id: 9, title: "The Future of Finance", topic: "Fintech, blockchain, decentralized systems, and new money" },
-  { id: 10, title: "The Future of Real Estate", topic: "Smart cities, remote work, VR, and new living models" },
-  { id: 11, title: "The Future of Food", topic: "Lab-grown meat, vertical farms, AI agriculture, and supply chains" },
-  { id: 12, title: "Threats & Dangers", topic: "Deepfakes, job displacement, bias, surveillance, and power concentration" },
-  { id: 13, title: "Five Great Migrations", topic: "Climate, urban, virtual, space, and meta-intelligence" }
+  // Part I: The Power of Convergence
+  { id: 1, part: "Part I: The Power of Convergence", title: "Convergence", topic: "How exponential technologies crash into each other to create disruption no single technology could achieve alone",
+    keyThemes: ["Exponential technologies don't advance in isolation", "Convergence creates multiplicative, not additive, disruption", "Flying cars as a case study in convergence", "The gap between sci-fi and reality is closing faster than anyone expects"],
+    summary: "The book opens with its central thesis: the real disruption doesn't come from any single technology improving on its own. It comes from convergence \u2014 the moment when multiple exponential technologies collide simultaneously. Diamandis and Kotler argue that while individual technologies like AI, sensors, and robotics are each impressive alone, their true power emerges at the intersections. When AI meets sensors, when 3D printing meets materials science, when networks meet robotics \u2014 capabilities emerge that none could achieve alone. The result is multiplicative, not additive. The authors use Uber's flying car initiative (Uber Elevate) as the signature example: creating a viable eVTOL required simultaneous breakthroughs in machine learning, battery technology, materials science, 3D-printed engine components, sensor arrays, and air traffic management software. No single technology made it possible. Their convergence did. This convergence framework becomes the lens through which the entire book examines the future.",
+    futureVision: "Imagine ordering a flying rideshare as easily as you call an Uber today. By the late 2020s, Diamandis and Kotler envision eVTOLs whisking commuters between rooftop 'mega-skyports' that handle a thousand takeoffs per hour. Uber's specifications require these skyports to recharge vehicles in seven to fifteen minutes and occupy no more than three acres \u2014 small enough to sit atop old parking garages. The convergence of lightweight materials, AI-powered navigation, advanced batteries, and 5G networks turns urban air mobility from science fiction into a commuter option.",
+    sportsConnection: "Think about how many exponential technologies converge in a single modern sports broadcast: AI cameras, RFID player tracking, real-time AR graphics, automated highlights, personalized betting feeds, 5G mobile delivery. None existed together a decade ago.",
+    realityCheck: { intro: "This book was published in 2020. The authors predicted flying rideshares by the late 2020s and described convergence as the key driver of disruption. Has the timeline held up?", prompts: ["Search for the current status of Joby Aviation, Archer Aviation, or Lilium. How close are commercial eVTOL flights to reality compared to what the book predicted?", "Find a recent example (last 6 months) of multiple technologies converging in a single sports product or broadcast. Does it match the book's thesis, or is the reality different than expected?", "The book uses Uber Elevate as a major case study. What happened to that program? What does its fate tell us about predicting convergence timelines?"] }
+  },
+  { id: 2, part: "Part I: The Power of Convergence", title: "The Jump to Lightspeed: Exponential Technologies, Part I", topic: "Deep dives into quantum computing, artificial intelligence, robotics, nanotechnology, and biotechnology",
+    keyThemes: ["Quantum computing solving previously impossible problems", "AI progressing from narrow intelligence toward general capability", "Robotics moving from factories into everyday life", "Nanotechnology and biotechnology converging to reshape the physical world"],
+    summary: "This chapter provides a detailed tour of five foundational exponential technologies. Quantum computing: by exploiting quantum mechanics (superposition and entanglement), quantum computers can solve problems that classical computers never will \u2014 from drug discovery to materials science to cryptography. Artificial intelligence: the authors trace AI's rapid evolution from narrow task-specific systems toward increasingly general capabilities, powered by deep learning, massive datasets, and accelerating hardware. They note that AI is the most important of the exponential technologies because it amplifies all the others. Robotics: robots are moving out of factories and into homes, hospitals, warehouses, and streets \u2014 driven by cheaper sensors, better AI, and improved actuators. Nanotechnology: engineering at the molecular scale enables new materials, targeted drug delivery, and manufacturing precision impossible at human scale. Biotechnology: CRISPR gene editing, synthetic biology, and genomics are giving humans the ability to read, write, and edit the code of life itself. The chapter emphasizes that each of these is powerful individually but transformative when they converge.",
+    futureVision: null,
+    sportsConnection: "AI is already the most impactful exponential technology in sports: from computer vision analyzing game footage, to natural language models writing recaps, to machine learning optimizing training loads. Every other technology in this chapter amplifies what AI can do for sports.",
+    realityCheck: { intro: "The book described AI as progressing 'from narrow intelligence toward general capability' and predicted quantum computing would solve previously impossible problems. How has the landscape shifted since 2020?", prompts: ["Search for the latest capabilities of ChatGPT, Claude, or Gemini. In 2020, these didn't exist. Has AI's progression toward 'general capability' been faster or slower than the book implied?", "Look up the current state of quantum computing (Google, IBM, or any major player). Are we closer to practical quantum applications than the book suggested, or has progress been slower?", "Find a recent story about robotics in sports — stadium operations, training, or broadcasting. Is this technology advancing on the exponential curve the authors described?"] }
+  },
+  { id: 3, part: "Part I: The Power of Convergence", title: "The Turbo-Boost: Exponential Technologies, Part II", topic: "Deep dives into networks, energy, 3D printing, augmented/virtual reality, and blockchain",
+    keyThemes: ["5G and satellite networks connecting the entire planet", "Solar energy and batteries reaching cost tipping points", "3D printing enabling distributed, on-demand manufacturing", "AR/VR approaching holodeck-level immersion", "Blockchain creating trustless systems"],
+    summary: "The second technology deep dive covers five more exponential technologies. Networks: 5G and satellite constellations (like SpaceX's Starlink) are bringing gigabit connectivity to every corner of the planet, connecting the next several billion people and enabling real-time data transfer for autonomous vehicles, telemedicine, and IoT. Energy: solar costs have dropped 200x in 40 years and batteries are on a similar curve, making clean energy cheaper than fossil fuels and enabling energy abundance. 3D printing: also called additive manufacturing, this technology is moving from prototyping to production \u2014 printing everything from rocket engines to houses to human organs. AR/VR: augmented and virtual reality are converging toward what the authors call the holodeck \u2014 fully immersive environments indistinguishable from physical reality. Blockchain: a decentralized, tamper-proof ledger enabling trustless transactions, smart contracts, and new organizational structures without intermediaries. Together with the technologies from Chapter 2, these ten exponentials form the raw ingredients for the convergences explored in the rest of the book.",
+    futureVision: "SpaceX's Starlink and similar satellite constellations beam high-speed internet to every square meter of the planet. A farmer in rural sub-Saharan Africa has the same connectivity as a developer in Silicon Valley. Combined with AI translation, cheap smartphones, and mobile banking, billions of people gain access to the global economy for the first time \u2014 creating an unprecedented wave of entrepreneurship, education, and economic growth.",
+    sportsConnection: "5G networks are already reshaping live sports: multi-angle streaming, in-stadium AR experiences on your phone, real-time betting integration. 3D printing is creating custom-fit protective equipment. VR is transforming how fans attend games remotely.",
+    realityCheck: { intro: "The authors highlighted 5G, solar energy, 3D printing, AR/VR, and blockchain as exponential technologies about to converge. Five years later, some have surged and others have stumbled.", prompts: ["Search for the current state of the Apple Vision Pro or Meta Quest. Has VR/AR reached the 'holodeck-level immersion' the book described, or is adoption slower than expected?", "Look up what happened to NFTs and blockchain in sports since their 2021-2022 peak (NBA Top Shot, fan tokens, etc.). Did this technology follow the exponential curve or hit a wall?", "Find recent data on Starlink's global internet coverage. How close is SpaceX to the book's vision of 'gigabit connectivity to every corner of the planet'?"] }
+  },
+  { id: 4, part: "Part I: The Power of Convergence", title: "The Acceleration of Acceleration", topic: "Why the pace of change itself is speeding up, driven by compounding forces beyond technology alone",
+    keyThemes: ["Seven forces accelerating the rate of change", "Saved time creates more time for innovation", "Falling costs of capital and experimentation", "The abundance of genius: more connected minds than ever before"],
+    summary: "Having established the ten exponential technologies, this chapter explains why the pace of change itself is accelerating \u2014 not just because of the technologies, but because of seven compounding forces. First, saved time: technology frees up hours in our day (think GPS replacing map-reading, or AI replacing manual research), and that freed time gets reinvested into more innovation. Second, more available capital: crowdfunding, venture capital, and falling startup costs mean more ideas get funded than ever before. Third, demonetization: as products become digital, their marginal cost drops toward zero, lowering barriers to experimentation. Fourth, more genius: global connectivity means the world's smartest people can find each other, collaborate, and build on each other's work. Fifth, increased communication: ideas spread faster than ever. Sixth, longer lifespans mean more productive years per person. Seventh, the convergence of all the above creates a meta-acceleration \u2014 the rate of change compounds on itself. The authors argue this is why experts consistently underestimate how fast disruption arrives: they project linearly in an exponential world.",
+    futureVision: null,
+    sportsConnection: "This chapter explains why sports media disruption feels like it's accelerating: it's not just one technology changing the game. It's cheaper tools, more connected creators, democratized distribution, and AI capability all compounding simultaneously. The gap between 2020 and 2025 in sports tech is bigger than the gap between 2010 and 2020.",
+    realityCheck: { intro: "The book argued that seven compounding forces — saved time, more capital, demonetization, more genius, better communication, longer lifespans, and convergence — are making change itself accelerate. Has this played out?", prompts: ["Search for how much venture capital has flowed into AI startups in the last 12 months. Does the 'more available capital' force seem to be accelerating or contracting?", "Find an example of a solo creator or tiny team producing sports content that would have required a full production team five years ago. What tools enabled it? Does this validate the 'demonetization + democratization = acceleration' argument?", "Look up recent debates about whether AI progress is slowing down (the 'scaling wall' argument) or still accelerating. Are there credible voices on both sides?"] }
+  },
+  // Part II: The Rebirth of Everything
+  { id: 5, part: "Part II: The Rebirth of Everything", title: "The Future of Shopping", topic: "Retail reinvented by AI, AR, drones, and data",
+    keyThemes: ["AI-driven personalization at scale", "The death of traditional retail and rise of the experience economy", "Cashierless stores and smart shelves", "3D printing enabling on-demand manufacturing"],
+    summary: "Diamandis and Kotler argue that shopping will split into two paths. Path A: physical retail reinvents itself as an 'experience economy' \u2014 stores become hyper-personalized destinations combining entertainment, wellness, and education. Smart mirrors show you wearing clothes you haven't tried on. Eye scanners create personalized fast lanes based on purchase history. Stores become places you go for the experience, not just the product. Path B: shopping disappears entirely into AI. Your personal AI knows your preferences, body measurements, schedule, and budget. It orders what you need before you know you need it. Drone delivery and autonomous vehicles bring it to your door. The authors describe Westfield's 'Destination 2028' concept \u2014 a hyper-connected micro-city with sensory gardens, smart bathrooms offering nutrition tips, and magic mirrors. They also discuss how 3D printing enables zero-waste, on-demand manufacturing: a body scan at a store produces a perfectly fitted garment printed on the spot.",
+    futureVision: "It's 2028 in Chicago. You forgot your coat on a rainy day. During your autonomous Uber ride, your AI finds a nearby shop selling lab-grown vegan leather jackets. You walk in, a full-body scan takes your measurements in seconds, and the jacket is 3D-printed to your exact fit while you grab a coffee next door. You walk out wearing it \u2014 no inventory, no waste, no wrong sizes. The store didn't stock the jacket. It manufactured it for you in minutes.",
+    sportsConnection: "Sports merchandising is already moving this direction. AI personalization recommends gear based on your team, player preferences, and viewing habits. On-demand manufacturing could mean customized jerseys printed in-arena.",
+    realityCheck: { intro: "The book predicted cashierless stores, AI personal shoppers, 3D-printed custom clothing, and the 'experience economy' replacing traditional retail. Written before the pandemic reshaped shopping habits entirely.", prompts: ["Search for the current status of Amazon Go cashierless stores. Has the concept expanded as predicted, or has Amazon pulled back? What does that tell us?", "Find a recent example of AI being used in sports merchandise or fan retail (personalization, recommendation engines, dynamic pricing). Is the 'AI personal shopper' vision materializing?", "Look up Westfield's 'Destination 2028' concept that the book highlighted. Did it happen? What does the current state of malls and experiential retail look like?"] }
+  },
+  { id: 6, part: "Part II: The Rebirth of Everything", title: "The Future of Advertising", topic: "Attention economies, personalization, and the death of mass marketing",
+    keyThemes: ["The attention economy and its limits", "AI enabling hyper-personalized ad targeting", "AR overlays replacing physical billboards", "The end of mass marketing as we know it"],
+    summary: "The advertising industry is being completely restructured by AI and AR. Diamandis and Kotler describe a world where mass-market advertising \u2014 the same commercial shown to millions \u2014 becomes obsolete. AI enables ads tailored not just to demographics but to individual behavior, mood, location, and real-time context. Augmented reality takes this further: physical billboards become dynamic digital overlays that show different ads to different people looking at the same space. The authors explore how attention itself becomes the scarce resource. As AI gets better at predicting what you want, advertising evolves from interruption to anticipation \u2014 showing you things you didn't know you wanted at the exact moment you're most receptive. The chapter also covers the ethical tensions: hyper-personalization creates extraordinary value for consumers and brands, but it requires unprecedented access to personal data.",
+    futureVision: "You're walking down the street wearing AR glasses. The billboard on the corner shows you an ad for running shoes in your size and preferred color \u2014 because your AI knows you ran a 10K last weekend and your current shoes have 400 miles on them. The person next to you sees an ad for a restaurant their spouse would love, because their anniversary is this week. Same billboard, completely different ads, both eerily relevant.",
+    sportsConnection: "Sports broadcasting already leads in targeted advertising. Dynamic ad insertion means the same game shows different commercials to different streaming viewers. AR-powered virtual signage means courtside ads can change by market in real time.",
+    realityCheck: { intro: "The book envisioned hyper-personalized advertising powered by AI and AR, where mass marketing becomes obsolete. Meanwhile, digital advertising has faced major upheavals the authors didn't fully anticipate.", prompts: ["Search for how Apple's App Tracking Transparency (ATT) and the death of third-party cookies have impacted digital ad targeting. Did the book account for a privacy backlash against hyper-personalization?", "Find a recent example of AI-powered or dynamic ad insertion in a live sports broadcast. How sophisticated is the personalization compared to what the book envisioned?", "Look up the current state of AR glasses from Meta, Apple, or Snap. How close are we to the book's vision of AR billboards showing different ads to different people on the same street?"] }
+  },
+  { id: 7, part: "Part II: The Rebirth of Everything", title: "The Future of Entertainment", topic: "Immersive experiences, spatial computing, and the creator economy",
+    keyThemes: ["VR and AR creating the experiential age", "The holodeck as an achievable near-term goal", "AI-generated content and interactive storytelling", "Flow states and addictive immersion"],
+    summary: "Entertainment is converging toward full immersion. Diamandis and Kotler trace a path from passive consumption (watching a screen) to active participation (living inside the story). VR headsets are getting lighter, cheaper, and more realistic every year. Haptic suits add touch. AI generates responsive narratives that adapt to your choices in real time. The authors argue we're heading toward a real-life holodeck \u2014 Star Trek's immersive entertainment room \u2014 within a generation. They also explore the neuroscience: VR is uniquely powerful at triggering flow states (deep, focused immersion), making it potentially more engaging \u2014 and more addictive \u2014 than any previous medium. The chapter addresses the democratization of entertainment creation too. AI tools mean a single creator can produce content that once required a full studio, fundamentally reshaping who can tell stories and how they're distributed.",
+    futureVision: "You put on a lightweight headset and step into a fully realized world \u2014 not watching a movie, but living inside one. The AI-driven narrative adapts to your decisions. Haptic feedback lets you feel rain and wind. You're not an audience member; you're the protagonist. When you remove the headset an hour later, the 'real' world feels flat by comparison. The authors warn this immersive pull will be one of the great challenges of the coming decades.",
+    sportsConnection: "Imagine attending an NBA game courtside from your living room in full VR \u2014 looking around the arena, hearing the crowd, choosing your own camera angles. Sports is the killer app for immersive tech because it's live, emotional, and inherently visual.",
+    realityCheck: { intro: "The book predicted VR and AR would create a 'holodeck' level of immersion, with AI-generated interactive storytelling replacing passive entertainment. The chapter also warned about 'addictive immersion.'", prompts: ["Search for recent VR sports viewing experiences (NBA, NFL, FIFA, etc.). Can you actually attend a game courtside in VR today? How close is the experience to what the book described?", "Look up AI-generated video tools like Sora, Runway, or Kling. The book predicted AI-driven interactive storytelling — is that happening yet, or are we still in the 'deceptive phase'?", "Find recent coverage of screen time, social media addiction, or gaming disorder concerns. Was the book's warning about 'addictive immersion' prescient, and has the concern shifted from VR to something the authors didn't predict (like short-form video)?"] }
+  },
+  { id: 8, part: "Part II: The Rebirth of Everything", title: "The Future of Education", topic: "AI tutors, personalized learning, and the end of one-size-fits-all",
+    keyThemes: ["AI tutors adapting to individual learning styles", "VR enabling experiential learning", "The end of one-size-fits-all classrooms", "Gamification and flow-state learning"],
+    summary: "The authors argue that the current education model \u2014 one teacher lecturing 30 students at the same pace \u2014 is a relic of the industrial age and is about to be disrupted as fundamentally as retail or media. AI enables personalized tutoring at scale: every student gets an AI tutor that adapts to their learning pace, style, and interests in real time. If a student learns math better through sports examples, the AI teaches math through sports. VR adds experiential learning: instead of reading about ancient Rome, you walk through it. Instead of memorizing the water cycle, you fly through a rainstorm as a water molecule. Gamification layers add engagement mechanics that trigger flow states. The result is education that's more engaging, more effective, and radically more accessible \u2014 a child in rural Kenya gets the same quality AI tutor as a student at an elite prep school.",
+    futureVision: "A student struggles with photosynthesis. Their AI tutor notices they learn best through visual-spatial interaction and love soccer. The next lesson shrinks the student down to molecular size inside a VR leaf, where they play a game: as a water molecule, they navigate the plant's vascular system, collect sunlight energy, and 'score goals' by completing the chemical reactions of photosynthesis. They master in 20 minutes what a textbook couldn't teach in a week.",
+    sportsConnection: "Sports analytics training is already moving this direction. VR quarterback training lets players read defenses from inside the play. AI coaching tools adapt practice drills to individual player weaknesses.",
+    realityCheck: { intro: "The book predicted AI tutors that adapt to individual learning styles, VR classrooms, and the end of one-size-fits-all education. Written just before the pandemic forced the largest remote learning experiment in history.", prompts: ["Search for how AI tutoring tools (like Khanmigo, Duolingo AI, or similar) are being used in education today. Are AI tutors adapting to individual students the way the book envisioned?", "Look up whether VR is actually being used in sports training today — quarterback training, referee simulation, or player development. Find a specific team or program. Is it mainstream or still niche?", "Find recent debate about AI in the classroom — are schools embracing it or banning it? How does the reality of AI in education compare to the optimistic vision in this chapter?"] }
+  },
+  { id: 9, part: "Part II: The Rebirth of Everything", title: "The Future of Healthcare", topic: "Diagnostics, wearables, robotic surgery, and the shift to predictive medicine",
+    keyThemes: ["AI outperforming human doctors in diagnostics", "Continuous monitoring via wearable sensors", "The shift from reactive to predictive medicine", "Genome sequencing at near-zero cost"],
+    summary: "Healthcare is shifting from reactive ('you feel sick, you see a doctor') to proactive and predictive ('your devices detect illness before you have symptoms'). Diamandis and Kotler describe a convergence of AI diagnostics, wearable biosensors, genome sequencing, and robotic surgery that will fundamentally transform medicine. AI already matches or exceeds human doctors in reading radiology scans, pathology slides, and retinal images. Wearable sensors continuously monitor blood chemistry, heart rhythm, sleep quality, and stress hormones. Genome sequencing \u2014 which cost $2.7 billion for the first human genome \u2014 now costs under $200, enabling personalized medicine tailored to your DNA. The authors describe a near-future where your bathroom mirror, toilet, and wearables form a continuous health monitoring system that detects cancer, heart disease, or infection weeks or months before symptoms appear.",
+    futureVision: "You step onto your bathroom scale in the morning. It doesn't just weigh you \u2014 it analyzes your gait for neurological changes, checks your body composition, and sends data to your AI health system. Your smart mirror scans your face for micro-expressions indicating pain or fatigue. Your toilet analyzes biomarkers in your urine. Before you finish brushing your teeth, your AI alerts you: 'Your inflammatory markers have trended up for three days. Based on your genome and these patterns, there's a 40% probability of a respiratory infection developing. I've scheduled a telemedicine consult and prepped a preventive protocol.'",
+    sportsConnection: "Sports medicine is the testing ground for predictive health tech. Wearable sensors already track player load, sleep, and biometrics. AI predicts injury risk before it happens. The same technology is coming to the general population.",
+    realityCheck: { intro: "The book predicted AI outperforming doctors in diagnostics, continuous health monitoring via wearables, and a shift from reactive to predictive medicine. The pandemic accelerated telemedicine but also revealed healthcare system fragility.", prompts: ["Search for recent FDA-approved AI diagnostic tools or AI that matched/outperformed doctors in a clinical study. Is AI in healthcare living up to the book's predictions, or facing regulatory hurdles the authors underestimated?", "Look up the latest wearable health features from Apple Watch, Whoop, or Oura Ring. How close are consumer wearables to the 'continuous monitoring' vision in this chapter?", "Find a recent example of AI being used for injury prediction or player health monitoring in professional sports. Is this technology actually preventing injuries, or is it still more hype than results?"] }
+  },
+  { id: 10, part: "Part II: The Rebirth of Everything", title: "The Future of Longevity", topic: "Extending healthspan, biotech, and the economics of aging",
+    keyThemes: ["Extending healthspan, not just lifespan", "Stem cell therapies and organ regeneration", "Senolytics and aging as a treatable condition", "The longevity escape velocity concept"],
+    summary: "This chapter argues that aging itself will increasingly be treated as a disease rather than an inevitability. Diamandis and Kotler explore breakthroughs in stem cell therapy, gene editing (CRISPR), senolytics (drugs that clear damaged senescent cells), and organ regeneration through 3D bioprinting. The concept of 'longevity escape velocity' is central: the point at which science extends your life by more than one year for every year you're alive. The authors believe we're approaching this threshold. They discuss Ray Kurzweil's prediction that by the mid-2030s, nanobots in our bloodstream will continuously repair damage at the cellular level. The economic implications are staggering: if people routinely live to 120 or beyond, every institution \u2014 retirement, pensions, career planning, marriage \u2014 must be reinvented.",
+    futureVision: "You're 70 years old but biologically 50. A quarterly visit to a longevity clinic includes a full-body MRI read by AI, a blood draw analyzed for thousands of biomarkers, a stem cell infusion to regenerate worn joints, and a senolytic treatment to clear aging cells. Your 3D-bioprinted replacement kidney, grown from your own cells, has been functioning perfectly for five years. Your doctor \u2014 an AI \u2014 tells you that at current rates of medical advancement, your expected remaining healthspan is another 50 years.",
+    sportsConnection: "Professional athletes are the earliest adopters of longevity science. Tom Brady's TB12 method, LeBron James spending $1.5M/year on body maintenance, PRP therapy, cryotherapy \u2014 these are primitive versions of what's coming for everyone.",
+    realityCheck: { intro: "The book described 'longevity escape velocity' and predicted breakthroughs in stem cells, senolytics, gene editing, and 3D-bioprinted organs. Some of the most specific predictions in the book live in this chapter.", prompts: ["Search for the current state of CRISPR gene therapy — has it been approved for any conditions? Find the most recent breakthrough. Is the trajectory matching the book's optimism?", "Look up athletes who are playing at elite levels past traditional retirement age today. Is modern sports science actually extending careers, or was Brady an outlier?", "Find recent coverage of the longevity industry (Bryan Johnson's 'Blueprint,' longevity clinics, anti-aging research). Is 'treating aging as a disease' becoming mainstream or still fringe?"] }
+  },
+  { id: 11, part: "Part II: The Rebirth of Everything", title: "The Future of Insurance, Finance, and Real Estate", topic: "How converging technologies reshape risk, money, and where we live",
+    keyThemes: ["Real-time risk data replacing actuarial tables and eliminating insurance uncertainty", "AI financial advisors and blockchain smart contracts replacing banks and middlemen", "Remote work and VR severing the link between where you work and where you live", "3D-printed homes, autonomous vehicles, and smart cities reshaping urban planning"],
+    summary: "This chapter examines three interconnected industries through the lens of convergence. Insurance: fundamentally a bet on uncertainty, but converging technologies are destroying uncertainty itself. Autonomous vehicles could eliminate 90%+ of car accidents, devastating the $260 billion auto insurance industry. Continuous health monitoring via wearables gives insurers real-time risk profiles, not statistical approximations. Smart home sensors detect problems before they cause damage. Finance: AI-powered robo-advisors are outperforming human advisors. Blockchain enables trustless transactions without banks or clearinghouses. Mobile banking reaches billions of previously unbanked people. Smart contracts execute automatically when conditions are met, no lawyers required. Crowdfunding democratizes access to capital globally. Real estate: high-bandwidth networks and VR sever the historic link between where you work and where you live. If your virtual office feels identical to being there, why live in an expensive city? 3D-printed houses (built in 24 hours for under $10,000) could solve housing affordability. Smart cities use AI and IoT to optimize everything. Autonomous vehicles eliminate parking lots, freeing land for housing and parks.",
+    futureVision: "Your home insurance premium adjusts monthly based on real-time sensor data. Your auto insurance costs almost nothing because your self-driving car hasn't had an incident in years. Your AI financial advisor manages your entire portfolio, negotiates your mortgage by shopping 200 lenders in milliseconds, and files your taxes automatically. When you buy a house, a blockchain smart contract handles the closing in minutes, not weeks. Meanwhile, you live on a 10-acre property in rural Vermont that cost less than a Manhattan studio \u2014 because you 'commute' to your San Francisco office in VR every morning. Your house was 3D-printed in 48 hours.",
+    sportsConnection: "Sports finance is being disrupted by blockchain fan tokens, NFT collectibles, fractional team ownership, and athlete NIL marketplaces. Smart stadiums with IoT sensors optimize every aspect of the venue experience. And the real estate implications are huge: if fans can attend games in VR from anywhere, what happens to the economics of stadium location?",
+    realityCheck: { intro: "The book predicted autonomous vehicles destroying auto insurance, AI financial advisors replacing human ones, blockchain smart contracts replacing lawyers, and remote work + VR severing the link between work and location. The pandemic tested some of these predictions in real time.", prompts: ["Search for the current state of autonomous vehicles (Waymo, Cruise, Tesla FSD). Has the 'eliminate 90% of accidents' prediction held up, or has the timeline slipped dramatically?", "Look up what happened to crypto/blockchain in sports since the book was written — FTX's sports sponsorships collapsing, fan token values, NFT marketplace activity. What's the honest status?", "Find data on remote work trends in 2025-2026. Did the pandemic permanently sever the work-location link as the book's thesis would predict, or is the return-to-office movement pushing back?"] }
+  },
+  { id: 12, part: "Part II: The Rebirth of Everything", title: "The Future of Food", topic: "Lab-grown meat, vertical farms, AI agriculture, and supply chains",
+    keyThemes: ["Cultured meat grown from stem cells without slaughtering animals", "Vertical farms using 95% less water and zero pesticides", "AI-optimized precision agriculture monitoring individual plants", "CRISPR gene editing for crop resilience"],
+    summary: "The food system is one of the most resource-intensive industries on Earth, and Diamandis and Kotler argue it's about to be transformed by convergence. Lab-grown (cultured) meat, produced from animal stem cells without slaughtering animals, could be cost-competitive with conventional meat by the late 2020s. Vertical farms \u2014 indoor facilities stacking crops in layers under LED lights \u2014 use 95% less water, zero pesticides, and can operate year-round in any climate, including food deserts and urban centers. AI-optimized precision agriculture uses drones, sensors, and machine learning to monitor individual plants, applying exactly the right amount of water and nutrients at exactly the right time. CRISPR gene editing creates crops resistant to drought, disease, and pests without traditional GMO techniques. The result: more food, less land, less water, fewer chemicals, lower costs.",
+    futureVision: "A robotic kitchen in your home stores ingredients from a vertical farm three blocks away, delivered by autonomous vehicle that morning. You tell your AI what you feel like eating. It considers your nutritional needs (from your wearable data), what's fresh, your dietary preferences, and what your family enjoyed last week. It suggests three options. You pick one. A robotic arm system \u2014 essentially a pair of chef-quality mechanical hands \u2014 prepares the meal from scratch while you relax. The 'steak' is cultured meat, indistinguishable from conventional beef, produced without a single cow. Total cost: about $3.",
+    sportsConnection: "Athlete nutrition is already being transformed by precision food science. AI-driven meal plans optimized for performance, recovery, and body composition are primitive versions of what's coming for everyone.",
+    realityCheck: { intro: "The book predicted cultured meat becoming cost-competitive by the late 2020s, vertical farms transforming food production, and AI-optimized agriculture. The food technology space has seen both breakthroughs and setbacks.", prompts: ["Search for the current state of lab-grown / cultured meat companies (Upside Foods, Good Meat, etc.). Are they close to cost-competitive with conventional meat, or has the timeline slipped?", "Look up recent news on vertical farming companies. Have any major ones failed or succeeded? Is the '95% less water' promise playing out at commercial scale?", "Find how professional sports teams or athletes are currently using AI or precision nutrition in their programs. Is this mainstream yet, or limited to the wealthiest organizations?"] }
+  },
+  // Part III: The Faster Future
+  { id: 13, part: "Part III: The Faster Future", title: "Threats and Solutions", topic: "Deepfakes, job displacement, bias, surveillance, power concentration \u2014 and what can be done",
+    keyThemes: ["Technological unemployment and the great displacement", "Deepfakes eroding trust in information", "Algorithmic bias and systemic inequity", "Surveillance capitalism and concentration of power", "Potential solutions: UBI, retraining, regulation, and new governance models"],
+    summary: "After the optimistic vision of Part II, Diamandis and Kotler confront what can go wrong. The same exponential technologies enabling extraordinary progress also enable extraordinary harm. AI-powered automation could displace millions of jobs faster than new ones are created, with truck driving, retail, food service, and office administration most at risk. Deepfakes \u2014 AI-generated fake video and audio \u2014 erode trust in media and could destabilize elections, markets, and public discourse. Algorithmic bias means AI systems trained on historical data can perpetuate and amplify racial, gender, and socioeconomic discrimination at scale. Surveillance technology gives governments and corporations unprecedented ability to monitor individuals. And perhaps most concerning: the benefits of exponential technology tend to concentrate among those who control the platforms, potentially creating a new class of technology oligarchs with more power than nation-states. Critically, this chapter isn't just about threats \u2014 it's 'Threats and Solutions.' The authors explore potential responses including universal basic income (UBI), massive retraining programs, new regulatory frameworks, incentive prizes for solving global challenges, and governance models adapted to the speed of technological change.",
+    futureVision: null,
+    sportsConnection: "These threats are already manifesting in sports: deepfake athlete videos manipulating betting markets, biometric surveillance controversies in stadiums, AI-generated coverage that systematically under-represents women's sports, algorithmic bias in scouting and recruiting tools, and power concentration as tech platforms control sports distribution.",
+    realityCheck: { intro: "The book warned about deepfakes, job displacement, algorithmic bias, surveillance, and power concentration. Since 2020, many of these threats have moved from theoretical to real — and some new ones have emerged that the authors didn't anticipate.", prompts: ["Search for a recent deepfake or AI-generated misinformation incident in sports (fake injury reports, manipulated betting, fabricated quotes). How serious is this threat today compared to 2020?", "Look up recent stories about AI replacing jobs in media, journalism, or content creation. Find a specific example in sports media. Is technological unemployment hitting this industry?", "Find recent coverage of AI regulation — the EU AI Act, US executive orders, or any new legislation. Are governments responding to these threats in the ways the book suggested, or taking a different approach entirely?"] }
+  },
+  { id: 14, part: "Part III: The Faster Future", title: "The Five Great Migrations", topic: "Climate, urban, virtual, space, and meta-intelligence \u2014 five forces reshaping civilization",
+    keyThemes: ["Climate migration: hundreds of millions relocating due to environmental disruption", "Urban migration: smart mega-cities of 50+ million people", "Virtual migration: humanity spending increasing time in digital worlds", "Space migration: Moon bases, Mars colonization, commercial space access", "Meta-intelligence: humans merging with AI through brain-computer interfaces"],
+    summary: "The book closes with five massive migrations that will reshape civilization over the coming century. Climate migration: rising seas, extreme weather, and agricultural disruption will force hundreds of millions to relocate, creating political and humanitarian crises on an unprecedented scale. Urban migration: smart cities optimized by AI will attract populations with superior services, creating mega-cities of 50+ million people with AI-managed infrastructure. Virtual migration: as VR and AR become indistinguishable from reality, humanity will spend increasing time in digital worlds \u2014 working, socializing, and playing in virtual spaces that feel more compelling than physical reality. Space migration: SpaceX and Blue Origin are making space access cheaper by orders of magnitude, with Moon bases and Mars colonization becoming tangible goals within decades, not centuries. Meta-intelligence migration: the most profound \u2014 humans augmenting their cognitive capabilities through brain-computer interfaces, effectively merging with AI. Elon Musk's Neuralink and similar efforts aim to create a direct neural connection between human brains and the cloud, creating what the authors call a collective consciousness that may be the only way humans remain relevant alongside superintelligent AI.",
+    futureVision: "Combining brain-computer interfaces with cloud-connected AI, Diamandis and Kotler envision a future where human intelligence is no longer bounded by biology. You don't search for information; you simply know it, because your neural interface accesses the entire knowledge base of humanity in real time. A group of linked minds collaborates on a problem simultaneously, each contributing a piece of the cognitive work. The boundary between 'you' and 'the network' blurs. The authors call this meta-intelligence \u2014 a collective consciousness that may be the only way humans remain relevant in a world of superintelligent AI.",
+    sportsConnection: "For sports, virtual migration is the most immediate: Gen Alpha experiences sports primarily through gaming and social media, not broadcast TV. The virtual and meta-intelligence migrations will reshape how sports are experienced, produced, and consumed. If fans can attend games in full-immersion VR, what does 'home field advantage' even mean?",
+    realityCheck: { intro: "The book closed with five massive migrations: climate, urban, virtual, space, and meta-intelligence. Some of these have accelerated dramatically since 2020, while others remain distant.", prompts: ["Search for the latest on Neuralink or brain-computer interfaces. The book predicted humans 'merging with AI' through neural links — how close is this to reality? Has any human patient used one?", "Look up how Gen Alpha (born after 2010) discovers and follows sports today. Find data or a recent article on their media habits. Is the 'virtual migration' — experiencing sports through gaming and social rather than TV — as far along as the book predicted?", "Find recent news on SpaceX, Blue Origin, or commercial space activity. Is 'space migration' still on the trajectory the book described, or has momentum slowed since the early 2020s hype?"] }
+  }
 ];
 
-function Bg() {
+const Bg = memo(function Bg() {
   const ref = useRef(null);
   useEffect(() => {
     const c = ref.current, ctx = c.getContext("2d"); let frame, ps = [];
@@ -145,20 +233,58 @@ function Bg() {
     const d = () => { ctx.clearRect(0,0,c.width,c.height); ps.forEach((p,i) => { p.x+=p.vx;p.y+=p.vy; if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;if(p.y<0)p.y=c.height;if(p.y>c.height)p.y=0; ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${p.o})`;ctx.fill(); for(let j=i+1;j<ps.length;j++){const dd=Math.hypot(p.x-ps[j].x,p.y-ps[j].y);if(dd<100){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(ps[j].x,ps[j].y);ctx.strokeStyle=`rgba(255,255,255,${.025*(1-dd/100)})`;ctx.stroke();}}}); frame=requestAnimationFrame(d); }; d();
     return () => { cancelAnimationFrame(frame); window.removeEventListener("resize", rs); };
   }, []); return <canvas ref={ref} style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0}} />;
-}
+});
 
-function Ring({p,size=48,sw=4,color="#fff"}) { const r=(size-sw)/2,c=2*Math.PI*r; return <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}><circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={sw}/><circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={sw} strokeDasharray={c} strokeDashoffset={c-(p/100)*c} strokeLinecap="round" style={{transition:"stroke-dashoffset 0.5s"}}/></svg>; }
-function Tag({children,color:cl="#666",bg="rgba(255,255,255,0.05)"}) { return <span style={{display:"inline-block",background:bg,color:cl,padding:"3px 10px",borderRadius:16,fontSize:10,fontWeight:700,letterSpacing:.3}}>{children}</span>; }
-function SegProg({cur,total,color}) { return <div style={{display:"flex",gap:4,marginBottom:20}}>{Array.from({length:total}).map((_,i)=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<=cur?color:"rgba(255,255,255,0.08)",transition:"background 0.3s"}}/>)}</div>; }
+const Ring = memo(function Ring({p,size=48,sw=4,color="#fff"}) { const r=(size-sw)/2,c=2*Math.PI*r; return <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}><circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={sw}/><circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={sw} strokeDasharray={c} strokeDashoffset={c-(p/100)*c} strokeLinecap="round" style={{transition:"stroke-dashoffset 0.5s"}}/></svg>; });
+const Tag = memo(function Tag({children,color:cl="#666",bg="rgba(255,255,255,0.05)"}) { return <span style={{display:"inline-block",background:bg,color:cl,padding:"3px 10px",borderRadius:16,fontSize:10,fontWeight:700,letterSpacing:.3}}>{children}</span>; });
+const SegProg = memo(function SegProg({cur,total,color}) { return <div style={{display:"flex",gap:4,marginBottom:20}}>{Array.from({length:total}).map((_,i)=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<=cur?color:"rgba(255,255,255,0.08)",transition:"background 0.3s"}}/>)}</div>; });
 
 const gs={background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",color:"#888",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit"};
 const bs=(bg)=>({background:bg,border:"none",color:"#fff",padding:"12px 24px",borderRadius:9,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"});
 
+// Shared style constants to reduce inline object creation
+const STY = {
+  card: {background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"clamp(16px,3vw,28px)"},
+  cardSm: {background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:18},
+  cardXs: {background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:10,padding:14},
+  sectionLabel: {fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginBottom:10},
+  subLabel: {fontSize:9,fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginBottom:5},
+  bodyText: {fontSize:15,lineHeight:1.75,color:"#bbb",margin:0},
+  dimText: {fontSize:12,color:"#666",margin:0,lineHeight:1.5},
+  thinBorder: "1px solid rgba(255,255,255,0.04)",
+  font: <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>,
+  S: {fontFamily:"'DM Sans',sans-serif",background:"#06060a",color:"#ddd",minHeight:"100vh"},
+};
+
 const INSTRUCTOR_PASSCODE = "MSU12345!";
+const INSTRUCTOR_NAME = "Ben Fairclough";
 
 export default function App() {
-  const [view,setView]=useState("home");
-  const [mi,setMi]=useState(0);
+  // ── Hash-based URL routing ──
+  const parseHash = () => {
+    const hash = window.location.hash.replace(/^#\/?/, "");
+    const parts = hash.split("/").filter(Boolean);
+    if(parts[0]==="module" && parts[1]) {
+      const modNum = parseInt(parts[1]);
+      if(modNum>=1 && modNum<=MODULES.length) {
+        if(parts[2]==="quiz") return { view:"quiz", mi:modNum-1 };
+        if(parts[2]==="results") return { view:"results", mi:modNum-1 };
+        return { view:"module", mi:modNum-1 };
+      }
+    }
+    if(parts[0]==="deepdive") {
+      if(parts[1]==="results") return { view:"ddresults" };
+      if(parts[1]==="chapter" && parts[2]) { const chNum=parseInt(parts[2]); if(chNum>=1&&chNum<=BOOK_CHAPTERS.length) return { view:"chapter", chapterId:chNum }; }
+      return { view:"deepdive" };
+    }
+    if(parts[0]==="instructor") return { view:"instructor" };
+    return { view:"home" };
+  };
+
+  const initial = parseHash();
+  const [view,setView]=useState(initial.view);
+  const [mi,setMi]=useState(initial.mi||0);
+  const [chapterId,setChapterId]=useState(initial.chapterId||null);
   const [si,setSi]=useState(0);
   const [ans,setAns]=useState({});
   const [done,setDone]=useState({});
@@ -187,6 +313,16 @@ export default function App() {
   const [ddQuizHistory,setDdQuizHistory]=useState([]); // past quiz results for this student
   const [ddSubmitQ,setDdSubmitQ]=useState({type:"mc",question:"",options:["","","",""],answer:"",chapterId:null});
   const [ddQuizAns,setDdQuizAns]=useState({});
+  const [ddChapterPrefs,setDdChapterPrefs]=useState(null); // saved prefs from Firebase: {first:id, second:id, third:id}
+  const [ddPickingPrefs,setDdPickingPrefs]=useState({}); // in-progress picks before submit
+  const [ddAllPrefs,setDdAllPrefs]=useState({}); // all students' prefs: {studentKey: {name, first, second, third}}
+
+  // Roster state
+  const [roster,setRoster]=useState([]); // ["First Last", ...]
+  const [showNameEntry,setShowNameEntry]=useState(false); // for "I don't see my name"
+  const [rosterNewName,setRosterNewName]=useState(""); // instructor adding to roster
+  const [archives,setArchives]=useState([]); // [{label, date, studentCount}]
+  const [semesterLabel,setSemesterLabel]=useState(()=>{const m=new Date().getMonth();const y=new Date().getFullYear();return (m>=6?"Fall":"Spring")+" "+y;});
 
   // Load student identity from localStorage, progress from Firebase
   useEffect(()=>{
@@ -197,30 +333,40 @@ export default function App() {
           const parsed = JSON.parse(saved);
           setStudentName(parsed.name);
           if(db){
-            try {
-              const snap = await get(child(ref(db), "students/"+fbKey(parsed.name)));
-              if(snap.exists()){
-                const p = snap.val();
-                if(p.done) setDone(p.done);
-                if(p.scores) setScores(p.scores);
-                if(p.intake) { setIntakeComplete(true); setIntakeAnswers(p.intake); try{localStorage.setItem("sptc243-intake-done","true");}catch(e2){} }
-                if(p.ddQuizHistory) setDdQuizHistory(p.ddQuizHistory);
-              }
-            } catch(e){}
-            // Load deep dive chapter assignments
-            try {
-              const ddSnap = await get(child(ref(db), "deepdive/chapters"));
-              if(ddSnap.exists()) setDdChapterAssignments(ddSnap.val());
-            } catch(e){}
-            // Load deep dive quiz questions
-            try {
-              const qqSnap = await get(child(ref(db), "deepdive/quizQuestions"));
-              if(qqSnap.exists()) {
-                const qs = qqSnap.val();
-                setDdQuizQuestions(Object.keys(qs).map(k=>({id:k,...qs[k]})));
-              }
-            } catch(e){}
+            // Parallel fetch: student data + deep dive + roster
+            const [studentSnap, ddChapSnap, ddQSnap, rosterSnap] = await Promise.all([
+              get(child(ref(db), "students/"+fbKey(parsed.name))).catch(()=>null),
+              get(child(ref(db), "deepdive/chapters")).catch(()=>null),
+              get(child(ref(db), "deepdive/quizQuestions")).catch(()=>null),
+              get(child(ref(db), "roster")).catch(()=>null),
+            ]);
+            if(studentSnap&&studentSnap.exists()){
+              const p = studentSnap.val();
+              if(p.done) setDone(p.done);
+              if(p.scores) setScores(p.scores);
+              if(p.intake) { setIntakeComplete(true); setIntakeAnswers(p.intake); try{localStorage.setItem("sptc243-intake-done","true");}catch(e2){} }
+              if(p.ddQuizHistory) setDdQuizHistory(p.ddQuizHistory);
+              if(p.chapterPrefs) setDdChapterPrefs(p.chapterPrefs);
+            }
+            if(ddChapSnap&&ddChapSnap.exists()) setDdChapterAssignments(ddChapSnap.val());
+            if(ddQSnap&&ddQSnap.exists()) {
+              const qs = ddQSnap.val();
+              setDdQuizQuestions(Object.keys(qs).map(k=>({id:k,...qs[k]})));
+            }
+            if(rosterSnap&&rosterSnap.exists()) {
+              const r = rosterSnap.val();
+              setRoster(Array.isArray(r) ? r : Object.values(r));
+            }
           }
+        } else if(db) {
+          // Not logged in — still load roster for dropdown
+          try {
+            const rosterSnap = await get(child(ref(db), "roster"));
+            if(rosterSnap.exists()) {
+              const r = rosterSnap.val();
+              setRoster(Array.isArray(r) ? r : Object.values(r));
+            }
+          } catch(e){}
         }
       } catch(e){}
       setLoading(false);
@@ -228,11 +374,11 @@ export default function App() {
   },[]);
 
   // Sync progress to Firebase
-  const syncProgress = async (newDone, newScores) => {
+  const syncProgress = useCallback(async (newDone, newScores) => {
     if(!studentName||!db) return;
     const data = { name: studentName, done: newDone, scores: newScores, lastActive: new Date().toISOString() };
     try { await set(ref(db, "students/"+fbKey(studentName)), data); } catch(e){ console.error("Sync failed:", e); }
-  };
+  },[studentName]);
 
   // Register student
   // Normalize name: trim, collapse spaces, capitalize each word
@@ -249,12 +395,14 @@ export default function App() {
 
   // Step 2: confirmed — save to localStorage + Firebase
   const registerStudent = async (name) => {
+    const onRoster = roster.includes(name);
     try {
       localStorage.setItem("sptc243-student", JSON.stringify({ name }));
-      if(db) await set(ref(db, "students/"+fbKey(name)), { name, done: {}, scores: {}, lastActive: new Date().toISOString() });
+      if(db) await set(ref(db, "students/"+fbKey(name)), { name, onRoster, done: {}, scores: {}, lastActive: new Date().toISOString() });
       setStudentName(name);
       setConfirmingName(null);
       setNameInput("");
+      setShowNameEntry(false);
     } catch(e){ console.error("Registration failed:", e); setStudentName(name); setConfirmingName(null); }
   };
 
@@ -299,9 +447,9 @@ export default function App() {
     ]}
   ];
 
-  const allIntakeQs = INTAKE_SECTIONS.flatMap(s=>s.questions);
-  const intakeReady = allIntakeQs.every(q=>q.type==="text"?(intakeAnswers[q.id]||"").trim().length>0:intakeAnswers[q.id]!==undefined&&(Array.isArray(intakeAnswers[q.id])?intakeAnswers[q.id].length>0:true));
-  const sectionReady = (secIdx) => INTAKE_SECTIONS[secIdx].questions.every(q=>q.type==="text"?(intakeAnswers[q.id]||"").trim().length>0:intakeAnswers[q.id]!==undefined&&(Array.isArray(intakeAnswers[q.id])?intakeAnswers[q.id].length>0:true));
+  const allIntakeQs = useMemo(()=>INTAKE_SECTIONS.flatMap(s=>s.questions),[]);
+  const intakeReady = useMemo(()=>allIntakeQs.every(q=>q.type==="text"?(intakeAnswers[q.id]||"").trim().length>0:intakeAnswers[q.id]!==undefined&&(Array.isArray(intakeAnswers[q.id])?intakeAnswers[q.id].length>0:true)),[intakeAnswers,allIntakeQs]);
+  const sectionReady = useCallback((secIdx) => INTAKE_SECTIONS[secIdx].questions.every(q=>q.type==="text"?(intakeAnswers[q.id]||"").trim().length>0:intakeAnswers[q.id]!==undefined&&(Array.isArray(intakeAnswers[q.id])?intakeAnswers[q.id].length>0:true)),[intakeAnswers]);
 
   const submitIntake = async () => {
     if(!studentName||!db) return;
@@ -319,9 +467,20 @@ export default function App() {
   // ═══════════════════════════════════════════════════
 
   // Get this student's assigned chapter(s)
-  const myChapters = Object.entries(ddChapterAssignments).filter(([,v])=>(v.students||[]).includes(studentName)).map(([k,v])=>({chapterId:parseInt(k),...v}));
+  const myChapters = useMemo(()=>Object.entries(ddChapterAssignments).filter(([,v])=>(v.students||[]).includes(studentName)).map(([k,v])=>({chapterId:parseInt(k),...v})),[ddChapterAssignments,studentName]);
   // Auto-set chapter for quiz submission when single assignment
   useEffect(()=>{if(myChapters.length===1&&!ddSubmitQ.chapterId)setDdSubmitQ(p=>({...p,chapterId:myChapters[0].chapterId}));},[JSON.stringify(myChapters)]);
+
+  // Submit chapter preferences
+  const submitChapterPrefs = async (prefs) => {
+    if(!studentName||!db) return;
+    try {
+      const snap = await get(child(ref(db), "students/"+fbKey(studentName)));
+      const existing = snap.exists() ? snap.val() : {};
+      await set(ref(db, "students/"+fbKey(studentName)), { ...existing, chapterPrefs: prefs, lastActive: new Date().toISOString() });
+      setDdChapterPrefs(prefs);
+    } catch(e){ console.error("Prefs submit failed:", e); }
+  };
 
   // Submit a quiz question
   const submitQuizQuestion = async () => {
@@ -370,6 +529,54 @@ export default function App() {
     } catch(e){ console.error("Assign failed:", e); }
   };
 
+  // Roster management
+  const addToRoster = async (name) => {
+    const normalized = normalizeName(name);
+    if(!normalized || roster.includes(normalized) || normalized === INSTRUCTOR_NAME) return;
+    const newRoster = [...roster, normalized].sort((a,b)=>a.localeCompare(b));
+    setRoster(newRoster);
+    if(db) { try { await set(ref(db, "roster"), newRoster); } catch(e){ console.error("Roster save failed:", e); } }
+  };
+
+  const removeFromRoster = async (name) => {
+    const newRoster = roster.filter(n=>n!==name);
+    setRoster(newRoster);
+    if(db) { try { await set(ref(db, "roster"), newRoster); } catch(e){ console.error("Roster save failed:", e); } }
+  };
+
+  const isOnRoster = (name) => roster.includes(name);
+  const isInstructor = studentName === INSTRUCTOR_NAME;
+
+  // Instructor: clear all test data and restart fresh
+  const resetTestData = async () => {
+    if(!confirm("This will erase ALL your progress, intake answers, quiz history, and Fast Future Series submissions. You'll be logged out and can re-register. Continue?")) return;
+    if(db && studentName) {
+      try { await remove(ref(db, "students/"+fbKey(studentName))); } catch(e){}
+      // Remove any quiz questions submitted by instructor
+      try {
+        const qqSnap = await get(ref(db, "deepdive/quizQuestions"));
+        if(qqSnap.exists()) {
+          const qs = qqSnap.val();
+          for(const k of Object.keys(qs)) { if(qs[k].studentName===studentName) { try { await remove(ref(db, "deepdive/quizQuestions/"+k)); } catch(e){} } }
+        }
+      } catch(e){}
+    }
+    localStorage.removeItem("sptc243-student");
+    localStorage.removeItem("sptc243-intake-done");
+    setStudentName(null);
+    setDone({});
+    setScores({});
+    setNameInput("");
+    setConfirmingName(null);
+    setIntakeComplete(false);
+    setIntakeAnswers({});
+    setIntakeStep(0);
+    setDdQuizHistory([]);
+    setDdSubmitQ({type:"mc",question:"",options:["","","",""],answer:"",chapterId:null});
+    setShowNameEntry(false);
+    window.location.hash = "#/";
+  };
+
   // Start a rolling quiz (grab approved questions)
   const startRollingQuiz = () => {
     const approved = ddQuizQuestions.filter(q=>q.status==="approved" && (q.type==="mc" || q.type==="short"));
@@ -401,7 +608,6 @@ export default function App() {
     go("ddresults");
   };
 
-  // Load instructor dashboard data
   // Load instructor dashboard data from Firebase
   const loadDashboard = async () => {
     setDashAuthed(true);
@@ -409,28 +615,105 @@ export default function App() {
     setDashLoading(true);
     try {
       if(!db){setDashData([]);setDashLoading(false);return;}
-      const snap = await get(ref(db, "students"));
+      // Parallel fetch all dashboard data
+      const [studentsSnap, rosterSnap, ddChSnap, ddQSnap, archSnap] = await Promise.all([
+        get(ref(db, "students")).catch(()=>null),
+        get(ref(db, "roster")).catch(()=>null),
+        get(ref(db, "deepdive/chapters")).catch(()=>null),
+        get(ref(db, "deepdive/quizQuestions")).catch(()=>null),
+        get(ref(db, "archives")).catch(()=>null),
+      ]);
+      // Process students
       const students = [];
-      if(snap.exists()){
-        const data = snap.val();
-        Object.keys(data).forEach(k=>{ if(data[k].name) students.push(data[k]); });
+      if(studentsSnap&&studentsSnap.exists()){
+        const data = studentsSnap.val();
+        Object.keys(data).forEach(k=>{ if(data[k].name && data[k].name !== INSTRUCTOR_NAME) students.push(data[k]); });
       }
       students.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
       setDashData(students);
-      // Load deep dive data for dashboard
-      try {
-        const ddChSnap = await get(ref(db, "deepdive/chapters"));
-        if(ddChSnap.exists()) setDdChapterAssignments(ddChSnap.val());
-      } catch(e){}
-      try {
-        const ddQSnap = await get(ref(db, "deepdive/quizQuestions"));
-        if(ddQSnap.exists()) {
-          const qs = ddQSnap.val();
-          setDdQuizQuestions(Object.keys(qs).map(k=>({id:k,...qs[k]})));
-        }
-      } catch(e){}
+      // Process roster
+      if(rosterSnap&&rosterSnap.exists()) {
+        const r = rosterSnap.val();
+        setRoster(Array.isArray(r) ? r : Object.values(r));
+      }
+      // Process chapter preferences
+      const allPrefs = {};
+      students.forEach(s => { if(s.chapterPrefs) allPrefs[fbKey(s.name)] = { name: s.name, ...s.chapterPrefs }; });
+      setDdAllPrefs(allPrefs);
+      // Process deep dive data
+      if(ddChSnap&&ddChSnap.exists()) setDdChapterAssignments(ddChSnap.val());
+      if(ddQSnap&&ddQSnap.exists()) {
+        const qs = ddQSnap.val();
+        setDdQuizQuestions(Object.keys(qs).map(k=>({id:k,...qs[k]})));
+      }
+      // Process archives
+      if(archSnap&&archSnap.exists()) {
+        const archData = archSnap.val();
+        setArchives(Object.keys(archData).map(k=>({key:k,...archData[k].meta})).sort((a,b)=>(b.date||"").localeCompare(a.date||"")));
+      } else { setArchives([]); }
     } catch(e){ console.error("Dashboard load failed:", e); setDashData([]); }
     setDashLoading(false);
+  };
+
+  // Semester rollover: archive everything, then wipe
+  const semesterRollover = async (label) => {
+    if(!db) return;
+    const archKey = label.toLowerCase().replace(/\s+/g,"-");
+    // Gather current data in parallel
+    const [sSnap, rSnap, dSnap] = await Promise.all([
+      get(ref(db, "students")).catch(()=>null),
+      get(ref(db, "roster")).catch(()=>null),
+      get(ref(db, "deepdive")).catch(()=>null),
+    ]);
+    let studentsData = sSnap&&sSnap.exists() ? sSnap.val() : null;
+    let rosterData = rSnap&&rSnap.exists() ? rSnap.val() : null;
+    let deepdiveData = dSnap&&dSnap.exists() ? dSnap.val() : null;
+    // Filter out instructor from archive
+    if(studentsData && studentsData[fbKey(INSTRUCTOR_NAME)]) {
+      delete studentsData[fbKey(INSTRUCTOR_NAME)];
+    }
+    // Count students for meta
+    const studentCount = studentsData ? Object.keys(studentsData).length : 0;
+    const rosterCount = rosterData ? (Array.isArray(rosterData) ? rosterData.length : Object.keys(rosterData).length) : 0;
+    // Write archive
+    const archivePayload = {
+      meta: { label, date: new Date().toISOString(), studentCount, rosterCount },
+      students: studentsData,
+      roster: rosterData,
+      deepdive: deepdiveData
+    };
+    try {
+      await set(ref(db, "archives/"+archKey), archivePayload);
+    } catch(e){ console.error("Archive write failed:", e); alert("Archive failed. Data NOT cleared."); return; }
+    // Wipe current data (but preserve instructor data and archives)
+    try { await remove(ref(db, "students")); } catch(e){}
+    try { await remove(ref(db, "roster")); } catch(e){}
+    try { await remove(ref(db, "deepdive")); } catch(e){}
+    // Clear local state
+    setDashData([]);
+    setRoster([]);
+    setDdChapterAssignments({});
+    setDdQuizQuestions([]);
+    // Clear instructor's own student-side session so it doesn't persist stale data
+    try { localStorage.removeItem("sptc243-student"); localStorage.removeItem("sptc243-intake-done"); } catch(e){}
+    setStudentName(null);
+    setDone({});
+    setScores({});
+    setIntakeComplete(false);
+    setIntakeAnswers({});
+    setDdQuizHistory([]);
+    // Auto-suggest next semester label
+    const m=new Date().getMonth(); const y=new Date().getFullYear();
+    setSemesterLabel((m>=6?"Spring":"Fall")+" "+(m>=6?y+1:y));
+    // Reload archives
+    try {
+      const archSnap = await get(ref(db, "archives"));
+      if(archSnap.exists()) {
+        const archData = archSnap.val();
+        setArchives(Object.keys(archData).map(k=>({key:k,...archData[k].meta})).sort((a,b)=>(b.date||"").localeCompare(a.date||"")));
+      }
+    } catch(e){}
+    alert("Semester '"+label+"' archived successfully. The app is now a clean slate for your next class.");
   };
 
   const toggle=(key)=>setExpanded(p=>({...p,[key]:!p[key]}));
@@ -525,16 +808,45 @@ export default function App() {
     }
   ];
 
-  const go=(v,m)=>{setFade(false);setTimeout(()=>{setView(v);if(m!==undefined)setMi(m);setSi(0);setAns({});setShowDeeper(false);setFade(true);window.scrollTo({top:0});},120);};
+  // Build hash from view state
+  const buildHash = (v, m) => {
+    if(v==="module" && m!==undefined) return "#/module/"+(m+1);
+    if(v==="quiz") return "#/module/"+(m!==undefined?m+1:mi+1)+"/quiz";
+    if(v==="results") return "#/module/"+(m!==undefined?m+1:mi+1)+"/results";
+    if(v==="deepdive") return "#/deepdive";
+    if(v==="chapter" && m!==undefined) return "#/deepdive/chapter/"+m;
+    if(v==="ddresults") return "#/deepdive/results";
+    if(v==="instructor") return "#/instructor";
+    return "#/";
+  };
+
+  const go=(v,m)=>{setFade(false);setTimeout(()=>{setView(v);if(m!==undefined){if(v==="chapter")setChapterId(m);else setMi(m);}setSi(0);setAns({});setShowDeeper(false);setFade(true);window.scrollTo({top:0});const hash=buildHash(v,m);if(window.location.hash!==hash)window.history.pushState(null,"",hash);},120);};
+
+  // Listen for browser back/forward
+  useEffect(()=>{
+    const onHashChange=()=>{
+      const parsed=parseHash();
+      setView(parsed.view);
+      if(parsed.mi!==undefined) setMi(parsed.mi);
+      if(parsed.chapterId!==undefined) setChapterId(parsed.chapterId);
+      setSi(0);setAns({});setShowDeeper(false);
+      window.scrollTo({top:0});
+    };
+    window.addEventListener("hashchange",onHashChange);
+    return ()=>window.removeEventListener("hashchange",onHashChange);
+  },[]);
+
+  // Set initial hash if none present
+  useEffect(()=>{if(!window.location.hash)window.history.replaceState(null,"","#/");},[]);
 
   // Auto-load dashboard data when navigating to instructor view while already authed
   useEffect(()=>{if(view==="instructor"&&dashAuthed&&dashData.length===0&&!dashLoading){loadDashboard();}},[view,dashAuthed]);
-  const isUnlocked=(i)=>i===0||(done[i-1]&&Math.round((scores[i-1]/MODULES[i-1].quiz.length)*100)>=MASTERY_THRESHOLD);
-  const progress=Math.round(Object.keys(done).length/MODULES.length*100);
-  const F={opacity:fade?1:0,transform:fade?"translateY(0)":"translateY(6px)",transition:"opacity .15s,transform .15s"};
+  const isUnlocked=useCallback((i)=>i===0||(done[i-1]&&Math.round((scores[i-1]/MODULES[i-1].quiz.length)*100)>=MASTERY_THRESHOLD),[done,scores]);
+  const progress=useMemo(()=>Math.round(Object.keys(done).length/MODULES.length*100),[done]);
+  const F=useMemo(()=>({opacity:fade?1:0,transform:fade?"translateY(0)":"translateY(6px)",transition:"opacity .15s,transform .15s"}),[fade]);
   const W={maxWidth:880,margin:"0 auto",padding:"0 20px",position:"relative",zIndex:2};
-  const S={fontFamily:"'DM Sans',sans-serif",background:"#06060a",color:"#ddd",minHeight:"100vh"};
-  const font=<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>;
+  const S=STY.S;
+  const font=STY.font;
 
   if(loading) return <div style={S}>{font}<Bg/><div style={{...W,display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh"}}><p style={{color:"#444",fontSize:14}}>Loading...</p></div></div>;
 
@@ -547,23 +859,43 @@ export default function App() {
         <p style={{fontSize:14,color:"#555",margin:"0 0 28px",lineHeight:1.6}}>AI & Emerging Technologies in Sports Communication<br/>Professor Ben Fairclough · Montclair State University</p>
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:24,textAlign:"left"}}>
           {!confirmingName?<>
-            <label style={{fontSize:11,fontWeight:700,color:"#666",letterSpacing:2,textTransform:"uppercase",display:"block",marginBottom:8}}>Enter your full name to get started</label>
-            <input value={nameInput} onChange={e=>setNameInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")startRegistration();}} placeholder="First Last" style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,boxSizing:"border-box"}}/>
-            <button onClick={startRegistration} disabled={!nameInput.trim()} style={{...bs(nameInput.trim()?"linear-gradient(135deg,#34C759,#30D158)":"#333"),width:"100%",cursor:nameInput.trim()?"pointer":"default"}}>Continue →</button>
+            {!showNameEntry?<>
+              <label style={{fontSize:11,fontWeight:700,color:"#666",letterSpacing:2,textTransform:"uppercase",display:"block",marginBottom:8}}>Select your name</label>
+              {roster.length>0?<>
+                <select value="" onChange={e=>{if(e.target.value)setConfirmingName(e.target.value);}} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,boxSizing:"border-box",appearance:"none",cursor:"pointer"}}>
+                  <option value="" style={{background:"#111",color:"#666"}}>Choose your name...</option>
+                  {roster.map(name=><option key={name} value={name} style={{background:"#111",color:"#fff"}}>{name}</option>)}
+                </select>
+                <button onClick={()=>setShowNameEntry(true)} style={{background:"none",border:"none",color:"#555",fontSize:11,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline",display:"block",margin:"0 auto"}}>I don't see my name</button>
+              </>:<>
+                <p style={{fontSize:13,color:"#666",margin:"0 0 14px",lineHeight:1.5}}>No class roster has been loaded yet. Enter your full name to get started.</p>
+                <input value={nameInput} onChange={e=>setNameInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")startRegistration();}} placeholder="First Last" style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,boxSizing:"border-box"}}/>
+                <button onClick={startRegistration} disabled={!nameInput.trim()} style={{...bs(nameInput.trim()?"linear-gradient(135deg,#34C759,#30D158)":"#333"),width:"100%",cursor:nameInput.trim()?"pointer":"default"}}>Continue →</button>
+              </>}
+            </>:<>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                <label style={{fontSize:11,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase"}}>Enter your name</label>
+                <button onClick={()=>{setShowNameEntry(false);setNameInput("");}} style={{background:"none",border:"none",color:"#555",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>← Back to list</button>
+              </div>
+              <p style={{fontSize:11,color:"#666",margin:"0 0 10px",lineHeight:1.5}}>If you're not on the class roster, enter your full name below. Your professor will see a flag to add you.</p>
+              <input value={nameInput} onChange={e=>setNameInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")startRegistration();}} placeholder="First Last" style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px 14px",color:"#fff",fontSize:15,fontFamily:"inherit",outline:"none",marginBottom:14,boxSizing:"border-box"}}/>
+              <button onClick={startRegistration} disabled={!nameInput.trim()} style={{...bs(nameInput.trim()?"linear-gradient(135deg,#FF9500,#FF6B00)":"#333"),width:"100%",cursor:nameInput.trim()?"pointer":"default"}}>Continue →</button>
+            </>}
           </>:<>
-            <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Confirm your name</div>
+            <div style={{fontSize:10,fontWeight:700,color:roster.includes(confirmingName)?"#34C759":"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>{roster.includes(confirmingName)?"Confirm your name":"Not on roster — Continue anyway?"}</div>
             <p style={{fontSize:13,color:"#999",margin:"0 0 6px",lineHeight:1.5}}>You'll be registered as:</p>
-            <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"14px 16px",marginBottom:16}}>
+            <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"14px 16px",marginBottom:8}}>
               <p style={{fontSize:20,fontWeight:800,color:"#fff",margin:0}}>{confirmingName}</p>
             </div>
-            <p style={{fontSize:11,color:"#666",margin:"0 0 16px",lineHeight:1.5}}>This name will be visible to your instructor and cannot be easily changed. Make sure it matches your name on the class roster.</p>
+            {!roster.includes(confirmingName)&&<p style={{fontSize:11,color:"#FF9500",margin:"0 0 12px",lineHeight:1.5}}>⚠ This name is not on the class roster. You can still proceed, and your professor will see a flag to add you.</p>}
+            <p style={{fontSize:11,color:"#666",margin:"0 0 16px",lineHeight:1.5}}>This name will be visible to your instructor. Make sure it matches your name on the class roster.</p>
             <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>setConfirmingName(null)} style={{...gs,flex:1,textAlign:"center"}}>← Fix it</button>
-              <button onClick={()=>registerStudent(confirmingName)} style={{...bs("linear-gradient(135deg,#34C759,#30D158)"),flex:2}}>That's correct — Start Learning →</button>
+              <button onClick={()=>{setConfirmingName(null);setShowNameEntry(false);}} style={{...gs,flex:1,textAlign:"center"}}>← Back</button>
+              <button onClick={()=>registerStudent(confirmingName)} style={{...bs(roster.includes(confirmingName)?"linear-gradient(135deg,#34C759,#30D158)":"linear-gradient(135deg,#FF9500,#FF6B00)"),flex:2}}>{roster.includes(confirmingName)?"That's me — Start Learning →":"Continue without roster →"}</button>
             </div>
           </>}
         </div>
-        <button onClick={()=>setView("instructor")} style={{background:"none",border:"none",color:"#333",fontSize:11,cursor:"pointer",marginTop:16,fontFamily:"inherit"}}>Instructor Dashboard →</button>
+        <button onClick={()=>go("instructor")} style={{background:"none",border:"none",color:"#333",fontSize:11,cursor:"pointer",marginTop:16,fontFamily:"inherit"}}>Instructor Dashboard →</button>
       </div>
     </div></div>
   );
@@ -591,11 +923,14 @@ export default function App() {
             {q.type==="text"&&<textarea value={intakeAnswers[q.id]||""} onChange={e=>setIntakeAnswers(p=>({...p,[q.id]:e.target.value}))} placeholder="Type your answer..." rows={3} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 13px",color:"#fff",fontSize:13,fontFamily:"inherit",outline:"none",resize:"vertical",boxSizing:"border-box"}}/>}
           </div>
         ))}
-        <div style={{display:"flex",justifyContent:"space-between",paddingTop:8,paddingBottom:40,gap:8}}>
+        <div style={{display:"flex",justifyContent:"space-between",paddingTop:8,paddingBottom:16,gap:8}}>
           {intakeStep>0?<button onClick={()=>setIntakeStep(intakeStep-1)} style={gs}>← Previous</button>:<div/>}
           {intakeStep<INTAKE_SECTIONS.length-1
             ?<button onClick={()=>{if(sectionReady(intakeStep)){setIntakeStep(intakeStep+1);window.scrollTo({top:0});}}} disabled={!sectionReady(intakeStep)} style={{...bs(sectionReady(intakeStep)?"linear-gradient(135deg,#FF9500,#FF6B00)":"#333"),cursor:sectionReady(intakeStep)?"pointer":"default"}}>Next Section →</button>
             :<button onClick={()=>{if(intakeReady){submitIntake();}}} disabled={!intakeReady} style={{...bs(intakeReady?"linear-gradient(135deg,#34C759,#30D158)":"#333"),cursor:intakeReady?"pointer":"default"}}>Submit & Start the Course →</button>}
+        </div>
+        <div style={{textAlign:"center",paddingBottom:40}}>
+          <button onClick={()=>{setIntakeComplete(true);try{localStorage.setItem("sptc243-intake-done","true");}catch(e){}}} style={{background:"none",border:"none",color:"#333",fontSize:11,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Skip for now →</button>
         </div>
       </div>
     </div></div>
@@ -613,7 +948,7 @@ export default function App() {
   if(view==="instructor") return(
     <div style={S}>{font}<Bg/><div style={{...W,...F}}>
       <div style={{paddingTop:40,paddingBottom:20}}>
-        <button onClick={()=>{setView("home");setDashPass("");setDashData([]);setExpanded({});}} style={gs}>← Back</button>
+        <button onClick={()=>{go("home");setDashPass("");setDashData([]);setExpanded({});}} style={gs}>← Back</button>
         <button onClick={()=>{setDashAuthed(false);setDashPass("");setDashData([]);setExpanded({});try{localStorage.removeItem("sptc243-instructor");}catch(e){}}} style={{...gs,marginLeft:8,color:"#FF3B30"}}>Sign Out</button>
       </div>
       {!dashAuthed?<div style={{maxWidth:420,margin:"0 auto",textAlign:"center"}}>
@@ -627,7 +962,7 @@ export default function App() {
       </div>:dashLoading?<p style={{textAlign:"center",color:"#555"}}>Loading student data...</p>:<div>
         {/* Tab bar */}
         <div style={{display:"flex",gap:4,marginBottom:20,background:"rgba(255,255,255,0.03)",borderRadius:10,padding:4}}>
-          {[["progress","📊 Progress"],["profiles","👥 Profiles"],["intake","📋 Intake"],["lessons","📖 Lessons"],["deepdive","🔬 Deep Dive"],["tips","⚙️ Guide Tips"]].map(([k,label])=>
+          {[["progress","📊 Progress"],["roster","📋 Roster"],["profiles","👥 Profiles"],["intake","📋 Intake"],["lessons","📖 Lessons"],["deepdive","🔬 Fast Future"],["tips","⚙️ Guide Tips"]].map(([k,label])=>
             <button key={k} onClick={()=>setDashTab(k)} style={{flex:1,padding:"10px 12px",borderRadius:8,border:"none",background:dashTab===k?"rgba(255,255,255,0.08)":"transparent",color:dashTab===k?"#fff":"#555",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"}}>{label}</button>
           )}
         </div>
@@ -680,6 +1015,67 @@ export default function App() {
             </table>
           </div>
           {dashData.length===0&&<p style={{textAlign:"center",color:"#555",padding:20}}>No student data yet.</p>}
+        </div>}
+
+        {/* TAB: Roster Management */}
+        {dashTab==="roster"&&<div>
+          <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Class Roster</h2>
+          <p style={{fontSize:13,color:"#555",margin:"0 0 20px"}}>{roster.length} student{roster.length!==1?"s":""} on roster. This is the single source of truth for your class.</p>
+
+          {/* Add student */}
+          <div style={{display:"flex",gap:8,marginBottom:20}}>
+            <input value={rosterNewName} onChange={e=>setRosterNewName(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&rosterNewName.trim()){addToRoster(rosterNewName);setRosterNewName("");}}} placeholder="First Last" style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 14px",color:"#fff",fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}}/>
+            <button onClick={()=>{if(rosterNewName.trim()){addToRoster(rosterNewName);setRosterNewName("");}}} disabled={!rosterNewName.trim()} style={{...bs(rosterNewName.trim()?"linear-gradient(135deg,#34C759,#30D158)":"#333"),padding:"10px 20px",fontSize:12}}>+ Add</button>
+          </div>
+
+          {/* Unrostered students alert */}
+          {(()=>{
+            const unrostered = dashData.filter(s=>s.name && s.name !== INSTRUCTOR_NAME && !roster.includes(s.name));
+            if(unrostered.length===0) return null;
+            return <div style={{background:"rgba(255,149,0,0.06)",border:"1px solid rgba(255,149,0,0.2)",borderRadius:12,padding:16,marginBottom:20}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>⚠ UNROSTERED STUDENTS ({unrostered.length})</div>
+              <p style={{fontSize:11,color:"#888",margin:"0 0 10px"}}>These students registered but are not on your roster. Add them or investigate.</p>
+              {unrostered.map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:i<unrostered.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                <div>
+                  <span style={{fontSize:13,fontWeight:600,color:"#FF9500"}}>{s.name}</span>
+                  <span style={{fontSize:10,color:"#666",marginLeft:8}}>Joined {s.lastActive?new Date(s.lastActive).toLocaleDateString("en-US",{month:"short",day:"numeric"}):""}</span>
+                </div>
+                <button onClick={()=>addToRoster(s.name)} style={{background:"rgba(52,199,89,0.12)",border:"1px solid rgba(52,199,89,0.3)",color:"#34C759",padding:"4px 12px",borderRadius:8,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>+ Add to Roster</button>
+              </div>)}
+            </div>;
+          })()}
+
+          {/* Roster list */}
+          {roster.length===0
+            ?<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:28,textAlign:"center"}}>
+              <p style={{fontSize:14,color:"#555",margin:"0 0 8px"}}>No students on the roster yet.</p>
+              <p style={{fontSize:12,color:"#444",margin:0}}>Add students one at a time using the field above. Students will select their name from a dropdown when they open the app.</p>
+            </div>
+            :<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,overflow:"hidden"}}>
+              {roster.map((name,i)=>{
+                const studentData = dashData.find(s=>s.name===name);
+                const hasLoggedIn = !!studentData;
+                const hasIntake = studentData && studentData.intake;
+                const modulesCompleted = studentData && studentData.done ? Object.keys(studentData.done).length : 0;
+                return <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",borderBottom:i<roster.length-1?"1px solid rgba(255,255,255,0.04)":"none",flexWrap:"wrap",gap:6}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{width:8,height:8,borderRadius:"50%",background:hasLoggedIn?"#34C759":"#333",flexShrink:0}}/>
+                    <span style={{fontSize:13,fontWeight:600,color:"#ddd"}}>{name}</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    {hasLoggedIn
+                      ?<>
+                        <span style={{fontSize:10,color:"#34C759",fontWeight:600}}>{modulesCompleted}/{MODULES.length} modules</span>
+                        {hasIntake&&<span style={{fontSize:9,color:"#007AFF",background:"rgba(0,122,255,0.1)",padding:"2px 6px",borderRadius:6}}>Intake done</span>}
+                      </>
+                      :<span style={{fontSize:10,color:"#555"}}>Not started</span>
+                    }
+                    <button onClick={()=>{if(confirm("Remove "+name+" from the roster?"))removeFromRoster(name);}} style={{background:"none",border:"none",color:"#333",fontSize:10,cursor:"pointer",fontFamily:"inherit",padding:"4px"}}>✕</button>
+                  </div>
+                </div>;
+              })}
+            </div>
+          }
         </div>}
 
         {/* TAB: Student Profiles */}
@@ -927,8 +1323,68 @@ export default function App() {
 
         {/* TAB: Deep Dive — Chapter Assignment & Quiz Management */}
         {dashTab==="deepdive"&&<div>
-          <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Industry Deep Dive</h2>
+          <h2 style={{fontSize:22,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Fast Future Series</h2>
           <p style={{fontSize:13,color:"#555",margin:"0 0 20px"}}>The Future Is Faster Than You Think — Chapter assignments, presentations & rolling quiz management</p>
+
+          {/* Student Chapter Preferences */}
+          {(()=>{
+            const prefEntries = Object.values(ddAllPrefs);
+            if(prefEntries.length===0) return <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:16,marginBottom:20}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>STUDENT PREFERENCES</div>
+              <p style={{color:"#555",fontSize:12,margin:0}}>No students have submitted chapter preferences yet.</p>
+            </div>;
+            // Build chapter demand map
+            const chapterDemand = {};
+            BOOK_CHAPTERS.forEach(ch=>{chapterDemand[ch.id]={first:[],second:[],third:[]};});
+            prefEntries.forEach(p=>{
+              if(p.first&&chapterDemand[p.first]) chapterDemand[p.first].first.push(p.name);
+              if(p.second&&chapterDemand[p.second]) chapterDemand[p.second].second.push(p.name);
+              if(p.third&&chapterDemand[p.third]) chapterDemand[p.third].third.push(p.name);
+            });
+            return <div style={{marginBottom:20}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>STUDENT PREFERENCES ({prefEntries.length} submitted)</div>
+
+              {/* By-student view */}
+              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,overflow:"hidden",marginBottom:12}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                  <thead><tr style={{borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+                    <th style={{textAlign:"left",padding:"10px 12px",color:"#666",fontWeight:700,fontSize:10,letterSpacing:1.5,textTransform:"uppercase"}}>Student</th>
+                    <th style={{textAlign:"center",padding:"10px 8px",color:"#34C759",fontWeight:700,fontSize:10}}>1st</th>
+                    <th style={{textAlign:"center",padding:"10px 8px",color:"#007AFF",fontWeight:700,fontSize:10}}>2nd</th>
+                    <th style={{textAlign:"center",padding:"10px 8px",color:"#FF9500",fontWeight:700,fontSize:10}}>3rd</th>
+                  </tr></thead>
+                  <tbody>{prefEntries.sort((a,b)=>a.name.localeCompare(b.name)).map((p,i)=><tr key={i} style={{borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                    <td style={{padding:"8px 12px",color:"#ddd",fontWeight:600}}>{p.name}</td>
+                    {["first","second","third"].map((rank,ri)=>{
+                      const ch=BOOK_CHAPTERS.find(c=>c.id===p[rank]);
+                      return <td key={rank} style={{textAlign:"center",padding:"8px",color:ri===0?"#34C759":ri===1?"#007AFF":"#FF9500",fontSize:11}}>
+                        {ch?"Ch. "+ch.id:"—"}
+                      </td>;
+                    })}
+                  </tr>)}</tbody>
+                </table>
+              </div>
+
+              {/* By-chapter demand view */}
+              <div style={{fontSize:10,fontWeight:700,color:"#666",letterSpacing:1,marginBottom:6}}>DEMAND BY CHAPTER</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:6,marginBottom:16}}>
+                {BOOK_CHAPTERS.map(ch=>{
+                  const d=chapterDemand[ch.id];
+                  const total=d.first.length+d.second.length+d.third.length;
+                  if(total===0) return null;
+                  return <div key={ch.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:10}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                      <span style={{fontSize:10,fontWeight:700,color:"#A855F7"}}>Ch. {ch.id}: {ch.title}</span>
+                      <span style={{fontSize:10,fontWeight:700,color:"#fff"}}>{total}</span>
+                    </div>
+                    {d.first.length>0&&<div style={{fontSize:10,color:"#34C759",marginBottom:2}}>1st: {d.first.join(", ")}</div>}
+                    {d.second.length>0&&<div style={{fontSize:10,color:"#007AFF",marginBottom:2}}>2nd: {d.second.join(", ")}</div>}
+                    {d.third.length>0&&<div style={{fontSize:10,color:"#FF9500"}}>3rd: {d.third.join(", ")}</div>}
+                  </div>;
+                })}
+              </div>
+            </div>;
+          })()}
 
           {/* Chapter Assignment Manager */}
           <div style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>CHAPTER ASSIGNMENTS</div>
@@ -1078,6 +1534,46 @@ export default function App() {
           {LESSON_PLANS.map((lp,i)=><Section key={i} id={"modtip-"+i} title={"Module "+(i+1)+": "+lp.title} icon={MODULES[i].icon} color={MODULES[i].color+"08"}>
             {lp.guideTips.map((tip,ti)=><p key={ti} style={{fontSize:12,color:"#aaa",margin:ti<lp.guideTips.length-1?"0 0 10px":"0",lineHeight:1.6,paddingLeft:12,borderLeft:"2px solid "+MODULES[i].color+"30"}}>{tip}</p>)}
           </Section>)}
+
+          {/* Semester Rollover */}
+          <div style={{marginTop:32,borderTop:"1px solid rgba(255,59,48,0.1)",paddingTop:24}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#FF3B30",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>🗂 SEMESTER ROLLOVER</div>
+            <p style={{fontSize:13,color:"#bbb",margin:"0 0 16px",lineHeight:1.7}}>At the end of each semester, archive all student data and reset the app for your next class. The archive preserves everything — roster, progress, intake, Fast Future Series data — in Firebase so you can reference it later if needed.</p>
+
+            {/* Archive controls */}
+            <div style={{background:"rgba(255,59,48,0.04)",border:"1px solid rgba(255,59,48,0.15)",borderRadius:12,padding:20,marginBottom:16}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#fff",marginBottom:12}}>Archive Current Semester & Reset</div>
+              <div style={{display:"flex",gap:8,marginBottom:12,alignItems:"center",flexWrap:"wrap"}}>
+                <label style={{fontSize:11,color:"#888"}}>Semester label:</label>
+                <input value={semesterLabel} onChange={e=>setSemesterLabel(e.target.value)} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"8px 12px",color:"#fff",fontSize:13,fontFamily:"inherit",outline:"none",width:160}}/>
+              </div>
+              <div style={{fontSize:11,color:"#888",marginBottom:12,lineHeight:1.5}}>
+                This will archive: <strong style={{color:"#ddd"}}>{dashData.length} student{dashData.length!==1?"s":""}</strong>, <strong style={{color:"#ddd"}}>{roster.length} roster entries</strong>, <strong style={{color:"#ddd"}}>{ddQuizQuestions.length} quiz question{ddQuizQuestions.length!==1?"s":""}</strong>, and all Fast Future Series data.
+                Then it clears everything for a fresh start.
+              </div>
+              <button onClick={()=>{
+                if(!semesterLabel.trim()) { alert("Enter a semester label."); return; }
+                if(!confirm("Archive '"+semesterLabel+"' and clear ALL current data?\n\nThis will:\n• Save all student progress, roster, intake, and Fast Future Series data to the archive\n• Wipe the app clean for a new class\n\nThis cannot be undone. Continue?")) return;
+                semesterRollover(semesterLabel.trim());
+              }} style={{background:"linear-gradient(135deg,#FF3B30,#FF6B6B)",border:"none",color:"#fff",padding:"12px 24px",borderRadius:9,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Archive & Reset →</button>
+            </div>
+
+            {/* Past archives */}
+            {archives.length>0&&<div>
+              <div style={{fontSize:10,fontWeight:700,color:"#666",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>PAST ARCHIVES</div>
+              {archives.map((a,i)=><div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:10,padding:14,marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
+                <div>
+                  <span style={{fontSize:14,fontWeight:700,color:"#ddd"}}>{a.label}</span>
+                  <span style={{fontSize:10,color:"#666",marginLeft:10}}>Archived {a.date?new Date(a.date).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):""}</span>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <span style={{fontSize:10,color:"#888"}}>{a.studentCount||0} students</span>
+                  <span style={{fontSize:10,color:"#888"}}>{a.rosterCount||0} on roster</span>
+                </div>
+              </div>)}
+            </div>}
+            {archives.length===0&&<p style={{fontSize:11,color:"#444"}}>No archives yet. Your first rollover will appear here.</p>}
+          </div>
         </div>}
       </div>}
     </div></div>
@@ -1089,7 +1585,10 @@ export default function App() {
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
           <div style={{width:10,height:10,borderRadius:"50%",background:"#FF3B30",boxShadow:"0 0 12px #FF3B3088"}}/>
           <span style={{fontSize:11,fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:"#666"}}>SPTC 243 · Montclair State</span>
-          <span style={{marginLeft:"auto",fontSize:12,color:"#555"}}>{studentName} <button onClick={logoutStudent} style={{background:"none",border:"none",color:"#444",fontSize:10,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Not you?</button></span>
+          <span style={{marginLeft:"auto",fontSize:12,color:"#555",display:"flex",alignItems:"center",gap:6}}>
+            {isInstructor&&<span style={{fontSize:9,fontWeight:700,color:"#A855F7",background:"rgba(168,85,247,0.12)",padding:"2px 8px",borderRadius:8}}>INSTRUCTOR</span>}
+            {studentName} <button onClick={logoutStudent} style={{background:"none",border:"none",color:"#444",fontSize:10,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Not you?</button>
+          </span>
         </div>
         <h1 style={{fontSize:"clamp(28px,5vw,52px)",fontWeight:800,lineHeight:1.05,margin:"0 0 14px",color:"#fff"}}>AI & Emerging Tech<br/><span style={{color:"#FF3B30"}}>in Sports Communication</span></h1>
         <p style={{fontSize:16,color:"#555",maxWidth:520,lineHeight:1.65,margin:"0 0 12px"}}>Your guided course companion. Each module builds on the last — from the big ideas driving disruption, to understanding AI, to seeing how it's reshaping the business of sports.</p>
@@ -1126,28 +1625,41 @@ export default function App() {
             <p style={{fontSize:12,color:"#555",margin:0,lineHeight:1.5}}>{m.subtitle}</p>
           </div>
         );})}
-        <div onClick={()=>go("deepdive")} style={{background:"linear-gradient(135deg,rgba(168,85,247,0.08),rgba(120,60,200,0.04))",border:"1px solid rgba(168,85,247,0.2)",borderRadius:14,padding:22,cursor:"pointer",transition:"all 0.2s",position:"relative"}}
-          onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor="rgba(168,85,247,0.4)";}}
-          onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor="rgba(168,85,247,0.2)";}}>
-          <div style={{fontSize:22,marginBottom:8}}>🔬</div>
-          <div style={{display:"flex",gap:5,marginBottom:8,flexWrap:"wrap"}}>
+      </div>
+
+      {/* FAST FUTURE SERIES — standalone section */}
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"#A855F7",marginBottom:10}}>📚 COURSE-WIDE</div>
+      <div onClick={()=>go("deepdive")} style={{background:"linear-gradient(135deg,rgba(168,85,247,0.08),rgba(120,60,200,0.04))",border:"1px solid rgba(168,85,247,0.25)",borderRadius:14,padding:24,cursor:"pointer",transition:"all 0.2s",marginBottom:32,display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}
+        onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor="rgba(168,85,247,0.5)";e.currentTarget.style.boxShadow="0 8px 32px rgba(168,85,247,0.1)";}}
+        onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor="rgba(168,85,247,0.25)";e.currentTarget.style.boxShadow="none";}}>
+        <div style={{fontSize:36}}>🔬</div>
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{display:"flex",gap:5,marginBottom:6,flexWrap:"wrap"}}>
             <Tag color="#A855F7" bg="rgba(168,85,247,0.15)">Ongoing</Tag>
             <Tag>{BOOK_CHAPTERS.length} chapters</Tag>
             {myChapters.length>0&&<Tag color="#34C759" bg="rgba(52,199,89,0.1)">You: Ch. {myChapters.map(c=>c.chapterId).join(", ")}</Tag>}
+            {ddQuizQuestions.filter(q=>q.status==="approved").length>0&&<Tag color="#FF9500" bg="rgba(255,149,0,0.1)">{ddQuizQuestions.filter(q=>q.status==="approved").length} quiz Qs live</Tag>}
           </div>
-          <h3 style={{fontSize:16,fontWeight:700,margin:"0 0 3px",color:"#fff"}}>Industry Deep Dive</h3>
-          <p style={{fontSize:12,color:"#555",margin:0,lineHeight:1.5}}>The Future Is Faster Than You Think — Chapter presentations & rolling quizzes</p>
+          <h3 style={{fontSize:18,fontWeight:800,margin:"0 0 4px",color:"#fff"}}>Fast Future Series</h3>
+          <p style={{fontSize:13,color:"#888",margin:0,lineHeight:1.5}}>The Future Is Faster Than You Think — Chapter presentations, student-created quiz questions & rolling quizzes</p>
         </div>
+        <div style={{fontSize:13,fontWeight:700,color:"#A855F7",whiteSpace:"nowrap"}}>Open →</div>
       </div>
+
       <div style={{borderTop:"1px solid rgba(255,255,255,0.03)",padding:"24px 0 40px",textAlign:"center"}}>
         <p style={{color:"#2a2a2a",fontSize:11}}>Professor Ben Fairclough · Fall 2025 · Wed 5:20-8:05 PM</p>
-        <button onClick={()=>setView("instructor")} style={{background:"none",border:"none",color:"#222",fontSize:10,cursor:"pointer",marginTop:4,fontFamily:"inherit"}}>Instructor Dashboard</button>
+        <button onClick={()=>go("instructor")} style={{background:"none",border:"none",color:"#222",fontSize:10,cursor:"pointer",marginTop:4,fontFamily:"inherit"}}>Instructor Dashboard</button>
+        {isInstructor&&<div style={{marginTop:16,paddingTop:16,borderTop:"1px solid rgba(168,85,247,0.1)"}}>
+          <div style={{fontSize:9,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>INSTRUCTOR TOOLS</div>
+          <button onClick={resetTestData} style={{background:"rgba(255,59,48,0.08)",border:"1px solid rgba(255,59,48,0.2)",color:"#FF3B30",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>🗑 Reset All My Test Data</button>
+          <p style={{fontSize:10,color:"#444",margin:"6px 0 0"}}>Erases your progress, intake, quiz history & submissions. You'll re-register fresh.</p>
+        </div>}
       </div>
     </div></div>
   );
 
   // ═══════════════════════════════════════════════════
-  // DEEP DIVE — Student View
+  // FAST FUTURE SERIES — Student View
   // ═══════════════════════════════════════════════════
   if(view==="deepdive") {
     const approvedQs = ddQuizQuestions.filter(q=>q.status==="approved"&&(q.type==="mc"||q.type==="short"));
@@ -1155,20 +1667,17 @@ export default function App() {
     <div style={S}>{font}<Bg/><div style={{...W,...F}}>
       <div style={{paddingTop:20,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",paddingBottom:12}}>
         <button onClick={()=>go("home")} style={gs}>← Home</button>
-        <Tag color="#A855F7" bg="rgba(168,85,247,0.15)">Industry Deep Dive</Tag>
+        <Tag color="#A855F7" bg="rgba(168,85,247,0.15)">Fast Future Series</Tag>
       </div>
 
       <h2 style={{fontSize:"clamp(22px,4vw,36px)",fontWeight:800,margin:"0 0 4px",color:"#fff"}}>The Future Is Faster<br/><span style={{color:"#A855F7"}}>Than You Think</span></h2>
-      <p style={{fontSize:13,color:"#555",margin:"0 0 6px"}}>Diamandis & Kotler — Industry Deep Dive</p>
+      <p style={{fontSize:13,color:"#555",margin:"0 0 6px"}}>Diamandis & Kotler — Fast Future Series</p>
       <p style={{fontSize:12,color:"#666",margin:"0 0 24px",lineHeight:1.6}}>Your group presents a chapter to the class. Everyone submits quiz questions from their chapter. Rolling quizzes draw from the class's approved question pool.</p>
 
-      {/* Your Assignment */}
-      <div style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>YOUR ASSIGNMENT</div>
-      {myChapters.length===0
-        ?<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:20,marginBottom:24,textAlign:"center"}}>
-          <p style={{fontSize:13,color:"#555",margin:0}}>No chapter assigned yet. Your professor will assign your group a chapter.</p>
-        </div>
-        :myChapters.map(mc=>{
+      {/* Chapter Preferences / Assignment */}
+      {myChapters.length>0?<>
+        <div style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>YOUR ASSIGNMENT</div>
+        {myChapters.map(mc=>{
           const ch = BOOK_CHAPTERS.find(c=>c.id===mc.chapterId);
           if(!ch) return null;
           const assignment = ddChapterAssignments[mc.chapterId] || {};
@@ -1184,8 +1693,62 @@ export default function App() {
               {assignment.students.map((s,si2)=><span key={si2} style={{fontSize:10,fontWeight:600,color:s===studentName?"#A855F7":"#888",background:s===studentName?"rgba(168,85,247,0.12)":"rgba(255,255,255,0.04)",padding:"2px 8px",borderRadius:8}}>{s}</span>)}
             </div>}
           </div>;
-        })
-      }
+        })}
+      </>:<>
+        <div style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>CHAPTER PREFERENCES</div>
+        {ddChapterPrefs
+          ?<div style={{background:"rgba(52,199,89,0.05)",border:"1px solid rgba(52,199,89,0.15)",borderRadius:14,padding:20,marginBottom:24}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#34C759",letterSpacing:1,marginBottom:10}}>✓ YOUR TOP 3 SUBMITTED</div>
+            {["first","second","third"].map((rank,ri)=>{
+              const ch = BOOK_CHAPTERS.find(c=>c.id===ddChapterPrefs[rank]);
+              if(!ch) return null;
+              return <div key={rank} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ri<2?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                <span style={{fontSize:16,fontWeight:800,color:ri===0?"#34C759":ri===1?"#007AFF":"#FF9500",width:24,textAlign:"center"}}>{ri+1}</span>
+                <div>
+                  <span style={{fontSize:13,fontWeight:600,color:"#ddd"}}>Ch. {ch.id}: {ch.title}</span>
+                  <p style={{fontSize:10,color:"#666",margin:0}}>{ch.topic}</p>
+                </div>
+              </div>;
+            })}
+            <button onClick={()=>{setDdChapterPrefs(null);setDdPickingPrefs({});}} style={{...gs,marginTop:12,fontSize:10}}>Change my picks</button>
+          </div>
+          :<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:20,marginBottom:24}}>
+            <p style={{fontSize:13,color:"#bbb",margin:"0 0 4px"}}>Pick your top 3 chapter preferences. Professor Fairclough will use these to form groups and assign chapters.</p>
+            <p style={{fontSize:11,color:"#666",margin:"0 0 16px"}}>Click chapters below in order: 1st choice, 2nd choice, 3rd choice.</p>
+            {(()=>{
+              const selected = [ddPickingPrefs.first, ddPickingPrefs.second, ddPickingPrefs.third].filter(Boolean);
+              const pickCount = selected.length;
+              const rankLabels = ["1st Choice","2nd Choice","3rd Choice"];
+              return <>
+                {pickCount>0&&<div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+                  {selected.map((id,i)=>{const ch=BOOK_CHAPTERS.find(c=>c.id===id); return ch?<span key={i} style={{fontSize:11,fontWeight:700,color:i===0?"#34C759":i===1?"#007AFF":"#FF9500",background:i===0?"rgba(52,199,89,0.1)":i===1?"rgba(0,122,255,0.1)":"rgba(255,149,0,0.1)",padding:"4px 10px",borderRadius:8}}>{rankLabels[i]}: Ch. {ch.id}</span>:null;})}
+                  <button onClick={()=>setDdPickingPrefs({})} style={{background:"none",border:"none",color:"#555",fontSize:10,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Reset</button>
+                </div>}
+                {pickCount<3&&<p style={{fontSize:10,color:"#FF9500",margin:"0 0 10px"}}>Select your {rankLabels[pickCount].toLowerCase()}:</p>}
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:6,marginBottom:14}}>
+                  {BOOK_CHAPTERS.map(ch=>{
+                    const isSelected = selected.includes(ch.id);
+                    const selIndex = selected.indexOf(ch.id);
+                    return <div key={ch.id} onClick={()=>{
+                      if(isSelected) return;
+                      if(pickCount>=3) return;
+                      const ranks=["first","second","third"];
+                      setDdPickingPrefs(prev=>({...prev,[ranks[pickCount]]:ch.id}));
+                    }} style={{background:isSelected?(selIndex===0?"rgba(52,199,89,0.08)":selIndex===1?"rgba(0,122,255,0.08)":"rgba(255,149,0,0.08)"):"rgba(255,255,255,0.015)",border:"1px solid "+(isSelected?(selIndex===0?"rgba(52,199,89,0.25)":selIndex===1?"rgba(0,122,255,0.25)":"rgba(255,149,0,0.25)"):"rgba(255,255,255,0.05)"),borderRadius:8,padding:10,cursor:isSelected||pickCount>=3?"default":"pointer",opacity:!isSelected&&pickCount>=3?0.4:1,transition:"all 0.15s"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <span style={{fontSize:10,fontWeight:700,color:isSelected?(selIndex===0?"#34C759":selIndex===1?"#007AFF":"#FF9500"):"#555"}}>Ch. {ch.id}</span>
+                        {isSelected&&<span style={{fontSize:9,fontWeight:700,color:selIndex===0?"#34C759":selIndex===1?"#007AFF":"#FF9500"}}>{rankLabels[selIndex]}</span>}
+                      </div>
+                      <p style={{fontSize:11,fontWeight:600,color:isSelected?"#fff":"#888",margin:"2px 0 0"}}>{ch.title}</p>
+                    </div>;
+                  })}
+                </div>
+                {pickCount===3&&<button onClick={()=>{submitChapterPrefs(ddPickingPrefs);}} style={bs("linear-gradient(135deg,#34C759,#30D158)")}>Submit My Top 3 →</button>}
+              </>;
+            })()}
+          </div>
+        }
+      </>}
 
       {/* Submit Quiz Question */}
       {myChapters.length>0&&<>
@@ -1280,7 +1843,9 @@ export default function App() {
         {BOOK_CHAPTERS.map(ch=>{
           const assignment = ddChapterAssignments[ch.id];
           const isMyChapter = myChapters.some(mc=>mc.chapterId===ch.id);
-          return <div key={ch.id} style={{background:isMyChapter?"rgba(168,85,247,0.06)":"rgba(255,255,255,0.015)",border:"1px solid "+(isMyChapter?"rgba(168,85,247,0.2)":"rgba(255,255,255,0.04)"),borderRadius:10,padding:14}}>
+          return <div key={ch.id} onClick={()=>go("chapter",ch.id)} style={{background:isMyChapter?"rgba(168,85,247,0.06)":"rgba(255,255,255,0.015)",border:"1px solid "+(isMyChapter?"rgba(168,85,247,0.2)":"rgba(255,255,255,0.04)"),borderRadius:10,padding:14,cursor:"pointer",transition:"all 0.15s"}}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.borderColor=isMyChapter?"rgba(168,85,247,0.4)":"rgba(255,255,255,0.12)";}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=isMyChapter?"rgba(168,85,247,0.2)":"rgba(255,255,255,0.04)";}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
               <span style={{fontSize:10,fontWeight:700,color:isMyChapter?"#A855F7":"#555"}}>Ch. {ch.id}</span>
               {assignment&&assignment.presentDate&&<span style={{fontSize:9,color:"#888"}}>{assignment.presentDate}</span>}
@@ -1309,8 +1874,103 @@ export default function App() {
       <p style={{color:"#555",fontSize:14,margin:"0 0 16px"}}>{pct>=70?"Great work on the rolling quiz!":"Keep studying — try again anytime."}</p>
       <p style={{fontSize:11,color:"#666",margin:"0 0 24px"}}>Quiz #{ddQuizHistory.length} · {new Date(lastResult.date).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</p>
       <div style={{display:"flex",gap:8,justifyContent:"center",paddingBottom:40}}>
-        <button onClick={()=>go("deepdive")} style={gs}>← Deep Dive</button>
+        <button onClick={()=>go("deepdive")} style={gs}>← Fast Future Series</button>
         <button onClick={()=>go("home")} style={gs}>Home</button>
+      </div>
+    </div></div>
+  );}
+
+  // ═══════════════════════════════════════════════════
+  // CHAPTER DETAIL VIEW
+  // ═══════════════════════════════════════════════════
+  if(view==="chapter" && chapterId) {
+    const ch = BOOK_CHAPTERS.find(c=>c.id===chapterId);
+    if(!ch) { go("deepdive"); return null; }
+    const assignment = ddChapterAssignments[ch.id] || {};
+    const isMyChapter = myChapters.some(mc=>mc.chapterId===ch.id);
+    const prevCh = ch.id > 1 ? ch.id - 1 : null;
+    const nextCh = ch.id < BOOK_CHAPTERS.length ? ch.id + 1 : null;
+    return (
+    <div style={S}>{font}<Bg/><div style={{...W,...F}}>
+      <div style={{paddingTop:20,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",paddingBottom:12}}>
+        <button onClick={()=>go("deepdive")} style={gs}>← Fast Future Series</button>
+        <Tag color="#A855F7" bg="rgba(168,85,247,0.15)">Chapter {ch.id} of {BOOK_CHAPTERS.length}</Tag>
+        {isMyChapter&&<Tag color="#34C759" bg="rgba(52,199,89,0.1)">Your Chapter</Tag>}
+      </div>
+
+      <h2 style={{fontSize:"clamp(24px,4vw,40px)",fontWeight:800,margin:"0 0 4px",color:"#fff"}}>{ch.title}</h2>
+      <p style={{fontSize:14,color:"#A855F7",margin:"0 0 6px",fontWeight:600}}>The Future Is Faster Than You Think</p>
+      {ch.part&&<p style={{fontSize:11,color:"#666",margin:"0 0 4px",fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>{ch.part}</p>}
+      <p style={{fontSize:13,color:"#666",margin:"0 0 24px"}}>{ch.topic}</p>
+
+      {assignment.students&&assignment.students.length>0&&<div style={{background:"rgba(168,85,247,0.05)",border:"1px solid rgba(168,85,247,0.15)",borderRadius:10,padding:14,marginBottom:20}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
+          <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+            <span style={{fontSize:10,fontWeight:700,color:"#A855F7",letterSpacing:1}}>PRESENTING:</span>
+            {assignment.students.map((s,i)=><span key={i} style={{fontSize:12,fontWeight:600,color:s===studentName?"#A855F7":"#bbb"}}>{s}{i<assignment.students.length-1?",":""}</span>)}
+          </div>
+          {assignment.presentDate&&<span style={{fontSize:11,color:"#FF9500",fontWeight:600}}>{assignment.presentDate}</span>}
+        </div>
+      </div>}
+
+      {/* Chapter Summary */}
+      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"clamp(18px,3vw,28px)",marginBottom:16}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>CHAPTER SUMMARY</div>
+        {ch.summary.split("\u2014").length > 3
+          ? ch.summary.split(". ").reduce((acc, sentence, i, arr) => {
+              const midpoint = Math.floor(arr.length / 2);
+              if(i === 0) acc.push(sentence);
+              else if(i === midpoint) { acc[acc.length-1] += "."; acc.push(sentence); }
+              else acc[acc.length-1] += ". " + sentence;
+              return acc;
+            }, []).map((para, pi) => <p key={pi} style={{fontSize:15,lineHeight:1.75,color:"#bbb",margin:pi===0?"0 0 16px":"16px 0 0"}}>{para}{!para.endsWith(".")?"":""}</p>)
+          : <p style={{fontSize:15,lineHeight:1.75,color:"#bbb",margin:0}}>{ch.summary}</p>
+        }
+      </div>
+
+      {/* Key Themes */}
+      <div style={{background:"rgba(168,85,247,0.04)",border:"1px solid rgba(168,85,247,0.15)",borderRadius:12,padding:18,marginBottom:16}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#A855F7",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>KEY THEMES</div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {ch.keyThemes.map((t,i)=><div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+            <span style={{color:"#A855F7",fontWeight:800,fontSize:14,lineHeight:"20px",flexShrink:0}}>{i+1}</span>
+            <p style={{fontSize:13,color:"#ccc",margin:0,lineHeight:1.55}}>{t}</p>
+          </div>)}
+        </div>
+      </div>
+
+      {/* Future Vision */}
+      {ch.futureVision&&<div style={{background:"linear-gradient(135deg,rgba(0,122,255,0.06),rgba(88,86,214,0.04))",border:"1px solid rgba(0,122,255,0.2)",borderRadius:14,padding:"clamp(18px,3vw,28px)",marginBottom:16}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#007AFF",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>🔮 FUTURE VISION</div>
+        <p style={{fontSize:14,lineHeight:1.75,color:"#bbb",margin:0,fontStyle:"italic"}}>{ch.futureVision}</p>
+      </div>}
+
+      {/* Sports Connection */}
+      {ch.sportsConnection&&<div style={{background:"rgba(255,59,48,0.04)",border:"1px solid rgba(255,59,48,0.15)",borderRadius:12,padding:18,marginBottom:24}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#FF3B30",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>🏟️ SPORTS CONNECTION</div>
+        <p style={{fontSize:13,lineHeight:1.65,color:"#aaa",margin:0}}>{ch.sportsConnection}</p>
+      </div>}
+
+      {/* Reality Check */}
+      {ch.realityCheck&&<div style={{background:"linear-gradient(135deg,rgba(255,149,0,0.06),rgba(255,204,0,0.03))",border:"1px solid rgba(255,149,0,0.25)",borderRadius:14,padding:"clamp(18px,3vw,28px)",marginBottom:24}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:4}}>⚡ REALITY CHECK — HAS THIS HELD UP?</div>
+        <p style={{fontSize:11,color:"#666",margin:"0 0 14px",fontStyle:"italic"}}>This book was published in 2020. Your job is to find out what's changed.</p>
+        <p style={{fontSize:14,lineHeight:1.7,color:"#bbb",margin:"0 0 18px"}}>{ch.realityCheck.intro}</p>
+        <div style={{fontSize:9,fontWeight:700,color:"#FF9500",letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>GO FIND OUT</div>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {ch.realityCheck.prompts.map((p,i)=><div key={i} style={{background:"rgba(0,0,0,0.2)",border:"1px solid rgba(255,149,0,0.12)",borderRadius:10,padding:14,display:"flex",gap:12,alignItems:"flex-start"}}>
+            <span style={{color:"#FF9500",fontWeight:800,fontSize:16,lineHeight:"22px",flexShrink:0}}>{i+1}</span>
+            <p style={{fontSize:13,color:"#ccc",margin:0,lineHeight:1.6}}>{p}</p>
+          </div>)}
+        </div>
+        <p style={{fontSize:11,color:"#666",margin:"16px 0 0",lineHeight:1.6}}>💡 <strong style={{color:"#999"}}>Tip:</strong> Search Google News, TechCrunch, The Verge, or industry sources. Look for what actually happened — not just what people predicted would happen. Bring what you find to class.</p>
+      </div>}
+
+      {/* Chapter Navigation */}
+      <div style={{display:"flex",justifyContent:"space-between",paddingBottom:40,gap:8,flexWrap:"wrap"}}>
+        {prevCh?<button onClick={()=>go("chapter",prevCh)} style={gs}>← Ch. {prevCh}</button>:<div/>}
+        {nextCh?<button onClick={()=>go("chapter",nextCh)} style={bs("linear-gradient(135deg,#A855F7,#7C3AED)")}>Ch. {nextCh}: {BOOK_CHAPTERS.find(c=>c.id===nextCh).title} →</button>
+        :<button onClick={()=>go("deepdive")} style={bs("linear-gradient(135deg,#A855F7,#7C3AED)")}>← Back to Fast Future Series</button>}
       </div>
     </div></div>
   );}
