@@ -324,6 +324,9 @@ export default function App() {
   const [archives,setArchives]=useState([]); // [{label, date, studentCount}]
   const [semesterLabel,setSemesterLabel]=useState(()=>{const m=new Date().getMonth();const y=new Date().getFullYear();return (m>=6?"Fall":"Spring")+" "+y;});
 
+  // Chapter assignment modal state
+  const [assignModal,setAssignModal]=useState(null); // null or {chapterId, selectedStudents:[], presentDate:""}
+
   // Load student identity from localStorage, progress from Firebase
   useEffect(()=>{
     (async()=>{
@@ -1408,11 +1411,7 @@ export default function App() {
                   {questionsForChapter.length>0 && <span style={{fontSize:10,color:"#34C759",marginLeft:8}}>{questionsForChapter.filter(q=>q.status==="approved").length}/{questionsForChapter.length} Qs approved</span>}
                 </div>
                 <button onClick={()=>{
-                  const names = prompt("Enter student names (comma separated):", (assignment.students||[]).join(", "));
-                  if(names===null) return;
-                  const date = prompt("Presentation date (e.g., 'Oct 15' or leave blank):", assignment.presentDate||"");
-                  const studentList = names.split(",").map(n=>n.trim()).filter(n=>n);
-                  assignChapter(ch.id, studentList, date||"");
+                  setAssignModal({chapterId:ch.id, selectedStudents:[...(assignment.students||[])], presentDate:assignment.presentDate||""});
                 }} style={{...gs,fontSize:10,padding:"6px 12px"}}>{isAssigned?"Edit":"Assign"}</button>
               </div>
             </div>;
@@ -1576,7 +1575,80 @@ export default function App() {
           </div>
         </div>}
       </div>}
-    </div></div>
+    </div>
+
+    {/* Chapter Assignment Modal */}
+    {assignModal&&(()=>{
+      const ch = BOOK_CHAPTERS.find(c=>c.id===assignModal.chapterId);
+      if(!ch) return null;
+      const allStudents = [...new Set([...roster, ...(assignModal.selectedStudents||[])])].filter(n=>n!==INSTRUCTOR_NAME).sort((a,b)=>a.localeCompare(b));
+      const assignedElsewhere = {};
+      Object.entries(ddChapterAssignments).forEach(([cId,a])=>{
+        if(parseInt(cId)!==assignModal.chapterId && a.students) {
+          a.students.forEach(s=>{assignedElsewhere[s]=parseInt(cId);});
+        }
+      });
+      const toggleStudent = (name) => {
+        setAssignModal(prev=>{
+          const sel = prev.selectedStudents.includes(name) ? prev.selectedStudents.filter(n=>n!==name) : [...prev.selectedStudents, name];
+          return {...prev, selectedStudents:sel};
+        });
+      };
+      return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setAssignModal(null)}>
+        <div style={{background:"#1a1a1a",border:"1px solid rgba(168,85,247,0.3)",borderRadius:16,padding:0,maxWidth:480,width:"100%",maxHeight:"85vh",display:"flex",flexDirection:"column",boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}} onClick={e=>e.stopPropagation()}>
+
+          {/* Header */}
+          <div style={{padding:"20px 24px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+              <div>
+                <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:6}}>
+                  <span style={{fontSize:10,fontWeight:700,color:"#A855F7",background:"rgba(168,85,247,0.15)",padding:"2px 8px",borderRadius:8}}>Ch. {ch.id}</span>
+                  <span style={{fontSize:9,fontWeight:700,color:"#666",letterSpacing:1.5,textTransform:"uppercase"}}>ASSIGN STUDENTS</span>
+                </div>
+                <h3 style={{fontSize:18,fontWeight:800,color:"#fff",margin:0}}>{ch.title}</h3>
+              </div>
+              <button onClick={()=>setAssignModal(null)} style={{background:"rgba(255,255,255,0.06)",border:"none",color:"#888",width:32,height:32,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>✕</button>
+            </div>
+          </div>
+
+          {/* Student list */}
+          <div style={{padding:"12px 24px",overflowY:"auto",flex:1}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#666",letterSpacing:1.5,textTransform:"uppercase",marginBottom:8}}>SELECT STUDENTS ({assignModal.selectedStudents.length} selected)</div>
+            {allStudents.length===0&&<p style={{fontSize:12,color:"#555",margin:"8px 0"}}>No students on the roster yet. Add students in the Roster tab first.</p>}
+            <div style={{display:"flex",flexDirection:"column",gap:4}}>
+              {allStudents.map(name=>{
+                const isSelected = assignModal.selectedStudents.includes(name);
+                const otherCh = assignedElsewhere[name];
+                return <div key={name} onClick={()=>toggleStudent(name)} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:isSelected?"rgba(168,85,247,0.12)":"rgba(255,255,255,0.02)",border:"1px solid "+(isSelected?"rgba(168,85,247,0.35)":"rgba(255,255,255,0.06)"),borderRadius:10,cursor:"pointer",transition:"all 0.15s"}}>
+                  <div style={{width:22,height:22,borderRadius:6,border:"2px solid "+(isSelected?"#A855F7":"rgba(255,255,255,0.15)"),background:isSelected?"#A855F7":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s"}}>
+                    {isSelected&&<span style={{color:"#fff",fontSize:14,fontWeight:700,lineHeight:1}}>✓</span>}
+                  </div>
+                  <span style={{fontSize:13,fontWeight:600,color:isSelected?"#fff":"#bbb",flex:1}}>{name}</span>
+                  {otherCh&&<span style={{fontSize:9,fontWeight:600,color:"#FF9500",background:"rgba(255,149,0,0.1)",padding:"2px 8px",borderRadius:8}}>Ch. {otherCh}</span>}
+                </div>;
+              })}
+            </div>
+          </div>
+
+          {/* Date + Actions */}
+          <div style={{padding:"16px 24px 20px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+            <div style={{marginBottom:14}}>
+              <label style={{fontSize:9,fontWeight:700,color:"#666",letterSpacing:1.5,textTransform:"uppercase",display:"block",marginBottom:6}}>PRESENTATION DATE</label>
+              <input value={assignModal.presentDate} onChange={e=>setAssignModal(prev=>({...prev,presentDate:e.target.value}))} placeholder="e.g., Oct 15" style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#fff",fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}}/>
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>setAssignModal(null)} style={{...gs,flex:1,textAlign:"center"}}>Cancel</button>
+              <button onClick={()=>{
+                assignChapter(assignModal.chapterId, assignModal.selectedStudents, assignModal.presentDate);
+                setAssignModal(null);
+              }} style={{...bs("linear-gradient(135deg,#A855F7,#7C3AED)"),flex:1,textAlign:"center"}}>{assignModal.selectedStudents.length>0?"Save Assignment":"Clear Assignment"}</button>
+            </div>
+          </div>
+        </div>
+      </div>;
+    })()}
+
+    </div>
   );
 
   if(view==="home") return(
